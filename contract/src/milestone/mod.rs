@@ -11,3 +11,6 @@
 pub mod types;
 pub mod storage;
 pub mod tracker;
+
+#[cfg(test)]
+mod tests;
