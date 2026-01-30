@@ -94,6 +94,7 @@ model Guild {
   avatarUrl   String?
   bannerUrl   String?
   ownerId     String
+  settings    Json?
   memberCount Int      @default(1)
   isActive    Boolean  @default(true)
 
@@ -108,7 +109,10 @@ model Guild {
 model GuildMembership {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
-  joinedAt  DateTime @default(now())
+  joinedAt  DateTime?
+  status    MembershipStatus @default(APPROVED)
+  invitationToken String?
+  invitedById String?
   role      GuildRole @default(MEMBER)
   userId    String
   guildId   String
@@ -117,8 +121,16 @@ model GuildMembership {
   user  User @relation(fields: [userId], references: [id], onDelete: Cascade)
   guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
 
+  invitedBy User? @relation(fields: [invitedById], references: [id])
+
   @@unique([userId, guildId])
   @@map("guild_memberships")
+}
+
+enum MembershipStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model Bounty {
