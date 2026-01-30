@@ -2,7 +2,7 @@ import { IsString, IsOptional } from 'class-validator';
 
 export class InviteMemberDto {
   @IsString()
-  userId: string;
+  userId!: string;
 
   @IsOptional()
   @IsString()

@@ -3,7 +3,7 @@ import { IsString, IsOptional, MaxLength, IsObject } from 'class-validator';
 export class CreateGuildDto {
   @IsString()
   @MaxLength(100)
-  name: string;
+  name!: string;
 
   @IsOptional()
   @IsString()
