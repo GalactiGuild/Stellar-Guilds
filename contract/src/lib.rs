@@ -57,6 +57,18 @@ use payment::{
     validate_distribution as pay_validate_distribution, DistributionRule, DistributionStatus,
 };
 
+mod reputation;
+use reputation::{
+    apply_time_decay as rep_apply_time_decay, award_achievement as rep_award_achievement,
+    calculate_multiplier as rep_calculate_multiplier,
+    check_achievement_eligibility as rep_check_achievement_eligibility,
+    get_achievements as rep_get_achievements, get_reputation as rep_get_reputation,
+    get_tier as rep_get_tier, get_top_contributors_for_guild as rep_get_top_contributors,
+    initialize_profile as rep_initialize_profile, initialize_reputation_system,
+    update_guild_leaderboard as rep_update_leaderboard, update_reputation as rep_update_reputation,
+};
+use reputation::types::{Achievement, ReputationEvent, ReputationProfile, ReputationTier};
+
 /// Stellar Guilds - Main Contract Entry Point
 ///
 /// This is the foundational contract for the Stellar Guilds platform.
@@ -78,6 +90,7 @@ pub struct StellarGuildsContract;
 impl StellarGuildsContract {
     pub fn initialize(env: Env) -> bool {
         storage::initialize(&env);
+        initialize_reputation_system(&env);
         true
     }
 
@@ -1072,6 +1085,145 @@ impl StellarGuildsContract {
     /// Vector of all bounties belonging to the guild
     pub fn get_guild_bounties(env: Env, guild_id: u64) -> Vec<Bounty> {
         get_guild_bounties_list(&env, guild_id)
+    }
+
+    // ============ Reputation & Incentive Functions ============
+
+    /// Initialize a reputation profile for a contributor
+    ///
+    /// # Arguments
+    /// * `address` - The address of the contributor
+    ///
+    /// # Returns
+    /// The newly created reputation profile
+    pub fn initialize_reputation_profile(env: Env, address: Address) -> ReputationProfile {
+        rep_initialize_profile(&env, address)
+    }
+
+    /// Update reputation based on an event
+    ///
+    /// # Arguments
+    /// * `address` - The address of the contributor
+    /// * `event` - The type of reputation event
+    /// * `value` - Context-specific value (complexity, significance, etc.)
+    ///
+    /// # Returns
+    /// The new reputation score
+    pub fn update_contributor_reputation(
+        env: Env,
+        address: Address,
+        event: ReputationEvent,
+        value: u32,
+    ) -> u32 {
+        rep_update_reputation(&env, address, event, value)
+    }
+
+    /// Award an achievement to a contributor
+    ///
+    /// # Arguments
+    /// * `address` - The address of the contributor
+    /// * `achievement_id` - The ID of the achievement to award
+    ///
+    /// # Returns
+    /// true if the achievement was awarded successfully
+    pub fn award_contributor_achievement(
+        env: Env,
+        address: Address,
+        achievement_id: u64,
+    ) -> bool {
+        rep_award_achievement(&env, address, achievement_id)
+    }
+
+    /// Get the reputation profile for a contributor
+    ///
+    /// # Arguments
+    /// * `address` - The address of the contributor
+    ///
+    /// # Returns
+    /// The contributor's reputation profile
+    pub fn get_contributor_reputation(env: Env, address: Address) -> ReputationProfile {
+        rep_get_reputation(&env, address)
+    }
+
+    /// Get the reputation tier for a contributor
+    ///
+    /// # Arguments
+    /// * `address` - The address of the contributor
+    ///
+    /// # Returns
+    /// The contributor's current tier
+    pub fn get_contributor_tier(env: Env, address: Address) -> ReputationTier {
+        rep_get_tier(&env, address)
+    }
+
+    /// Calculate the incentive multiplier for a contributor
+    ///
+    /// # Arguments
+    /// * `address` - The address of the contributor
+    ///
+    /// # Returns
+    /// The incentive multiplier in basis points (100 = 1.0x)
+    pub fn calculate_contributor_incentive_multiplier(env: Env, address: Address) -> u32 {
+        rep_calculate_multiplier(&env, address)
+    }
+
+    /// Get top contributors for a guild
+    ///
+    /// # Arguments
+    /// * `guild_id` - The ID of the guild
+    /// * `limit` - Maximum number of contributors to return
+    ///
+    /// # Returns
+    /// List of top contributor addresses
+    pub fn get_guild_top_contributors(env: Env, guild_id: u64, limit: u32) -> Vec<Address> {
+        rep_get_top_contributors(&env, guild_id, limit)
+    }
+
+    /// Check if a contributor is eligible for a specific achievement
+    ///
+    /// # Arguments
+    /// * `address` - The address of the contributor
+    /// * `achievement_id` - The ID of the achievement
+    ///
+    /// # Returns
+    /// true if the contributor is eligible
+    pub fn check_contributor_achievement_eligibility(
+        env: Env,
+        address: Address,
+        achievement_id: u64,
+    ) -> bool {
+        rep_check_achievement_eligibility(&env, address, achievement_id)
+    }
+
+    /// Get all achievements earned by a contributor
+    ///
+    /// # Arguments
+    /// * `address` - The address of the contributor
+    ///
+    /// # Returns
+    /// List of earned achievements
+    pub fn get_contributor_achievements(env: Env, address: Address) -> Vec<Achievement> {
+        rep_get_achievements(&env, address)
+    }
+
+    /// Update guild leaderboard for a contributor
+    ///
+    /// # Arguments
+    /// * `guild_id` - The ID of the guild
+    /// * `address` - The address of the contributor
+    pub fn update_contributor_leaderboard(env: Env, guild_id: u64, address: Address) {
+        rep_update_leaderboard(&env, guild_id, &address);
+    }
+
+    /// Apply time decay to a contributor's reputation
+    ///
+    /// # Arguments
+    /// * `address` - The address of the contributor
+    ///
+    /// # Returns
+    /// The new reputation score after decay
+    pub fn apply_contributor_time_decay(env: Env, address: Address) -> u32 {
+        rep_apply_time_decay(&env, address)
     }
 }
 
