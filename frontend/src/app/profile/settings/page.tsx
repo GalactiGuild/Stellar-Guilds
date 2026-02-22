@@ -12,6 +12,9 @@ export default function SettingsPage() {
     avatarUrl: mockUser.avatarUrl,
     twitter: "https://twitter.com/tybravo",
     github: "https://github.com/tybravo",
+    showActivityFeed: true,
+    allowMessagesFromNonFollowers: false,
+    showAchievements: true,
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -175,6 +178,66 @@ export default function SettingsPage() {
                     />
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Privacy & Social Controls */}
+            <div className="border-t border-gray-100 pt-6">
+              <h3 className="mb-4 text-lg font-medium text-gray-900">
+                Privacy & Social
+              </h3>
+              <div className="space-y-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    name="showActivityFeed"
+                    checked={formData.showActivityFeed || false}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        showActivityFeed: e.target.checked,
+                      }))
+                    }
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">
+                    Display my activity feed publicly
+                  </span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    name="allowMessagesFromNonFollowers"
+                    checked={formData.allowMessagesFromNonFollowers || false}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        allowMessagesFromNonFollowers: e.target.checked,
+                      }))
+                    }
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">
+                    Allow direct messages from anyone
+                  </span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    name="showAchievements"
+                    checked={formData.showAchievements || false}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        showAchievements: e.target.checked,
+                      }))
+                    }
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">
+                    Publicly show my achievements
+                  </span>
+                </label>
               </div>
             </div>
 

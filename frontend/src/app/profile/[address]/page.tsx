@@ -9,6 +9,10 @@ import { ReputationCard } from "@/features/profile/components/ReputationCard";
 import { StatsOverview } from "@/features/profile/components/StatsOverview";
 import { AchievementGrid } from "@/features/profile/components/AchievementGrid";
 import { ActivityTimeline } from "@/features/profile/components/ActivityTimeline";
+
+// social additions
+import { ProfileSocialSection } from "@/components/Profile/ProfileSocialSection";
+import { mockFeed } from "@/features/social/mockData";
 import { Settings, Share2, MapPin } from "lucide-react";
 import Link from "next/link";
 
@@ -96,6 +100,9 @@ export default async function ProfilePage({
             <ActivityTimeline activities={mockActivity} />
           </div>
         </div>
+
+        {/* Social feed (planned) */}
+        <ProfileSocialSection feedItems={mockFeed} />
 
       </div>
 
