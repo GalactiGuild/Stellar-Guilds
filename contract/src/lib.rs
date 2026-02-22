@@ -34,10 +34,13 @@ use analytics::{
 
 mod reputation;
 use reputation::{
-    compute_governance_weight as rep_governance_weight, get_badges as rep_get_badges,
-    get_contributions as rep_get_contributions, get_decayed_profile, get_global_reputation,
-    record_contribution as rep_record_contribution, Badge, ContributionRecord, ContributionType,
-    ReputationProfile,
+    award_achievement as rep_award_achievement,
+    calculate_incentive_multiplier as rep_calculate_incentive_multiplier,
+    check_achievement_eligibility as rep_check_achievement_eligibility,
+    get_achievements as rep_get_achievements, get_reputation as rep_get_reputation,
+    get_tier as rep_get_tier, get_top_contributors as rep_get_top_contributors,
+    initialize_profile as rep_initialize_profile, update_reputation as rep_update_reputation,
+    ReputationEvent, ReputationProfile, ReputationTier,
 };
 
 mod governance;
@@ -993,56 +996,45 @@ impl StellarGuildsContract {
 
     // ============ Reputation Functions ============
 
-    /// Record a contribution and update reputation score.
-    /// Awards badges automatically if thresholds are met.
-    pub fn record_contribution(
+    pub fn initialize_profile(env: Env, address: Address) -> ReputationProfile {
+        rep_initialize_profile(env, address)
+    }
+
+    pub fn update_reputation(
         env: Env,
-        guild_id: u64,
-        contributor: Address,
-        contribution_type: ContributionType,
-        reference_id: u64,
-    ) {
-        contributor.require_auth();
-        rep_record_contribution(
-            &env,
-            guild_id,
-            &contributor,
-            contribution_type,
-            reference_id,
-        );
-    }
-
-    /// Get a user's reputation profile for a specific guild (with decay applied).
-    pub fn get_reputation(env: Env, guild_id: u64, address: Address) -> ReputationProfile {
-        get_decayed_profile(&env, &address, guild_id)
-            .unwrap_or_else(|| panic!("no reputation profile found"))
-    }
-
-    /// Get a user's aggregate reputation across all guilds.
-    pub fn get_reputation_global(env: Env, address: Address) -> u64 {
-        get_global_reputation(&env, &address)
-    }
-
-    /// Get contribution history for a user in a guild.
-    pub fn get_reputation_contributions(
-        env: Env,
-        guild_id: u64,
         address: Address,
-        limit: u32,
-    ) -> Vec<ContributionRecord> {
-        rep_get_contributions(&env, &address, guild_id, limit)
+        event: ReputationEvent,
+        value: u32,
+    ) -> u32 {
+        rep_update_reputation(env, address, event, value)
     }
 
-    /// Get badges earned by a user in a guild.
-    pub fn get_reputation_badges(env: Env, guild_id: u64, address: Address) -> Vec<Badge> {
-        rep_get_badges(&env, &address, guild_id)
+    pub fn award_achievement(env: Env, address: Address, achievement_id: u64) -> bool {
+        rep_award_achievement(env, address, achievement_id)
     }
 
-    /// Get computed governance weight for a user (role + reputation).
-    pub fn get_governance_weight_for(env: Env, guild_id: u64, address: Address) -> i128 {
-        let member = guild::storage::get_member(&env, guild_id, &address)
-            .unwrap_or_else(|| panic!("not a guild member"));
-        rep_governance_weight(&env, &address, guild_id, &member.role)
+    pub fn get_reputation(env: Env, address: Address) -> ReputationProfile {
+        rep_get_reputation(env, address)
+    }
+
+    pub fn get_tier(env: Env, address: Address) -> ReputationTier {
+        rep_get_tier(env, address)
+    }
+
+    pub fn calculate_incentive_multiplier(env: Env, address: Address) -> u32 {
+        rep_calculate_incentive_multiplier(env, address)
+    }
+
+    pub fn get_top_contributors(env: Env, guild_id: u64, limit: u32) -> Vec<Address> {
+        rep_get_top_contributors(env, guild_id, limit)
+    }
+
+    pub fn check_achievement_eligibility(env: Env, address: Address, achievement_id: u64) -> bool {
+        rep_check_achievement_eligibility(env, address, achievement_id)
+    }
+
+    pub fn get_achievements(env: Env, address: Address) -> Vec<u64> {
+        rep_get_achievements(env, address)
     }
 
     // ============ Milestone Tracking Functions ============

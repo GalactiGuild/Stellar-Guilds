@@ -1,278 +1,131 @@
-use soroban_sdk::{Address, Env, String, Symbol};
+use crate::reputation::storage;
+use crate::reputation::types::{ReputationEvent, ReputationProfile, ReputationTier};
+use soroban_sdk::{Address, Env, Vec};
 
-use crate::guild::types::Role;
-use crate::reputation::storage::{
-    count_contributions_by_type, get_badges, get_next_badge_id, get_next_contribution_id,
-    get_profile, has_badge_type, store_badge, store_contribution, store_profile,
-};
-use crate::reputation::types::{
-    points_for_contribution, Badge, BadgeAwardedEvent, BadgeType, ContributionRecord,
-    ContributionType, ReputationProfile, ReputationUpdatedEvent, DECAY_DENOMINATOR,
-    DECAY_NUMERATOR, DECAY_PERIOD_SECS,
-};
+pub fn calculate_decay(env: &Env, profile: &mut ReputationProfile) {
+    let current_time = env.ledger().timestamp();
+    let month_seconds: u64 = 30 * 24 * 60 * 60;
 
-use crate::governance::types::role_weight;
+    if profile.last_active > 0 {
+        let inactive_duration = current_time.saturating_sub(profile.last_active);
+        let months_inactive = inactive_duration / month_seconds;
 
-// ────────────────────── Core Scoring ──────────────────────
+        if months_inactive > 0 {
+            // Decay by 1% per month of inactivity
+            for _ in 0..months_inactive {
+                let decay_amount = profile.score / 100; // 1%
+                profile.score = profile.score.saturating_sub(decay_amount);
+            }
+        }
+    }
 
-/// Record a contribution and update the user's reputation profile.
-/// Awards badges if thresholds are met.
-pub fn record_contribution(
+    // Always update last_active when scoring is processed
+    profile.last_active = current_time;
+}
+
+pub fn process_event(
     env: &Env,
-    guild_id: u64,
-    contributor: &Address,
-    contribution_type: ContributionType,
-    reference_id: u64,
+    profile: &mut ReputationProfile,
+    event: ReputationEvent,
+    base_value: u32,
 ) {
-    let points = points_for_contribution(&contribution_type);
-    let now = env.ledger().timestamp();
-
-    // Store the contribution record
-    let contrib_id = get_next_contribution_id(env);
-    let record = ContributionRecord {
-        id: contrib_id,
-        guild_id,
-        contributor: contributor.clone(),
-        contribution_type: contribution_type.clone(),
-        points,
-        timestamp: now,
-        reference_id,
+    // Determine point change
+    let point_delta: i64 = match event {
+        ReputationEvent::TaskCompleted => {
+            profile.tasks_completed = profile.tasks_completed.saturating_add(1);
+            base_value as i64 // usually +10 to +50
+        }
+        ReputationEvent::MilestoneAchieved => {
+            base_value as i64 // usually +20 to +100
+        }
+        ReputationEvent::DisputeWon => 5,
+        ReputationEvent::DisputeLost => -20,
+        ReputationEvent::TaskFailed => {
+            profile.tasks_failed = profile.tasks_failed.saturating_add(1);
+            -10
+        }
     };
-    store_contribution(env, &record);
 
-    // Update or create reputation profile
-    let mut profile = get_profile(env, contributor, guild_id).unwrap_or(ReputationProfile {
-        address: contributor.clone(),
-        guild_id,
-        total_score: 0,
-        decayed_score: 0,
-        contributions_count: 0,
-        last_activity: now,
-        last_decay_applied: now,
+    if point_delta > 0 {
+        profile.score = profile.score.saturating_add(point_delta as u32);
+    } else {
+        profile.score = profile.score.saturating_sub(point_delta.abs() as u32);
+    }
+
+    // Calculate new success rate (e.g. 9500 = 95.00%)
+    let total_tasks = profile.tasks_completed + profile.tasks_failed;
+    if total_tasks > 0 {
+        profile.success_rate = (profile.tasks_completed * 10000) / total_tasks;
+    } else {
+        profile.success_rate = 10000;
+    }
+
+    // Success rate bonus (+50% bonus on top if success rate > 95%)
+    let mut actual_score = profile.score;
+    if profile.success_rate > 9500 {
+        // e.g. 50% bonus
+        actual_score = actual_score.saturating_add(actual_score / 2);
+    }
+
+    // Update tier based on actual score with bonuses
+    profile.tier = determine_tier(actual_score);
+}
+
+pub fn determine_tier(score: u32) -> ReputationTier {
+    if score >= 5000 {
+        ReputationTier::Diamond
+    } else if score >= 1500 {
+        ReputationTier::Platinum
+    } else if score >= 500 {
+        ReputationTier::Gold
+    } else if score >= 100 {
+        ReputationTier::Silver
+    } else {
+        ReputationTier::Bronze
+    }
+}
+
+pub fn get_multiplier(tier: &ReputationTier) -> u32 {
+    match tier {
+        ReputationTier::Bronze => 100,
+        ReputationTier::Silver => 110,
+        ReputationTier::Gold => 125,
+        ReputationTier::Platinum => 150,
+        ReputationTier::Diamond => 200,
+    }
+}
+
+pub fn update_top_contributors(env: &Env, guild_id: u64, addr: Address, new_score: u32) {
+    let mut contributors = storage::get_guild_contributors(env, guild_id);
+
+    // Naive tracking logic for small sets - add/sort/truncate to keep top 50
+    // In a production app, we'd probably use a more performant structure or off-chain indexer
+    if !contributors.contains(&addr) {
+        contributors.push_back(addr);
+    }
+
+    // For sorting, we have to copy values off-chain or do manual insertion sort
+    // Due to Soroban limits, we avoid full sorting here and just ensure they're in the list
+    storage::set_guild_contributors(env, guild_id, &contributors);
+}
+
+// Re-add compute_governance_weight for governance integration
+pub fn compute_governance_weight(env: &Env, address: &Address, _guild_id: u64, role: &crate::guild::types::Role) -> i128 {
+    let base_weight = crate::governance::types::role_weight(role);
+    let profile = storage::get_profile(env, address).unwrap_or_else(|| {
+        ReputationProfile {
+            address: address.clone(),
+            score: 0,
+            tier: ReputationTier::Bronze,
+            tasks_completed: 0,
+            success_rate: 10000,
+            achievements: Vec::new(env),
+            last_active: env.ledger().timestamp(),
+            tasks_failed: 0,
+        }
     });
-
-    // Apply pending decay before adding new points
-    apply_decay_to_profile(&mut profile, now);
-
-    profile.total_score += points as u64;
-    profile.decayed_score += points as u64;
-    profile.contributions_count += 1;
-    profile.last_activity = now;
-    store_profile(env, &profile);
-
-    // Emit reputation updated event
-    let event = ReputationUpdatedEvent {
-        guild_id,
-        contributor: contributor.clone(),
-        points_earned: points,
-        new_total_score: profile.total_score,
-        contribution_type,
-    };
-    env.events().publish(
-        (Symbol::new(env, "reputation"), Symbol::new(env, "updated")),
-        event,
-    );
-
-    // Check and award badges
-    check_and_award_badges(env, guild_id, contributor, &profile);
-}
-
-// ────────────────────── Decay ──────────────────────
-
-/// Apply time-based decay to a profile's decayed_score.
-/// Uses iterative multiplication by 99/100 per elapsed period.
-fn apply_decay_to_profile(profile: &mut ReputationProfile, now: u64) {
-    if now <= profile.last_decay_applied {
-        return;
-    }
-
-    let elapsed = now - profile.last_decay_applied;
-    let periods = elapsed / DECAY_PERIOD_SECS;
-
-    if periods == 0 {
-        return;
-    }
-
-    // Cap iterations to avoid excessive gas usage
-    let capped_periods = if periods > 52 { 52 } else { periods };
-
-    let mut score = profile.decayed_score;
-    for _ in 0..capped_periods {
-        score = (score * DECAY_NUMERATOR) / DECAY_DENOMINATOR;
-    }
-
-    profile.decayed_score = score;
-    profile.last_decay_applied = now;
-}
-
-/// Get a profile with decay applied (read-only, does not persist).
-pub fn get_decayed_profile(
-    env: &Env,
-    address: &Address,
-    guild_id: u64,
-) -> Option<ReputationProfile> {
-    let mut profile = get_profile(env, address, guild_id)?;
-    let now = env.ledger().timestamp();
-    apply_decay_to_profile(&mut profile, now);
-    Some(profile)
-}
-
-// ────────────────────── Governance Weight ──────────────────────
-
-/// Compute governance weight: role_weight + integer_sqrt(decayed_score).
-/// Falls back to role_weight only if no reputation profile exists.
-pub fn compute_governance_weight(env: &Env, address: &Address, guild_id: u64, role: &Role) -> i128 {
-    let base = role_weight(role);
-
-    let reputation_bonus = match get_decayed_profile(env, address, guild_id) {
-        Some(profile) => integer_sqrt(profile.decayed_score) as i128,
-        None => 0,
-    };
-
-    base + reputation_bonus
-}
-
-/// Get the global (cross-guild) reputation for a user.
-pub fn get_global_reputation(env: &Env, address: &Address) -> u64 {
-    let profiles = crate::reputation::storage::get_all_guild_profiles(env, address);
-    let now = env.ledger().timestamp();
-
-    let mut total: u64 = 0;
-    for mut profile in profiles.iter() {
-        apply_decay_to_profile(&mut profile, now);
-        total += profile.decayed_score;
-    }
-    total
-}
-
-// ────────────────────── Badge Logic ──────────────────────
-
-/// Check badge criteria and award any newly earned badges.
-fn check_and_award_badges(
-    env: &Env,
-    guild_id: u64,
-    contributor: &Address,
-    profile: &ReputationProfile,
-) {
-    let now = env.ledger().timestamp();
-
-    // FirstContribution — contributions_count >= 1
-    if profile.contributions_count >= 1 {
-        maybe_award_badge(
-            env,
-            guild_id,
-            contributor,
-            BadgeType::FirstContribution,
-            "First Contribution",
-            now,
-        );
-    }
-
-    // BountyHunter — 5+ bounties completed
-    let bounty_count = count_contributions_by_type(
-        env,
-        contributor,
-        guild_id,
-        &ContributionType::BountyCompleted,
-    );
-    if bounty_count >= 5 {
-        maybe_award_badge(
-            env,
-            guild_id,
-            contributor,
-            BadgeType::BountyHunter,
-            "Bounty Hunter",
-            now,
-        );
-    }
-
-    // Mentor — 10+ milestones approved
-    let milestone_count = count_contributions_by_type(
-        env,
-        contributor,
-        guild_id,
-        &ContributionType::MilestoneApproved,
-    );
-    if milestone_count >= 10 {
-        maybe_award_badge(env, guild_id, contributor, BadgeType::Mentor, "Mentor", now);
-    }
-
-    // Governor — 10+ votes cast
-    let vote_count =
-        count_contributions_by_type(env, contributor, guild_id, &ContributionType::VoteCast);
-    if vote_count >= 10 {
-        maybe_award_badge(
-            env,
-            guild_id,
-            contributor,
-            BadgeType::Governor,
-            "Governor",
-            now,
-        );
-    }
-
-    // Veteran — score > 1000
-    if profile.total_score > 1000 {
-        maybe_award_badge(
-            env,
-            guild_id,
-            contributor,
-            BadgeType::Veteran,
-            "Veteran",
-            now,
-        );
-    }
-}
-
-/// Award a badge if the user doesn't already have it.
-fn maybe_award_badge(
-    env: &Env,
-    guild_id: u64,
-    holder: &Address,
-    badge_type: BadgeType,
-    name: &str,
-    timestamp: u64,
-) {
-    if has_badge_type(env, holder, guild_id, &badge_type) {
-        return;
-    }
-
-    let badge_id = get_next_badge_id(env);
-    let badge_name = String::from_str(env, name);
-    let badge = Badge {
-        id: badge_id,
-        guild_id,
-        holder: holder.clone(),
-        badge_type: badge_type.clone(),
-        name: badge_name.clone(),
-        awarded_at: timestamp,
-    };
-    store_badge(env, &badge);
-
-    let event = BadgeAwardedEvent {
-        guild_id,
-        holder: holder.clone(),
-        badge_type,
-        badge_name,
-    };
-    env.events().publish(
-        (Symbol::new(env, "reputation"), Symbol::new(env, "badge")),
-        event,
-    );
-}
-
-// ────────────────────── Helpers ──────────────────────
-
-/// Integer square root using Newton's method.
-fn integer_sqrt(n: u64) -> u64 {
-    if n == 0 {
-        return 0;
-    }
-    let mut x = n;
-    let mut y = (x + 1) / 2;
-    while y < x {
-        x = y;
-        y = (x + n / x) / 2;
-    }
-    x
+    
+    // Scale base weight by reputation tier multiplier
+    let multiplier = get_multiplier(&profile.tier) as i128;
+    (base_weight * multiplier) / 100
 }
