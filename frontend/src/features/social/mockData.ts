@@ -12,7 +12,7 @@ export const mockFeed: FeedItem[] = [
   {
     id: "f2",
     userAddress: "0xdef",
-    content: "Earned the "Top Contributor" achievement",
+    content: "Earned the \"Top Contributor\" achievement",
     timestamp: "2026-02-21T08:30:00Z",
     type: "achievement",
   },
