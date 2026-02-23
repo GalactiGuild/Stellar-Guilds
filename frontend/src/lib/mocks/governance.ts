@@ -1,4 +1,4 @@
-import { Proposal, Vote, VotingStats, ProposalStatus, ProposalType, VoteChoice } from '@/types/ui'
+import { Proposal, Vote, VotingStats, ProposalStatus } from '@/types/ui'
 
 // Mock Votes
 export const mockVotes: Vote[] = [

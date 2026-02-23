@@ -6,7 +6,9 @@ const withNextIntl = createNextIntlPlugin("./src/i18n.ts");
 const nextConfig = {
   // Ensure we are not forcing turbo in config
   reactStrictMode: true,
-  devIndicators: false,
+  devIndicators: {
+    buildActivity: false,
+  },
 };
 
 export default withNextIntl(nextConfig);

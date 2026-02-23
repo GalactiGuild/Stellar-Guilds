@@ -127,7 +127,7 @@ export default function UseCasesSection() {
         >
           <div className="relative p-8 md:p-10 rounded-3xl bg-slate-800/30 border border-slate-700/50">
             <div className="absolute top-6 left-8 text-6xl text-violet-500/20 font-serif">
-              "
+              &quot;
             </div>
 
             <div className="relative z-10 max-w-3xl mx-auto text-center">

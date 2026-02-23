@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Save, Trash2 } from 'lucide-react'
+import { ArrowLeft, Trash2 } from 'lucide-react'
 import { useGuildStore } from '@/store/guildStore'
 import { GuildForm } from '@/features/guilds/components/GuildForm'
 import { Button } from '@/components/ui/Button'

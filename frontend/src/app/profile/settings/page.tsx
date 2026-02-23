@@ -118,12 +118,6 @@ export default function SettingsPage() {
                   placeholder="https://..."
                 />
               </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Preview:
-              </p>
-              <div className="mt-2 h-12 w-12 overflow-hidden rounded-full border border-gray-200">
-                <img src={formData.avatarUrl} alt="Avatar preview" className="h-full w-full object-cover" />
-              </div>
             </div>
 
             {/* Social Links */}

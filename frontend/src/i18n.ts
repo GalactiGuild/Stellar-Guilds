@@ -17,7 +17,7 @@ export const isRtlLocale = (locale: Locale): boolean => {
 
 export default getRequestConfig(async ({ locale }) => {
   // Validate that the incoming locale is supported
-  if (!locale || !locales.includes(locale as any)) {
+  if (!locale || !locales.includes(locale as Locale)) {
     locale = defaultLocale;
   }
 

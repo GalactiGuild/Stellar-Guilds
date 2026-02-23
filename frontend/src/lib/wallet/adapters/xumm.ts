@@ -1,4 +1,4 @@
-import { WalletAdapter, WalletProvider, StellarNetwork } from '../types'
+import { WalletAdapter, WalletProvider } from '../types'
 
 /**
  * XUMM wallet adapter.
@@ -50,7 +50,7 @@ export class XummAdapter implements WalletAdapter {
 
     // ── Connection ───────────────────────────────────────────────────────────
 
-    async connect(_network: StellarNetwork): Promise<string> {
+    async connect(): Promise<string> {
         try {
             const xumm = (await getXumm()) as {
                 authorize: () => Promise<{ me?: { account?: string } } | undefined>
@@ -100,8 +100,7 @@ export class XummAdapter implements WalletAdapter {
     // ── Transaction Signing ──────────────────────────────────────────────────
 
     async signTransaction(
-        xdr: string,
-        _network: StellarNetwork
+        xdr: string
     ): Promise<string> {
         try {
             const xumm = (await getXumm()) as {

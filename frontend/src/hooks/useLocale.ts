@@ -1,10 +1,10 @@
 import { useLocale as useNextLocale } from 'next-intl';
-import { isRtlLocale } from '@/i18n';
+import { Locale, isRtlLocale } from '@/i18n';
 
 export function useLocale() {
   const locale = useNextLocale();
-  const isRTL = isRtlLocale(locale as any);
-  
+  const isRTL = isRtlLocale(locale as Locale);
+
   return {
     locale,
     isRTL,

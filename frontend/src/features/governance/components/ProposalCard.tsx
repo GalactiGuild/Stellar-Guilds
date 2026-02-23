@@ -33,11 +33,6 @@ const getStatusConfig = (status: ProposalStatus) => {
   return configs[status]
 }
 
-const formatDate = (dateString: string): string => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-}
-
 export const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, guildId }) => {
   const statusConfig = getStatusConfig(proposal.status)
   const isActive = proposal.status === 'active'

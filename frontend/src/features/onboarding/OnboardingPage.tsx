@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useOnboardingStore, OnboardingStep } from '@/store/onboardingStore';
+import { useOnboardingStore } from '@/store/onboardingStore';
 import OnboardingProgressIndicator from './components/OnboardingProgressIndicator';
 import WelcomeStep from './components/WelcomeStep';
 import WalletSetupStep from './components/WalletSetupStep';
@@ -16,7 +16,7 @@ const OnboardingPage = () => {
 
   useEffect(() => {
     initializeOnboarding();
-  }, []);
+  }, [initializeOnboarding]);
 
   const renderCurrentStep = () => {
     switch (currentStep) {
@@ -50,7 +50,11 @@ const OnboardingPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-stellar-navy via-stellar-darkNavy to-stellar-lightNavy flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-4xl">
         <OnboardingProgressIndicator />
-        
+
+        <p className="text-xl text-stellar-slate max-w-2xl mx-auto">
+          We&apos;re excited to have you join our community of builders and explorers.
+          Let&apos;s get you set up in just a few minutes.
+        </p>
         <div className="mt-8 min-h-[500px]">
           <AnimatePresence mode="wait">
             <motion.div

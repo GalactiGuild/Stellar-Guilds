@@ -13,7 +13,7 @@ import { ActivityTimeline } from "@/features/profile/components/ActivityTimeline
 // social additions
 import { ProfileSocialSection } from "@/components/Profile/ProfileSocialSection";
 import { mockFeed } from "@/features/social/mockData";
-import { Settings, Share2, MapPin } from "lucide-react";
+import { Settings, Share2 } from "lucide-react";
 import Link from "next/link";
 
 export default async function ProfilePage({
@@ -21,13 +21,13 @@ export default async function ProfilePage({
 }: {
   params: Promise<{ address: string }>;
 }) {
-  const { address } = await params;
+  await params;
   return (
 
-    
+
     <main className="min-h-screen bg-slate-50 pb-20 pt-10 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl space-y-8">
-        
+
         {/* Header Section */}
         <div className="relative rounded-2xl bg-white p-6 shadow-md border border-gray-100 sm:p-8 transition-shadow duration-300 hover:shadow-xl">
           <div className="absolute right-6 top-6 flex gap-3">
@@ -49,7 +49,7 @@ export default async function ProfilePage({
                 className="h-full w-full object-cover"
               />
             </div>
-            
+
             <div className="flex-1 text-center sm:text-left sm:pt-2">
               <h1 className="text-3xl font-bold text-gray-900">
                 {mockUser.displayName}
@@ -76,15 +76,15 @@ export default async function ProfilePage({
             <ReputationCard user={mockUser} />
           </div>
           <div className="lg:col-span-1">
-             {/* Stats are integrated into a grid in the component, but we can wrap it or just place it */}
-             {/* The StatsOverview is a grid of 3. It might look squashed in 1 col.
+            {/* Stats are integrated into a grid in the component, but we can wrap it or just place it */}
+            {/* The StatsOverview is a grid of 3. It might look squashed in 1 col.
                  Let's place it below Rep Card full width, OR keep it here. 
                  The StatsOverview component is responsive grid-cols-1 sm:grid-cols-3.
                  If placed in lg:col-span-1 (1/3 width), it will be a stack of 3 cards. Which is good.
              */}
-             <div className="h-full flex flex-col justify-center">
-                {/* We pass stats to the component */}
-             </div>
+            <div className="h-full flex flex-col justify-center">
+              {/* We pass stats to the component */}
+            </div>
           </div>
         </div>
 
@@ -106,7 +106,7 @@ export default async function ProfilePage({
 
       </div>
 
-       {/* user profile  */}
+      {/* user profile  */}
       {/* <div className="z-10 max-w-5xl w-full items-center justify-center font-mono text-sm lg:flex flex-col gap-6 text-center">
         <h1 className="text-4xl font-bold text-gray-900">Stellar Guilds</h1>
         <p className="text-xl text-gray-600">User Profile & Reputation Dashboard</p>

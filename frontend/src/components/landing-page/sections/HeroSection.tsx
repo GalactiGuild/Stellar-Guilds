@@ -1,7 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Target, Shield, Zap, Users } from "lucide-react";
-import { Button } from "@/components/ui";
 import ParticleBackground from "@/components/landing-page/ui/ParticleBackground";
 import Link from "next/link";
 import HeroTypewriter from "../ui/HeroTypewriter";

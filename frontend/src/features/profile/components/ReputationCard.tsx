@@ -1,7 +1,7 @@
 import React from "react";
 import { UserProfile } from "../types";
 import { Trophy, Star, Shield, Gem } from "lucide-react";
-import { clsx } from "clsx";
+
 import { twMerge } from "tailwind-merge";
 
 interface ReputationCardProps {

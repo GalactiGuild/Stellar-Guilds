@@ -3,7 +3,7 @@ import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Bounty, BountyStatus } from "../types";
-import { Calendar, Users, ArrowUpRight, ShieldCheck } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 
 interface StatusBadgeProps {
   status: BountyStatus;

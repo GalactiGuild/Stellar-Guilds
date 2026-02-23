@@ -64,7 +64,7 @@ function RouteProgressBarContent() {
       if (timerRef.current) window.clearInterval(timerRef.current);
       if (finishTimeoutRef.current) window.clearTimeout(finishTimeoutRef.current);
     };
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     if (!startedRef.current) return;

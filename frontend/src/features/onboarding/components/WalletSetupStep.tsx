@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Wallet, Info, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -10,9 +10,8 @@ import { useOnboardingStore } from '@/store/onboardingStore';
 import { WalletProvider } from '@/lib/wallet/types';
 
 const WalletSetupStep = () => {
-  const { connect, isConnected, isConnecting, publicKey, provider, disconnect } = useWallet();
+  const { connect, isConnected, isConnecting, publicKey, provider } = useWallet();
   const { nextStep, prevStep } = useOnboardingStore();
-  const [showHelp, setShowHelp] = useState(false);
 
   const handleConnect = async (walletProvider: 'freighter' | 'xumm') => {
     try {
@@ -29,7 +28,7 @@ const WalletSetupStep = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -54,7 +53,7 @@ const WalletSetupStep = () => {
                 <div>
                   <h3 className="font-semibold text-white mb-1">Why do I need a wallet?</h3>
                   <p className="text-stellar-slate text-sm">
-                    A Stellar wallet is required to interact with the blockchain, claim bounties, 
+                    A Stellar wallet is required to interact with the blockchain, claim bounties,
                     participate in governance, and manage your reputation score.
                   </p>
                 </div>
@@ -67,7 +66,7 @@ const WalletSetupStep = () => {
                 <div>
                   <h3 className="font-semibold text-white mb-1">Getting Started</h3>
                   <p className="text-stellar-slate text-sm">
-                    Download a Stellar-compatible wallet like Freighter (browser extension) 
+                    Download a Stellar-compatible wallet like Freighter (browser extension)
                     or XUMM (mobile app) before connecting.
                   </p>
                 </div>
@@ -90,8 +89,8 @@ const WalletSetupStep = () => {
               <p className="text-stellar-slate text-sm mb-4">
                 Browser extension wallet for desktop users
               </p>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full border-gold-500 text-gold-400 hover:bg-gold-500/10"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -116,8 +115,8 @@ const WalletSetupStep = () => {
               <p className="text-stellar-slate text-sm mb-4">
                 Mobile wallet with QR code pairing
               </p>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full border-gold-500 text-gold-400 hover:bg-gold-500/10"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -151,22 +150,21 @@ const WalletSetupStep = () => {
       )}
 
       <div className="flex justify-between">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={prevStep}
           className="border-stellar-lightNavy text-stellar-slate hover:bg-stellar-lightNavy"
         >
           Back
         </Button>
-        
-        <Button 
+
+        <Button
           onClick={handleNext}
           disabled={!isConnected || isConnecting}
-          className={`${
-            isConnected 
-              ? 'bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-stellar-navy' 
-              : 'bg-stellar-lightNavy text-stellar-slate cursor-not-allowed'
-          } px-6 py-2 rounded-lg`}
+          className={`${isConnected
+            ? 'bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-stellar-navy'
+            : 'bg-stellar-lightNavy text-stellar-slate cursor-not-allowed'
+            } px-6 py-2 rounded-lg`}
         >
           {isConnecting ? 'Connecting...' : isConnected ? 'Continue' : 'Connect First'}
         </Button>

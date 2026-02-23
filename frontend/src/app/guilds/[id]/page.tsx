@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft, Settings, UserPlus, Activity, Users as UsersIcon } from 'lucide-react'
@@ -15,7 +15,6 @@ type TabType = 'overview' | 'members' | 'activity'
 
 export default function GuildDetailPage() {
   const params = useParams()
-  const router = useRouter()
   const guildId = params.id as string
   const { currentGuild, fetchGuildById, changeMemberRole, removeMember, isLoading } = useGuildStore()
   const [activeTab, setActiveTab] = useState<TabType>('overview')
@@ -146,11 +145,10 @@ export default function GuildDetailPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === tab.id
-                      ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                  }`}
+                  className={`flex items-center gap-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
+                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                    }`}
                 >
                   {tab.icon}
                   {tab.label}
