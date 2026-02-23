@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Shield, Smartphone, Copy, Check, Eye, EyeOff } from "lucide-react";
+import { Shield, Smartphone, Phone, Copy, Check, Eye, EyeOff } from "lucide-react";
 import { useSecurity } from "@/hooks/useSecurity";
 import { TwoFactorProvider } from "@/features/security/types";
 
@@ -71,7 +71,7 @@ export const TwoFactorSetup: React.FC = () => {
                     <p className="text-sm text-stellar-slate">
                         Choose a two-factor authentication method:
                     </p>
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-3 sm:grid-cols-3">
                         <button
                             onClick={() => handleEnable("authenticator")}
                             className="flex items-center gap-3 rounded-lg border border-stellar-lightNavy bg-stellar-lightNavy p-4 text-left transition-colors hover:border-gold-500/50"
@@ -83,6 +83,20 @@ export const TwoFactorSetup: React.FC = () => {
                                 </p>
                                 <p className="text-xs text-stellar-slate">
                                     Google Authenticator, Authy, etc.
+                                </p>
+                            </div>
+                        </button>
+                        <button
+                            onClick={() => handleEnable("sms")}
+                            className="flex items-center gap-3 rounded-lg border border-stellar-lightNavy bg-stellar-lightNavy p-4 text-left transition-colors hover:border-gold-500/50"
+                        >
+                            <Phone className="h-5 w-5 text-gold-400" />
+                            <div>
+                                <p className="text-sm font-medium text-stellar-white">
+                                    SMS Verification
+                                </p>
+                                <p className="text-xs text-stellar-slate">
+                                    Receive codes via text message
                                 </p>
                             </div>
                         </button>
