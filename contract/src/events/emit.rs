@@ -64,6 +64,7 @@ fn set_sequence(env: &Env, seq: u64) {
 /// Stellar's event filter system two independent axes to index on. Consumers
 /// can subscribe to all events from a module, all events of an action type,
 /// or the intersection of both.
+/// emits event
 pub fn emit_event<T>(env: &Env, module: &str, action: &str, data: T)
 where
     T: IntoVal<Env, Val>,
