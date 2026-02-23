@@ -74,6 +74,7 @@ pub const ACT_VOTED: &str      = "voted";
 pub const ACT_DELEGATED: &str  = "delegated";
 pub const ACT_FINALIZED: &str  = "finalized";
 pub const ACT_PROPOSED: &str   = "proposed";
+pub const VOTED: &str      = "vote";      // A help for proper issue linking
 
 // =========== Milestone-specific actions ===========
 
