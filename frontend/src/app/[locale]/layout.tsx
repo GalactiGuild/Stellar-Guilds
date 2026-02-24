@@ -13,33 +13,30 @@ export const metadata: Metadata = {
   description: "User Profile & Reputation Dashboard",
 };
 
-export default async function LocaleLayout({
+export default async function RootLayout({
   children,
   params,
-}: Readonly<{
+}: {
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
-}>) {
-  const { locale } = await params;
+}) {
+  const resolvedParams = await params;
+  let locale = resolvedParams.locale;
   
   // Validate that the incoming locale is supported
   if (!locales.includes(locale as any)) {
-    notFound();
+    locale = defaultLocale;
   }
 
   // Get the messages for the current locale
   const messages = await getMessages();
 
   return (
-    <html lang={locale} dir={locale === 'ar' || locale === 'he' ? 'rtl' : 'ltr'} className="dark">
-      <body className={inter.className}>
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <div className="min-h-screen bg-stellar-navy text-stellar-white font-sans">
-            {children}
-          </div>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      <div className="min-h-screen bg-stellar-navy text-stellar-white font-sans">
+        {children}
+      </div>
+    </NextIntlClientProvider>
   );
 }
 
