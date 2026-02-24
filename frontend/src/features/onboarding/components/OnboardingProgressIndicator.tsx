@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle } from 'lucide-react';
-import { useOnboardingStore, getOnboardingProgress } from '@/store/onboardingStore';
+import { useOnboardingStore, getOnboardingProgress, type OnboardingStep } from '@/store/onboardingStore';
 
 const STEP_LABELS: Record<OnboardingStep, string> = {
   'welcome': 'Welcome',
