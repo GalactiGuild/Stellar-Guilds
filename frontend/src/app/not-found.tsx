@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { useTranslations } from 'next-intl';
 
 export default function NotFound() {
-  const t = useTranslations('common');
+  const tErrors = useTranslations('errors');
+  const tCommon = useTranslations('common');
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-stellar-navy px-4">
@@ -12,18 +13,18 @@ export default function NotFound() {
         </div>
         
         <h1 className="text-3xl font-bold text-stellar-white mb-4">
-          {t('error')} - {t('notFound')}
+          {tErrors('notFound')}
         </h1>
         
-        <p className="text-stellar-slate mb-8">
-          {t('errors.notFound')}
+        <p className="text-stellar-sand mb-8">
+          {tErrors('generic')}
         </p>
         
         <Link 
           href="/en"
           className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-gold-500 to-gold-600 text-stellar-navy font-semibold rounded-lg hover:from-gold-400 hover:to-gold-500 transition-all"
         >
-          {t('home')}
+          {tCommon('home')}
         </Link>
       </div>
     </div>
