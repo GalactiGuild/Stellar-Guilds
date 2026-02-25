@@ -6,7 +6,6 @@ import { Search, Plus, Filter } from 'lucide-react'
 import { useGuildStore } from '@/store/guildStore'
 import { GuildCard } from '@/features/guilds/components/GuildCard'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 
 export default function GuildsPage() {
   const { guilds, fetchGuilds } = useGuildStore()

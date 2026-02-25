@@ -43,7 +43,7 @@ export const EarningsTrackerWidget: React.FC = () => {
         borderColor: '#1e293b', 
         borderWidth: 1,
         callbacks: {
-          label: (context: any) => `Amount: $${context.raw}`
+          label: (context: { raw: number }) => `Amount: $${context.raw}`
         }
       }
     },
@@ -55,7 +55,7 @@ export const EarningsTrackerWidget: React.FC = () => {
       },
       y: { 
         grid: { color: '#1e293b', borderDash: [3, 3] }, 
-        ticks: { color: '#64748b', callback: (value: any) => `$${value}` }, 
+        ticks: { color: '#64748b', callback: (value: string | number) => `$${value}` }, 
         border: { display: false } 
       }
     }

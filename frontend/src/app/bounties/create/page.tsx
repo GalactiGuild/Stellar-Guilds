@@ -9,8 +9,6 @@ import {
   Edit3,
   Eye,
   Zap,
-  Coins,
-  Calendar,
   ShieldCheck,
   ChevronRight,
   Info,
@@ -53,7 +51,6 @@ export default function CreateBountyPage() {
     handleSubmit,
     watch,
     setValue,
-    trigger,
     formState: { errors, isSubmitting, isValid },
   } = useForm<BountyFormValues>({
     resolver: zodResolver(bountySchema),
@@ -287,7 +284,7 @@ const FieldLabel = ({ label, error }: { label: string; error?: string }) => (
   </div>
 );
 
-const TabButton = ({ active, onClick, icon, label }: any) => (
+const TabButton = ({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) => (
   <button
     onClick={onClick}
     className={`flex items-center gap-2 px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${active ? "bg-white text-black shadow-lg" : "text-slate-500 hover:text-slate-300"}`}
@@ -296,7 +293,7 @@ const TabButton = ({ active, onClick, icon, label }: any) => (
   </button>
 );
 
-const SummaryRow = ({ label, value, highlight }: any) => (
+const SummaryRow = ({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) => (
   <div className="flex justify-between text-[10px] uppercase tracking-widest font-bold">
     <span className="text-slate-500">{label}</span>
     <span

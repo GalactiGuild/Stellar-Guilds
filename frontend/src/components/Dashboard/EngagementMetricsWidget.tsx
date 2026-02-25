@@ -44,7 +44,7 @@ export const EngagementMetricsWidget: React.FC = () => {
     }
   };
 
-  let chartDataObj: any = { labels: [], datasets: [] };
+  let chartDataObj: { labels: string[]; datasets: { label: string; data: number[]; backgroundColor: string; borderColor: string; borderWidth: number }[] } = { labels: [], datasets: [] };
   if (data) {
     chartDataObj = {
       labels: ['Forums', 'Bounties', 'Guilds', 'Session (m)'],

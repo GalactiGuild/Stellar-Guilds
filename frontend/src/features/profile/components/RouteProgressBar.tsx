@@ -11,6 +11,7 @@ function RouteProgressBarContent() {
   const finishTimeoutRef = useRef<number | null>(null);
   const startedRef = useRef(false);
   const searchParams = useSearchParams();
+  const searchParamsString = searchParams?.toString();
 
   useEffect(() => {
     const start = () => {
@@ -76,7 +77,7 @@ function RouteProgressBarContent() {
       startedRef.current = false;
       window.clearTimeout(doneTimer);
     }, 250);
-  }, [pathname, searchParams?.toString()]);
+  }, [pathname, searchParamsString]);
 
   useEffect(() => {
     if (startedRef.current && !finishTimeoutRef.current) {

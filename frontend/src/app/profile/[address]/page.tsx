@@ -14,6 +14,7 @@ import { ActivityTimeline } from "@/features/profile/components/ActivityTimeline
 import { ProfileSocialSection } from "@/components/Profile/ProfileSocialSection";
 import { mockFeed } from "@/features/social/mockData";
 import { Settings, Share2 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 export default async function ProfilePage({
@@ -43,9 +44,11 @@ export default async function ProfilePage({
 
           <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
             <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full border-4 border-white shadow-lg sm:h-32 sm:w-32">
-              <img
+              <Image
                 src={mockUser.avatarUrl}
                 alt={mockUser.displayName}
+                width={128}
+                height={128}
                 className="h-full w-full object-cover"
               />
             </div>

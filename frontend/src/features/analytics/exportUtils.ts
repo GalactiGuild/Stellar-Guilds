@@ -1,4 +1,4 @@
-export const exportDataToCSV = (data: any[], filename: string) => {
+export const exportDataToCSV = (data: Record<string, unknown>[], filename: string) => {
   if (!data || !data.length) return;
 
   const separator = ',';

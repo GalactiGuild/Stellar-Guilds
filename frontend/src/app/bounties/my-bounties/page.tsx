@@ -192,7 +192,7 @@ export default function MyBountiesDashboard() {
 }
 
 
-const StatCard = ({ label, value, trend, icon }: any) => (
+const StatCard = ({ label, value, trend, icon }: { label: string; value: string; trend: string; icon: React.ReactNode }) => (
   <div className="bg-[#0A0A0A] border border-white/5 p-8 rounded-[32px] hover:border-violet-500/30 transition-all group">
     <div className="flex justify-between items-start mb-6">
       <div className="p-3 bg-white/5 rounded-2xl border border-white/5 group-hover:bg-violet-500/10 transition-colors">
@@ -207,8 +207,8 @@ const StatCard = ({ label, value, trend, icon }: any) => (
   </div>
 );
 
-const ActivityItem = ({ title, desc, time, status }: any) => {
-  const dots: any = {
+const ActivityItem = ({ title, desc, time, status }: { title: string; desc: string; time: string; status: string }) => {
+  const dots: Record<string, string> = {
     review: "bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]",
     claim: "bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]",
     success: "bg-violet-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"

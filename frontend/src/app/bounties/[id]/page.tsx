@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, use } from "react";
+import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import { MOCK_BOUNTIES } from "@/lib/mocks/bounties";
 import { StatusBadge } from "@/features/bounties/components/BountyCard";
@@ -10,8 +11,6 @@ import {
   Wallet,
   ChevronLeft,
   ShieldCheck,
-  ExternalLink,
-  Github,
   Globe,
   Award,
   Users,
@@ -213,10 +212,12 @@ export default function BountyDetailPage({ params }: PageProps) {
 
             <div className="bg-white/5 border border-white/10 rounded-[32px] p-6 space-y-6">
               <div className="flex items-center gap-4">
-                <img
+                <Image
                   src={bounty.guildLogo}
+                  width={48}
+                  height={48}
                   className="w-12 h-12 rounded-2xl bg-black p-1 border border-white/10"
-                  alt=""
+                  alt={bounty.guildName}
                 />
                 <div>
                   <h4 className="font-bold text-lg">{bounty.guildName}</h4>
@@ -267,8 +268,4 @@ const SidebarInfo = ({
   </div>
 );
 
-const SocialLink = ({ icon }: { icon: React.ReactNode }) => (
-  <button className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-all border border-white/10">
-    {icon}
-  </button>
-);
+
