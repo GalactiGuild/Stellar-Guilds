@@ -1,0 +1,32 @@
+/* Mobile First */
+
+.container {
+  padding: 16px;
+}
+
+/* Buttons */
+button {
+  min-height: 48px;
+  font-size: 16px;
+}
+
+/* Cards */
+.card {
+  border-radius: 12px;
+  padding: 16px;
+}
+
+/* Tablet */
+@media (min-width: 768px) {
+  .container {
+    padding: 24px;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1200px;
+    margin: auto;
+  }
+}
