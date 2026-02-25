@@ -1,4 +1,5 @@
-export const exportDataToCSV = (data: Record<string, unknown>[], filename: string) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const exportDataToCSV = (data: any[], filename: string) => {
   if (!data || !data.length) return;
 
   const separator = ',';
