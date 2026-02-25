@@ -248,7 +248,7 @@ export async function executeMockSearch(query: SearchQueryState): Promise<Search
     }
   }
 
-  let sorted = [...results]
+  const sorted = [...results]
 
   if (query.filters.sortBy === 'relevance') {
     sorted.sort((a, b) => b.score - a.score)

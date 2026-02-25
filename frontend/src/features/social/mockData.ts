@@ -1,4 +1,4 @@
-import { FeedItem, Notification, Message, Thread, Post, FollowRelationship } from "./types";
+import { FeedItem, Notification, Message, Thread, FollowRelationship } from "./types";
 
 // placeholder arrays, to be replaced with real data from backend
 export const mockFeed: FeedItem[] = [

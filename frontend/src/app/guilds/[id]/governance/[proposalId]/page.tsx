@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import React from 'react'
+import { useParams } from 'next/navigation'
 import { ArrowLeft, Calendar, User, CheckCircle2, XCircle, Loader2, Clock } from 'lucide-react'
 import Link from 'next/link'
-import { Proposal, ProposalStatus } from '@/types/ui'
+import { ProposalStatus } from '@/types/ui'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { VotingPanel } from '@/features/governance/components/VotingPanel'
@@ -16,7 +16,6 @@ import { cn } from '@/lib/utils'
 
 export default function ProposalDetailPage() {
   const params = useParams()
-  const router = useRouter()
   const guildId = params.id as string
   const proposalId = params.proposalId as string
 
@@ -28,7 +27,7 @@ export default function ProposalDetailPage() {
         <div className="max-w-4xl mx-auto">
           <Card className="p-12 text-center">
             <h2 className="text-2xl font-bold text-stellar-white mb-4">Proposal Not Found</h2>
-            <p className="text-stellar-slate mb-6">The proposal you're looking for doesn't exist.</p>
+            <p className="text-stellar-slate mb-6">The proposal you&apos;re looking for doesn&apos;t exist.</p>
             <Link href={`/guilds/${guildId}/governance`}>
               <Button>Back to Governance</Button>
             </Link>
@@ -52,9 +51,9 @@ export default function ProposalDetailPage() {
   const statusConfig = getStatusConfig(proposal.status)
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { 
-      month: 'long', 
-      day: 'numeric', 
+    return date.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
@@ -74,7 +73,7 @@ export default function ProposalDetailPage() {
   const timelineEvents = [
     { label: 'Created', date: proposal.createdAt, status: 'completed' },
     { label: 'Voting Started', date: proposal.startDate, status: 'completed' },
-    { 
+    {
       label: proposal.status === 'passed' ? 'Passed' : proposal.status === 'rejected' ? 'Rejected' : 'Voting Ends',
       date: proposal.endDate,
       status: proposal.status === 'active' ? 'pending' : 'completed'
@@ -159,8 +158,8 @@ export default function ProposalDetailPage() {
                     <div key={index} className="flex items-start gap-4">
                       <div className={cn(
                         "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-                        event.status === 'completed' 
-                          ? "bg-green-500 text-white" 
+                        event.status === 'completed'
+                          ? "bg-green-500 text-white"
                           : "bg-stellar-slate text-stellar-white"
                       )}>
                         {index + 1}
@@ -178,8 +177,8 @@ export default function ProposalDetailPage() {
             {/* Sidebar */}
             <div className="space-y-6">
               <VotingPanel proposal={proposal} onVote={handleVote} />
-              <VoteDelegation 
-                proposalId={proposal.id} 
+              <VoteDelegation
+                proposalId={proposal.id}
                 userVotingPower={mockUserVotingPower}
               />
               <ResultsChart stats={proposal.votingStats} showPower={true} />

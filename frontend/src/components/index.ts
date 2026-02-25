@@ -36,7 +36,12 @@ export { NotificationBell } from '@/features/social/components/NotificationBell'
 export { useWallet } from '@/hooks/useWallet'
 export { useWalletModal } from '@/hooks/useWalletModal'
 
+// Security
+export { SecurityDashboard } from './Security/SecurityDashboard'
+export { useSecurity } from '@/hooks/useSecurity'
+
 // Stores
 export { useSidebarStore } from '@/store/sidebarStore'
 export { useThemeStore } from '@/store/themeStore'
 export { useWalletStore } from '@/store/walletStore'
+export { useSecurityStore } from '@/store/securityStore'

@@ -6,7 +6,15 @@ const withNextIntl = createNextIntlPlugin("./src/i18n.ts");
 const nextConfig = {
   // Ensure we are not forcing turbo in config
   reactStrictMode: true,
-  devIndicators: false,
+  devIndicators: {
+    buildActivity: false,
+  },
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'api.dicebear.com' },
+      { protocol: 'https', hostname: 'i.pravatar.cc' },
+    ],
+  },
 };
 
 export default withNextIntl(nextConfig);

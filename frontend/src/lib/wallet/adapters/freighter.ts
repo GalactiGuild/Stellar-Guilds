@@ -36,7 +36,7 @@ export class FreighterAdapter implements WalletAdapter {
 
     // ── Connection ───────────────────────────────────────────────────────────
 
-    async connect(_network: StellarNetwork): Promise<string> {
+    async connect(): Promise<string> {
         const installed = await this.isInstalled()
         if (!installed) {
             throw new Error(

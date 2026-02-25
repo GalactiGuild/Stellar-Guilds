@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { mockUser } from "@/features/profile/mockData";
-import { Save, User, Link as LinkIcon, Image as ImageIcon, ArrowLeft } from "lucide-react";
+import { Save, User, Link as LinkIcon, Image as ImageIcon, ArrowLeft, Shield } from "lucide-react";
 import Link from "next/link";
 
 export default function SettingsPage() {
@@ -51,7 +51,7 @@ export default function SettingsPage() {
 
         <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            
+
             {/* Display Name */}
             <div>
               <label
@@ -118,12 +118,6 @@ export default function SettingsPage() {
                   placeholder="https://..."
                 />
               </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Preview:
-              </p>
-              <div className="mt-2 h-12 w-12 overflow-hidden rounded-full border border-gray-200">
-                <img src={formData.avatarUrl} alt="Avatar preview" className="h-full w-full object-cover" />
-              </div>
             </div>
 
             {/* Social Links */}
@@ -131,7 +125,7 @@ export default function SettingsPage() {
               <h3 className="mb-4 text-lg font-medium text-gray-900">
                 Social Links
               </h3>
-              
+
               <div className="grid gap-4">
                 <div>
                   <label
@@ -183,9 +177,18 @@ export default function SettingsPage() {
 
             {/* Privacy & Social Controls */}
             <div className="border-t border-gray-100 pt-6">
-              <h3 className="mb-4 text-lg font-medium text-gray-900">
-                Privacy & Social
-              </h3>
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Privacy & Social
+                </h3>
+                <Link
+                  href="/profile/security"
+                  className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+                >
+                  <Shield className="h-4 w-4" />
+                  Advanced Security Settings
+                </Link>
+              </div>
               <div className="space-y-4">
                 <label className="flex items-center space-x-2">
                   <input

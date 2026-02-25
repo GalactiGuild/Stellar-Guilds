@@ -5,16 +5,14 @@ import { Users, UserPlus, UserCheck, AlertCircle } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { cn } from '@/lib/utils'
 
 interface VoteDelegationProps {
   proposalId: string
   userVotingPower: number
 }
 
-export const VoteDelegation: React.FC<VoteDelegationProps> = ({ 
-  proposalId, 
-  userVotingPower 
+export const VoteDelegation: React.FC<VoteDelegationProps> = ({
+  userVotingPower
 }) => {
   const [delegateAddress, setDelegateAddress] = useState('')
   const [isDelegated, setIsDelegated] = useState(false)
@@ -27,7 +25,7 @@ export const VoteDelegation: React.FC<VoteDelegationProps> = ({
     setIsSubmitting(true)
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500))
-    
+
     setIsDelegated(true)
     setDelegatedTo(delegateAddress)
     setIsSubmitting(false)
@@ -37,7 +35,7 @@ export const VoteDelegation: React.FC<VoteDelegationProps> = ({
     setIsSubmitting(true)
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500))
-    
+
     setIsDelegated(false)
     setDelegatedTo(null)
     setDelegateAddress('')

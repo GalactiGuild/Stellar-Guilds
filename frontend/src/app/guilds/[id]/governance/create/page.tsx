@@ -57,15 +57,15 @@ export default function CreateProposalPage() {
   const watchedData = watch()
   const executionData = watchedData.executionData
 
-  const onSubmit = async (data: ProposalFormData) => {
+  const onSubmit = async () => {
     setIsSubmitting(true)
-    
+
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     setIsSubmitting(false)
     setSubmitSuccess(true)
-    
+
     // Redirect after 2 seconds
     setTimeout(() => {
       router.push(`/guilds/${guildId}/governance`)

@@ -4,7 +4,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, Star, Gift, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { useOnboardingStore } from '@/store/onboardingStore';
 import { useRouter } from 'next/navigation';
 
@@ -46,7 +45,7 @@ const CompletionStep = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -70,7 +69,7 @@ const CompletionStep = () => {
           Congratulations!
         </h1>
         <p className="text-xl text-stellar-slate max-w-2xl mx-auto">
-          You've successfully completed the Stellar Guilds onboarding process
+          You&apos;ve successfully completed the Stellar Guilds onboarding process
         </p>
       </motion.div>
 
@@ -102,7 +101,7 @@ const CompletionStep = () => {
         transition={{ delay: 0.8 }}
         className="bg-gradient-to-r from-stellar-lightNavy/30 to-stellar-darkNavy/30 border border-stellar-lightNavy rounded-xl p-6 mb-8"
       >
-        <h3 className="text-xl font-semibold text-white mb-3">What's Next?</h3>
+        <h3 className="text-xl font-semibold text-white mb-3">What&apos;s Next?</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
           <div className="bg-stellar-darkNavy/50 p-4 rounded-lg">
             <h4 className="font-medium text-gold-400 mb-2">Explore</h4>
@@ -131,14 +130,14 @@ const CompletionStep = () => {
         transition={{ delay: 1 }}
         className="flex flex-col sm:flex-row gap-4 justify-center"
       >
-        <Button 
+        <Button
           onClick={handleFinish}
           className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white px-8 py-3 text-lg font-semibold rounded-xl"
         >
           Enter Stellar Guilds
         </Button>
-        
-        <Button 
+
+        <Button
           onClick={handleRestart}
           variant="outline"
           className="border-stellar-lightNavy text-stellar-slate hover:bg-stellar-lightNavy px-8 py-3 text-lg font-semibold rounded-xl"

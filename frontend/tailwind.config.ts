@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import typography from "@tailwindcss/typography";
 
 const config: Config = {
   content: [
@@ -47,6 +48,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["Inter", "sans-serif"],
+        hero: ["Orbitron", "sans-serif"],
       },
       boxShadow: {
         card: "0 10px 30px -15px rgba(2, 12, 27, 0.7)",
@@ -58,7 +60,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("@tailwindcss/typography")],
+  plugins: [typography],
 };
 
 export default config;

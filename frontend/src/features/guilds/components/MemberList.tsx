@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { MoreVertical, UserMinus, Shield, User } from 'lucide-react'
 import { RoleBadge } from './RoleBadge'
-import { Button } from '@/components/ui/Button'
 import type { GuildMember, GuildRole } from '../types'
 
 interface MemberListProps {

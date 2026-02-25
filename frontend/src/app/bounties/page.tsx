@@ -5,7 +5,6 @@ import { MOCK_BOUNTIES } from "@/lib/mocks/bounties";
 import { BountyCard } from "@/features/bounties/components/BountyCard";
 import {
   Search,
-  SlidersHorizontal,
   Zap,
   XCircle,
   LayoutDashboard,
@@ -29,7 +28,7 @@ export default function MarketplacePage() {
   const [activeCategory, setActiveCategory] = useState("All");
 
   const filteredAndSortedBounties = useMemo(() => {
-    let result = MOCK_BOUNTIES.filter((bounty) => {
+    const result = MOCK_BOUNTIES.filter((bounty) => {
       const matchesSearch = bounty.title
         .toLowerCase()
         .includes(search.toLowerCase());
@@ -258,7 +257,7 @@ export default function MarketplacePage() {
   );
 }
 
-const CategoryBtn = ({ icon, label, active, onClick }: any) => (
+const CategoryBtn = ({ icon, label, active, onClick }: { icon: React.ReactNode; label: string; active: boolean; onClick: () => void }) => (
   <button
     onClick={onClick}
     className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
@@ -271,7 +270,7 @@ const CategoryBtn = ({ icon, label, active, onClick }: any) => (
   </button>
 );
 
-const EmptyState = ({ onReset }: any) => (
+const EmptyState = ({ onReset }: { onReset: () => void }) => (
   <div className="col-span-full flex flex-col items-center justify-center py-32 border-2 border-dashed border-white/5 rounded-[40px]">
     <XCircle size={40} className="text-slate-800 mb-4" />
     <h3 className="text-xl font-black italic tracking-tighter text-slate-500 mb-6 uppercase">

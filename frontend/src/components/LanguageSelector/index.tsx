@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 import { ChevronDown, Languages } from 'lucide-react';
 import { locales, type Locale } from '@/i18n';
 import { Button } from '@/components/ui/Button';
@@ -38,7 +38,7 @@ const localeFlags: Record<Locale, string> = {
 
 export default function LanguageSelector() {
   const currentLocale = useLocale() as Locale;
-  const t = useTranslations('common');
+
   const [mounted, setMounted] = useState(false);
 
   // Ensure component is mounted before rendering (to prevent hydration errors)
@@ -53,7 +53,7 @@ export default function LanguageSelector() {
   const handleChangeLocale = (newLocale: Locale) => {
     // Store the selected locale in localStorage for persistence
     localStorage.setItem('preferred-locale', newLocale);
-    
+
     // Reload the page with the new locale
     window.location.href = `/${newLocale}${window.location.pathname.substring(3)}`;
   };

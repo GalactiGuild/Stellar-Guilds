@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Loader2, Target, Users, Tag as TagIcon, Trophy } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import type { SearchResultBase, SearchStatus } from '@/features/search/types'
 
 interface SearchResultsProps {
