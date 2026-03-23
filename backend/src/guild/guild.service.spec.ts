@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GuildService } from './guild.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailerService } from '../mailer/mailer.service';
 import { validateAndNormalizeSettings } from './guild.settings';
 import { ConflictException } from '@nestjs/common';
 
@@ -20,13 +21,22 @@ const mockPrisma = () => ({
   user: { findUnique: jest.fn() },
 });
 
+const mockMailer = () => ({
+  sendInviteEmail: jest.fn(),
+  sendRevokeEmail: jest.fn(),
+});
+
 describe('GuildService (settings integration)', () => {
   let service: GuildService;
   let prisma: any;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [GuildService, { provide: PrismaService, useFactory: mockPrisma }],
+      providers: [
+        GuildService,
+        { provide: PrismaService, useFactory: mockPrisma },
+        { provide: MailerService, useFactory: mockMailer },
+      ],
     }).compile();
 
     service = module.get<GuildService>(GuildService);
@@ -72,5 +82,75 @@ describe('GuildService (settings integration)', () => {
     } else {
       expect(calledWhere).toEqual(expect.objectContaining({ settings: { path: ['discoverable'], equals: true } }));
     }
+  });
+
+  it('getGuild includes active member and open bounty counts', async () => {
+    const guildData = {
+      id: 'guild-1',
+      name: 'Test Guild',
+      slug: 'test-guild',
+      memberships: [],
+      _count: {
+        memberships: 5,
+        bounties: 3,
+      },
+    };
+    prisma.guild.findUnique.mockResolvedValue(guildData);
+
+    const result = await service.getGuild('guild-1');
+    
+    expect(prisma.guild.findUnique).toHaveBeenCalledWith({
+      where: { id: 'guild-1' },
+      include: {
+        memberships: { include: { user: true } },
+        _count: {
+          select: {
+            memberships: {
+              where: { status: 'APPROVED' },
+            },
+            bounties: {
+              where: { status: 'OPEN' },
+            },
+          },
+        },
+      },
+    });
+    expect(result._count.memberships).toBe(5);
+    expect(result._count.bounties).toBe(3);
+  });
+
+  it('getBySlug includes active member and open bounty counts', async () => {
+    const guildData = {
+      id: 'guild-1',
+      slug: 'test-guild',
+      name: 'Test Guild',
+      memberships: [],
+      _count: {
+        memberships: 8,
+        bounties: 2,
+      },
+    };
+    prisma.guild.findUnique.mockResolvedValue(guildData);
+
+    const result = await service.getBySlug('test-guild');
+    
+    expect(prisma.guild.findUnique).toHaveBeenCalledWith({
+      where: { slug: 'test-guild' },
+      include: {
+        memberships: { include: { user: true } },
+        _count: {
+          select: {
+            memberships: {
+              where: { status: 'APPROVED' },
+            },
+            bounties: {
+              where: { status: 'OPEN' },
+            },
+          },
+        },
+      },
+    });
+    expect(result._count.memberships).toBe(8);
+    expect(result._count.bounties).toBe(2);
   });
 });

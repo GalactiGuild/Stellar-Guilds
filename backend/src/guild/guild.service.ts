@@ -64,7 +64,19 @@ export class GuildService {
   async getGuild(id: string) {
     const guild = await this.prisma.guild.findUnique({
       where: { id },
-      include: { memberships: { include: { user: true } } },
+      include: {
+        memberships: { include: { user: true } },
+        _count: {
+          select: {
+            memberships: {
+              where: { status: 'APPROVED' },
+            },
+            bounties: {
+              where: { status: 'OPEN' },
+            },
+          },
+        },
+      },
     });
     if (!guild) throw new NotFoundException('Guild not found');
     return guild;
@@ -73,7 +85,19 @@ export class GuildService {
   async getBySlug(slug: string) {
     const guild = await this.prisma.guild.findUnique({
       where: { slug },
-      include: { memberships: { include: { user: true } } },
+      include: {
+        memberships: { include: { user: true } },
+        _count: {
+          select: {
+            memberships: {
+              where: { status: 'APPROVED' },
+            },
+            bounties: {
+              where: { status: 'OPEN' },
+            },
+          },
+        },
+      },
     });
     if (!guild) throw new NotFoundException('Guild not found');
     return guild;

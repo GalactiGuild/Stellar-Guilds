@@ -19,6 +19,7 @@ import { UpdateGuildDto } from './dto/update-guild.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
 import { ApproveInviteDto } from './dto/approve-invite.dto';
 import { SearchGuildDto } from './dto/search-guild.dto';
+import { GuildDetailsDto } from './dto/guild-details.dto';
 
 @Controller('guilds')
 export class GuildController {
@@ -31,12 +32,12 @@ export class GuildController {
   }
 
   @Get(':id')
-  async get(@Param('id') id: string) {
+  async get(@Param('id') id: string): Promise<GuildDetailsDto> {
     return this.guildService.getGuild(id);
   }
 
   @Get('by-slug/:slug')
-  async getBySlug(@Param('slug') slug: string) {
+  async getBySlug(@Param('slug') slug: string): Promise<GuildDetailsDto> {
     return this.guildService.getBySlug(slug);
   }
 
