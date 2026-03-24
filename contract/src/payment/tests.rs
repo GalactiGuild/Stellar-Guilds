@@ -4,10 +4,13 @@
 //! validation, distribution execution, and batch operations.
 
 use super::*;
+use crate::events::types::EventEnvelope;
+use crate::payment::types::PaymentPoolCreatedEvent;
 use crate::StellarGuildsContract;
 use crate::StellarGuildsContractClient;
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{token, Address, Env, Vec};
+use soroban_sdk::testutils::Events;
+use soroban_sdk::{symbol_short, token, vec, Address, Env, IntoVal, TryFromVal, Vec};
 
 // ============ Test Helpers ============
 
@@ -55,6 +58,17 @@ fn test_create_pool_percentage() {
     let pool_id =
         client.create_payment_pool(&1000i128, &token, &DistributionRule::Percentage, &creator);
     assert_eq!(pool_id, 1);
+
+    let emitted_events = env.events().all();
+    let last_event = emitted_events.last().unwrap();
+    let (event_contract, _topics, data) = last_event;
+
+    assert_eq!(event_contract, contract_id);
+    let event_data = PaymentPoolCreatedEvent::try_from_val(&env, &data).unwrap();
+    assert_eq!(event_data.pool_id, 1);
+    assert_eq!(event_data.creator, creator);
+    assert_eq!(event_data.total_amount, 1000);
+    assert_eq!(event_data.rule, DistributionRule::Percentage);
 }
 
 #[test]

@@ -1,7 +1,6 @@
 use crate::events::emit::emit_event;
 use crate::events::topics::{
-    ACT_CANCELLED, ACT_DISTRIBUTED, ACT_FAILED, ACT_RECIPIENT_ADDED, MOD_PAYMENT,
-    ACT_CREATED,
+    ACT_CANCELLED, ACT_CREATED, ACT_DISTRIBUTED, ACT_FAILED, ACT_RECIPIENT_ADDED, MOD_PAYMENT,
 };
 use crate::payment::storage::{
     add_recipient_to_pool, clear_pool_recipients, get_next_pool_id, get_payment_pool,

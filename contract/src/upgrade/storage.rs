@@ -17,21 +17,29 @@ pub fn initialize(env: &Env, initial_version: Version, governance_address: Addre
     env.storage()
         .persistent()
         .set(&GOVERNANCE_ADDRESS_KEY, &governance_address);
-    
+
     // Initialize empty proposals map
     let proposals: Map<u64, UpgradeProposal> = Map::new(env);
-    env.storage().persistent().set(&UPGRADE_PROPOSALS_KEY, &proposals);
-    
+    env.storage()
+        .persistent()
+        .set(&UPGRADE_PROPOSALS_KEY, &proposals);
+
     // Initialize empty voting power map
     let voting_power: Map<Address, u32> = Map::new(env);
-    env.storage().persistent().set(&VOTING_POWER_KEY, &voting_power);
-    
+    env.storage()
+        .persistent()
+        .set(&VOTING_POWER_KEY, &voting_power);
+
     // Initialize empty migration plans map
     let migration_plans: Map<u64, MigrationPlan> = Map::new(env);
-    env.storage().persistent().set(&MIGRATION_PLANS_KEY, &migration_plans);
-    
+    env.storage()
+        .persistent()
+        .set(&MIGRATION_PLANS_KEY, &migration_plans);
+
     // Set emergency upgrade flag to false
-    env.storage().persistent().set(&EMERGENCY_UPGRADE_KEY, &false);
+    env.storage()
+        .persistent()
+        .set(&EMERGENCY_UPGRADE_KEY, &false);
 }
 
 /// Get the current contract version
@@ -44,7 +52,9 @@ pub fn get_current_version(env: &Env) -> Version {
 
 /// Set the current contract version
 pub fn set_current_version(env: &Env, version: &Version) {
-    env.storage().persistent().set(&CURRENT_VERSION_KEY, version);
+    env.storage()
+        .persistent()
+        .set(&CURRENT_VERSION_KEY, version);
 }
 
 /// Get the governance address
@@ -113,7 +123,9 @@ pub fn set_voting_power(env: &Env, address: &Address, power: u32) {
         .unwrap_or_else(|| Map::new(env));
 
     voting_power.set(address.clone(), power);
-    env.storage().persistent().set(&VOTING_POWER_KEY, &voting_power);
+    env.storage()
+        .persistent()
+        .set(&VOTING_POWER_KEY, &voting_power);
 }
 
 /// Get voting power for an address
@@ -134,8 +146,7 @@ pub fn record_vote(
     voter: &Address,
     vote_for: bool,
 ) -> Result<(), &'static str> {
-    let mut proposal = get_upgrade_proposal(env, proposal_id)
-        .ok_or("Proposal does not exist")?;
+    let mut proposal = get_upgrade_proposal(env, proposal_id).ok_or("Proposal does not exist")?;
 
     if proposal.status != UpgradeStatus::Pending {
         return Err("Proposal is not in pending status");
@@ -144,7 +155,7 @@ pub fn record_vote(
     // Check if voter has already voted
     // In a real implementation, we'd track who has voted
     // For simplicity, we'll just update the vote counts
-    
+
     if vote_for {
         proposal.votes_for += get_voting_power(env, voter);
     } else {
@@ -190,5 +201,7 @@ pub fn is_emergency_upgrade_enabled(env: &Env) -> bool {
 
 /// Enable/disable emergency upgrades
 pub fn set_emergency_upgrade_enabled(env: &Env, enabled: bool) {
-    env.storage().persistent().set(&EMERGENCY_UPGRADE_KEY, &enabled);
+    env.storage()
+        .persistent()
+        .set(&EMERGENCY_UPGRADE_KEY, &enabled);
 }

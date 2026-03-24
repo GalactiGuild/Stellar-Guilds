@@ -15,15 +15,19 @@ pub fn initialize(env: &Env, initial_implementation: Address, admin: Address) {
         version: 1, // Start with version 1
         last_updated: env.ledger().timestamp(),
     };
-    
+
     env.storage().persistent().set(&PROXY_CONFIG_KEY, &config);
-    
+
     // Also store implementation in a dedicated slot for easy access
-    env.storage().persistent().set(&IMPLEMENTATION_SLOT, &config.implementation);
-    
+    env.storage()
+        .persistent()
+        .set(&IMPLEMENTATION_SLOT, &config.implementation);
+
     // Initialize upgrade history
     let upgrade_history: Map<u64, UpgradeTransaction> = Map::new(env);
-    env.storage().persistent().set(&UPGRADE_HISTORY_KEY, &upgrade_history);
+    env.storage()
+        .persistent()
+        .set(&UPGRADE_HISTORY_KEY, &upgrade_history);
 }
 
 /// Get the current proxy configuration
@@ -44,14 +48,16 @@ pub fn get_implementation(env: &Env) -> Address {
 
 /// Set a new implementation address
 pub fn set_implementation(env: &Env, implementation: &Address) {
-    env.storage().persistent().set(&IMPLEMENTATION_SLOT, implementation);
-    
+    env.storage()
+        .persistent()
+        .set(&IMPLEMENTATION_SLOT, implementation);
+
     // Also update the config
     let mut config = get_proxy_config(env);
     config.implementation = implementation.clone();
     config.version += 1; // Increment version
     config.last_updated = env.ledger().timestamp();
-    
+
     env.storage().persistent().set(&PROXY_CONFIG_KEY, &config);
 }
 
@@ -66,7 +72,7 @@ pub fn set_admin(env: &Env, admin: &Address) {
     let mut config = get_proxy_config(env);
     config.admin = admin.clone();
     config.last_updated = env.ledger().timestamp();
-    
+
     env.storage().persistent().set(&PROXY_CONFIG_KEY, &config);
 }
 

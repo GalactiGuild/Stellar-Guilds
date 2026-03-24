@@ -27,7 +27,6 @@
 /// # Size budget
 /// Soroban charges per-byte for event data. Keep payload structs lean; use
 /// IDs to reference large blobs stored elsewhere rather than inlining them.
-
 use crate::events::types::{EventEnvelope, EVENT_SCHEMA_VERSION, EVENT_SEQUENCE_KEY};
 use soroban_sdk::{Env, IntoVal, Symbol, Val};
 
@@ -86,7 +85,10 @@ where
     // Publish envelope on the meta-topic so indexers can track all events
     // without needing to know every module+action pair in advance.
     env.events().publish(
-        (Symbol::new(env, "stellar_guilds"), Symbol::new(env, "event")),
+        (
+            Symbol::new(env, "stellar_guilds"),
+            Symbol::new(env, "event"),
+        ),
         envelope,
     );
 

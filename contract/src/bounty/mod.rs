@@ -18,7 +18,6 @@
 /// | Release escrow      | `(bounty, released)`     | `EscrowReleasedEvent`    |
 /// | Cancel bounty       | `(bounty, cancelled)`    | `BountyCancelledEvent`   |
 /// | Expire bounty       | `(bounty, expired)`      | `BountyExpiredEvent`     |
-
 pub mod escrow;
 pub mod storage;
 pub mod types;
@@ -33,8 +32,8 @@ use crate::dispute::storage as dispute_storage;
 use crate::dispute::types::DisputeReference;
 use crate::events::emit::emit_event;
 use crate::events::topics::{
-    ACT_APPROVED, ACT_CANCELLED, ACT_CLAIMED, ACT_CREATED, ACT_EXPIRED, ACT_FUNDED,
-    ACT_RELEASED, ACT_SUBMITTED, MOD_BOUNTY,
+    ACT_APPROVED, ACT_CANCELLED, ACT_CLAIMED, ACT_CREATED, ACT_EXPIRED, ACT_FUNDED, ACT_RELEASED,
+    ACT_SUBMITTED, MOD_BOUNTY,
 };
 use crate::guild::membership::has_permission;
 use crate::guild::types::Role;
@@ -136,7 +135,12 @@ pub fn fund_bounty(env: &Env, bounty_id: u64, funder: Address, amount: i128) -> 
     if now > bounty.expires_at {
         bounty.status = BountyStatus::Expired;
         store_bounty(env, &bounty);
-        emit_event(env, MOD_BOUNTY, ACT_EXPIRED, BountyExpiredEvent { bounty_id });
+        emit_event(
+            env,
+            MOD_BOUNTY,
+            ACT_EXPIRED,
+            BountyExpiredEvent { bounty_id },
+        );
         panic!("Bounty has expired");
     }
 
@@ -185,7 +189,12 @@ pub fn claim_bounty(env: &Env, bounty_id: u64, claimer: Address) -> bool {
     if now > bounty.expires_at {
         bounty.status = BountyStatus::Expired;
         store_bounty(env, &bounty);
-        emit_event(env, MOD_BOUNTY, ACT_EXPIRED, BountyExpiredEvent { bounty_id });
+        emit_event(
+            env,
+            MOD_BOUNTY,
+            ACT_EXPIRED,
+            BountyExpiredEvent { bounty_id },
+        );
         panic!("Bounty has expired");
     }
 
@@ -265,7 +274,10 @@ pub fn approve_completion(env: &Env, bounty_id: u64, approver: Address) -> bool 
         env,
         MOD_BOUNTY,
         ACT_APPROVED,
-        BountyApprovedEvent { bounty_id, approver },
+        BountyApprovedEvent {
+            bounty_id,
+            approver,
+        },
     );
 
     true
@@ -394,7 +406,12 @@ pub fn expire_bounty(env: &Env, bounty_id: u64) -> bool {
     bounty.status = BountyStatus::Expired;
     store_bounty(env, &bounty);
 
-    emit_event(env, MOD_BOUNTY, ACT_EXPIRED, BountyExpiredEvent { bounty_id });
+    emit_event(
+        env,
+        MOD_BOUNTY,
+        ACT_EXPIRED,
+        BountyExpiredEvent { bounty_id },
+    );
 
     true
 }

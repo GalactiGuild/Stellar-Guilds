@@ -2047,7 +2047,11 @@ impl StellarGuildsContract {
         initial_version_patch: u32,
         governance_address: Address,
     ) -> bool {
-        let version = Version::new(initial_version_major, initial_version_minor, initial_version_patch);
+        let version = Version::new(
+            initial_version_major,
+            initial_version_minor,
+            initial_version_patch,
+        );
         upgrade_storage::initialize(&env, version, governance_address);
         true
     }
@@ -2062,8 +2066,18 @@ impl StellarGuildsContract {
         target_version_patch: u32,
         description: String,
     ) -> u64 {
-        let target_version = Version::new(target_version_major, target_version_minor, target_version_patch);
-        upgrade_logic::propose_upgrade(&env, &proposer, &new_contract_address, &target_version, description)
+        let target_version = Version::new(
+            target_version_major,
+            target_version_minor,
+            target_version_patch,
+        );
+        upgrade_logic::propose_upgrade(
+            &env,
+            &proposer,
+            &new_contract_address,
+            &target_version,
+            description,
+        )
     }
 
     /// Vote on an upgrade proposal
@@ -2080,11 +2094,7 @@ impl StellarGuildsContract {
     }
 
     /// Execute an approved upgrade
-    pub fn execute_upgrade_proposal(
-        env: Env,
-        executor: Address,
-        proposal_id: u64,
-    ) -> bool {
+    pub fn execute_upgrade_proposal(env: Env, executor: Address, proposal_id: u64) -> bool {
         match upgrade_logic::execute_upgrade(&env, &executor, proposal_id) {
             Ok(_) => true,
             Err(_) => false,
@@ -2108,11 +2118,7 @@ impl StellarGuildsContract {
     }
 
     /// Toggle emergency upgrades on/off
-    pub fn toggle_emergency_upgrades(
-        env: Env,
-        caller: Address,
-        enable: bool,
-    ) -> bool {
+    pub fn toggle_emergency_upgrades(env: Env, caller: Address, enable: bool) -> bool {
         match upgrade_logic::toggle_emergency_upgrades(&env, &caller, enable) {
             Ok(_) => true,
             Err(_) => false,
@@ -2155,21 +2161,13 @@ impl StellarGuildsContract {
     // ============ Proxy Functions ============
 
     /// Initialize proxy functionality
-    pub fn initialize_proxy(
-        env: Env,
-        initial_implementation: Address,
-        admin: Address,
-    ) -> bool {
+    pub fn initialize_proxy(env: Env, initial_implementation: Address, admin: Address) -> bool {
         proxy_storage::initialize(&env, initial_implementation, admin);
         true
     }
 
     /// Upgrade the proxy to a new implementation
-    pub fn proxy_upgrade(
-        env: Env,
-        caller: Address,
-        new_implementation: Address,
-    ) -> bool {
+    pub fn proxy_upgrade(env: Env, caller: Address, new_implementation: Address) -> bool {
         match proxy_impl::upgrade(&env, &caller, &new_implementation) {
             Ok(_) => true,
             Err(_) => false,
@@ -2177,11 +2175,7 @@ impl StellarGuildsContract {
     }
 
     /// Transfer admin rights of the proxy
-    pub fn proxy_transfer_admin(
-        env: Env,
-        caller: Address,
-        new_admin: Address,
-    ) -> bool {
+    pub fn proxy_transfer_admin(env: Env, caller: Address, new_admin: Address) -> bool {
         match proxy_impl::transfer_admin(&env, &caller, &new_admin) {
             Ok(_) => true,
             Err(_) => false,
@@ -2199,10 +2193,7 @@ impl StellarGuildsContract {
     }
 
     /// Trigger emergency stop for the proxy
-    pub fn proxy_emergency_stop(
-        env: Env,
-        caller: Address,
-    ) -> bool {
+    pub fn proxy_emergency_stop(env: Env, caller: Address) -> bool {
         match proxy_impl::emergency_stop(&env, &caller) {
             Ok(_) => true,
             Err(_) => false,
@@ -2210,10 +2201,7 @@ impl StellarGuildsContract {
     }
 
     /// Resume proxy after emergency stop
-    pub fn proxy_resume(
-        env: Env,
-        caller: Address,
-    ) -> bool {
+    pub fn proxy_resume(env: Env, caller: Address) -> bool {
         match proxy_impl::resume(&env, &caller) {
             Ok(_) => true,
             Err(_) => false,

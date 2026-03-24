@@ -18,7 +18,6 @@
 /// Never call `env.events().publish()` directly from module code.
 /// Always go through `emit::emit_event()` so the envelope is populated
 /// consistently and the sequence counter is incremented atomically.
-
 use soroban_sdk::{contracttype, Symbol};
 
 /// Current event schema version. Increment on any breaking envelope change.

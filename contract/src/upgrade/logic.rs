@@ -16,10 +16,16 @@ pub fn propose_upgrade(
 
     // In a real implementation, we might check if the proposer has sufficient voting power
     // For now, we just verify the governance address
-    
+
     // Generate a new proposal ID (in practice, this might be more sophisticated)
-    let proposal_id = env.storage().instance().get(&symbol_short!("nxt_prop")).unwrap_or(1u64);
-    env.storage().instance().set(&symbol_short!("nxt_prop"), &(proposal_id + 1));
+    let proposal_id = env
+        .storage()
+        .instance()
+        .get(&symbol_short!("nxt_prop"))
+        .unwrap_or(1u64);
+    env.storage()
+        .instance()
+        .set(&symbol_short!("nxt_prop"), &(proposal_id + 1));
 
     let proposal = UpgradeProposal {
         id: proposal_id,
@@ -51,16 +57,16 @@ pub fn vote_on_proposal(
     vote_for: bool,
 ) -> Result<(), &'static str> {
     voter.require_auth();
-    
+
     // Record the vote
     storage::record_vote(env, proposal_id, voter, vote_for)?;
-    
+
     // Check if proposal has reached required threshold
     if let Some(proposal) = storage::get_upgrade_proposal(env, proposal_id) {
         let _total_votes = proposal.votes_for + proposal.votes_against;
         // Simple majority threshold - in real implementation this could be configurable
         let required_votes = (proposal.total_voters / 2) + 1;
-        
+
         if proposal.votes_for >= required_votes {
             storage::update_proposal_status(env, proposal_id, UpgradeStatus::Approved);
             env.events()
@@ -71,43 +77,46 @@ pub fn vote_on_proposal(
                 .publish(("upgrade", "proposal_rejected"), proposal_id);
         }
     }
-    
+
     Ok(())
 }
 
 /// Execute an approved upgrade
-pub fn execute_upgrade(env: &Env, executor: &Address, proposal_id: u64) -> Result<(), &'static str> {
+pub fn execute_upgrade(
+    env: &Env,
+    executor: &Address,
+    proposal_id: u64,
+) -> Result<(), &'static str> {
     executor.require_auth();
-    
-    let mut proposal = storage::get_upgrade_proposal(env, proposal_id)
-        .ok_or("Proposal does not exist")?;
-    
+
+    let mut proposal =
+        storage::get_upgrade_proposal(env, proposal_id).ok_or("Proposal does not exist")?;
+
     if proposal.status != UpgradeStatus::Approved {
         return Err("Proposal is not approved for execution");
     }
-    
+
     // Check if the caller is authorized to execute upgrades
     let governance_addr = storage::get_governance_address(env);
     if *executor != governance_addr {
         return Err("Only governance address can execute upgrades");
     }
-    
+
     // Perform state migration if a migration plan exists
     if let Some(migration_plan) = storage::get_migration_plan(env, proposal_id) {
         perform_state_migration(env, &migration_plan)?;
     }
-    
+
     // Update the current version
     storage::set_current_version(env, &proposal.version);
-    
+
     // Update proposal status
     proposal.status = UpgradeStatus::Executed;
     storage::store_upgrade_proposal(env, &proposal);
-    
+
     // Emit upgrade execution event
-    env.events()
-        .publish(("upgrade", "executed"), proposal_id);
-    
+    env.events().publish(("upgrade", "executed"), proposal_id);
+
     Ok(())
 }
 
@@ -119,43 +128,47 @@ pub fn emergency_upgrade(
     new_version: &Version,
 ) -> Result<(), &'static str> {
     caller.require_auth();
-    
+
     // Check if emergency upgrades are enabled
     if !storage::is_emergency_upgrade_enabled(env) {
         return Err("Emergency upgrades are not enabled");
     }
-    
+
     // Only governance address can perform emergency upgrades
     let governance_addr = storage::get_governance_address(env);
     if *caller != governance_addr {
         return Err("Only governance address can perform emergency upgrades");
     }
-    
+
     // Update the current version directly
     storage::set_current_version(env, new_version);
-    
+
     // Emit emergency upgrade event
     env.events()
         .publish(("upgrade", "emergency_executed"), new_version.clone());
-    
+
     Ok(())
 }
 
 /// Enable or disable emergency upgrades
-pub fn toggle_emergency_upgrades(env: &Env, caller: &Address, enable: bool) -> Result<(), &'static str> {
+pub fn toggle_emergency_upgrades(
+    env: &Env,
+    caller: &Address,
+    enable: bool,
+) -> Result<(), &'static str> {
     caller.require_auth();
-    
+
     // Only governance address can enable/disable emergency upgrades
     let governance_addr = storage::get_governance_address(env);
     if *caller != governance_addr {
         return Err("Only governance address can toggle emergency upgrades");
     }
-    
+
     storage::set_emergency_upgrade_enabled(env, enable);
-    
+
     env.events()
         .publish(("upgrade", "emergency_toggled"), enable);
-    
+
     Ok(())
 }
 
@@ -167,18 +180,18 @@ pub fn register_migration_plan(
     migration_plan: &MigrationPlan,
 ) -> Result<(), &'static str> {
     caller.require_auth();
-    
+
     // Only governance address can register migration plans
     let governance_addr = storage::get_governance_address(env);
     if *caller != governance_addr {
         return Err("Only governance address can register migration plans");
     }
-    
+
     storage::store_migration_plan(env, proposal_id, migration_plan);
-    
+
     env.events()
         .publish(("upgrade", "migration_registered"), proposal_id);
-    
+
     Ok(())
 }
 
@@ -187,17 +200,17 @@ fn perform_state_migration(env: &Env, plan: &MigrationPlan) -> Result<(), &'stat
     // In a real implementation, this would call specific migration functions
     // based on the migration plan's selector
     // For now, we'll just log the migration attempt
-    
+
     env.events()
         .publish(("upgrade", "migration_started"), plan.from_version.clone());
-    
+
     // Placeholder for actual migration logic
     // This would involve calling migration functions that transform data
     // from the old format to the new format
-    
+
     env.events()
         .publish(("upgrade", "migration_completed"), plan.to_version.clone());
-    
+
     Ok(())
 }
 
@@ -215,27 +228,29 @@ pub fn rollback_to_version(
     target_version: &Version,
 ) -> Result<(), &'static str> {
     caller.require_auth();
-    
+
     // Only governance address can perform rollbacks
     let governance_addr = storage::get_governance_address(env);
     if *caller != governance_addr {
         return Err("Only governance address can perform rollbacks");
     }
-    
+
     // In a real implementation, this would involve complex state restoration
     // For now, we'll just check if the rollback is to a previous version
     let current_version = storage::get_current_version(env);
-    
-    if target_version.major != current_version.major || 
-       (target_version.major == current_version.major && target_version.minor > current_version.minor) {
+
+    if target_version.major != current_version.major
+        || (target_version.major == current_version.major
+            && target_version.minor > current_version.minor)
+    {
         return Err("Can only rollback to earlier versions in the same major series");
     }
-    
+
     // Update to the target version
     storage::set_current_version(env, target_version);
-    
+
     env.events()
         .publish(("upgrade", "rollback_completed"), target_version.clone());
-    
+
     Ok(())
 }

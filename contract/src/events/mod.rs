@@ -53,7 +53,6 @@
 /// 4. Replace every `env.events().publish(...)` call in the module with
 ///    `emit_event(env, MOD_<MODULE>, ACT_<ACTION>, payload)`.
 /// 5. Document the new events in the module's top-level doc comment.
-
 pub mod emit;
 pub mod topics;
 pub mod types;
