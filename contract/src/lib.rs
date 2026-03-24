@@ -154,6 +154,18 @@ use proxy::implementation as proxy_impl;
 use proxy::storage as proxy_storage;
 use proxy::types::ProxyConfig;
 
+mod integration;
+use integration::{
+    ContractType, EventType, PermissionLevel, IntegrationStatus,
+    register_contract, get_contract_address, update_contract, get_all_contracts,
+    emit_event, get_events, subscribe_to_events,
+    verify_cross_contract_auth,
+    validate_address, format_error, get_integration_status,
+};
+
+mod interfaces;
+mod utils;
+
 /// Stellar Guilds - Main Contract Entry Point
 ///
 /// This is the foundational contract for the Stellar Guilds platform.
@@ -2244,6 +2256,160 @@ impl StellarGuildsContract {
             Ok(_) => true,
             Err(_) => false,
         }
+    }
+
+    // ============ Contract Integration Layer Functions ============
+
+    /// Initialize the contract integration layer.
+    ///
+    /// # Arguments
+    /// * `admin` - Admin address for registry and authorization management
+    pub fn initialize_integration(env: Env, admin: Address) -> bool {
+        integration::initialize(&env, admin);
+        true
+    }
+
+    /// Register a contract in the integration registry.
+    ///
+    /// # Arguments
+    /// * `contract_type` - Type of contract to register
+    /// * `address` - Contract address
+    /// * `version` - Contract version
+    /// * `caller` - Address making the request (must be admin)
+    pub fn register_integration_contract(
+        env: Env,
+        contract_type: ContractType,
+        address: Address,
+        version: u32,
+        caller: Address,
+    ) -> bool {
+        match register_contract(&env, &caller, contract_type, address, version) {
+            Ok(result) => result,
+            Err(_) => panic!("Failed to register contract"),
+        }
+    }
+
+    /// Get the address of a registered contract.
+    ///
+    /// # Arguments
+    /// * `contract_type` - Type of contract to lookup
+    pub fn get_integration_contract_address(
+        env: Env,
+        contract_type: ContractType,
+    ) -> Address {
+        match get_contract_address(&env, contract_type) {
+            Ok(addr) => addr,
+            Err(_) => panic!("Contract not registered"),
+        }
+    }
+
+    /// Update a contract's address and version.
+    ///
+    /// # Arguments
+    /// * `contract_type` - Type of contract to update
+    /// * `new_address` - New contract address
+    /// * `new_version` - New version number
+    /// * `caller` - Address making the request (must be admin)
+    pub fn update_integration_contract(
+        env: Env,
+        contract_type: ContractType,
+        new_address: Address,
+        new_version: u32,
+        caller: Address,
+    ) -> bool {
+        match update_contract(&env, &caller, contract_type, new_address, new_version) {
+            Ok(result) => result,
+            Err(_) => panic!("Failed to update contract"),
+        }
+    }
+
+    /// Get all registered contracts.
+    pub fn get_all_integration_contracts(env: Env) -> Vec<integration::ContractRegistryEntry> {
+        get_all_contracts(&env)
+    }
+
+    /// Emit an event through the integration layer.
+    ///
+    /// # Arguments
+    /// * `event_type` - Type of event to emit
+    /// * `contract_source` - Contract type emitting the event
+    /// * `data` - Event data
+    pub fn emit_integration_event(
+        env: Env,
+        event_type: EventType,
+        contract_source: ContractType,
+        data: soroban_sdk::Symbol,
+    ) -> bool {
+        match emit_event(&env, event_type, contract_source, data) {
+            Ok(result) => result,
+            Err(_) => panic!("Failed to emit event"),
+        }
+    }
+
+    /// Get events with optional filtering.
+    ///
+    /// # Arguments
+    /// * `from_timestamp` - Start timestamp for filtering
+    /// * `limit` - Maximum number of events to return
+    pub fn get_integration_events(
+        env: Env,
+        from_timestamp: u64,
+        limit: u32,
+    ) -> Vec<integration::types::Event> {
+        get_events(&env, None, from_timestamp, limit)
+    }
+
+    /// Subscribe to specific event types.
+    ///
+    /// # Arguments
+    /// * `event_types` - Vector of event types to subscribe to
+    /// * `subscriber` - Address subscribing
+    pub fn subscribe_to_integration_events(
+        env: Env,
+        event_types: Vec<EventType>,
+        subscriber: Address,
+    ) -> bool {
+        match subscribe_to_events(&env, &subscriber, event_types) {
+            Ok(result) => result,
+            Err(_) => panic!("Failed to subscribe to events"),
+        }
+    }
+
+    /// Verify cross-contract authorization.
+    ///
+    /// # Arguments
+    /// * `caller` - Address attempting the call
+    /// * `target_contract` - Target contract type
+    /// * `permission` - Required permission level
+    pub fn verify_integration_auth(
+        env: Env,
+        caller: Address,
+        target_contract: ContractType,
+        permission: PermissionLevel,
+    ) -> bool {
+        match verify_cross_contract_auth(&env, &caller, target_contract, permission) {
+            Ok(result) => result,
+            Err(_) => false,
+        }
+    }
+
+    /// Validate an address is not zero.
+    pub fn validate_integration_address(env: Env, address: Address) -> bool {
+        validate_address(&env, &address)
+    }
+
+    /// Format an error with context.
+    pub fn format_integration_error(
+        env: Env,
+        error_code: integration::types::IntegrationError,
+        context: String,
+    ) -> soroban_sdk::Symbol {
+        format_error(&env, error_code, &context)
+    }
+
+    /// Get integration layer status.
+    pub fn get_integration_status(env: Env) -> integration::IntegrationStatus {
+        integration::get_integration_status(&env)
     }
 }
 
