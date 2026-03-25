@@ -92,11 +92,17 @@ export class UserController {
   @Post('me/avatar')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async uploadAvatar(@Request() req: any, @Body('avatarUrl') avatarUrl: string) {
+  async uploadAvatar(
+    @Request() req: any,
+    @Body('avatarUrl') avatarUrl: string,
+  ) {
     if (!avatarUrl) {
       throw new BadRequestException('avatarUrl is required');
     }
-    const result = await this.userService.updateAvatar(req.user.userId, avatarUrl);
+    const result = await this.userService.updateAvatar(
+      req.user.userId,
+      avatarUrl,
+    );
     return {
       avatarUrl: result.avatarUrl,
       message: 'Avatar updated successfully',
@@ -120,7 +126,11 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async getUserDetails(@Param('userId') userId: string, @Request() req: any) {
-    return this.userService.getUserDetails(userId, req.user.userId, req.user.role);
+    return this.userService.getUserDetails(
+      userId,
+      req.user.userId,
+      req.user.role,
+    );
   }
 
   /**

@@ -27,9 +27,18 @@ export class BountyController {
     return this.service.create(dto, req.user.userId);
   }
 
+  @Get('open')
+  async findAll(
+    @Query('page') page = '0',
+    @Query('size') size = '20',
+    @Query('guildId') guildId?: string,
+  ) {
+    return this.service.findAll(Number(page), Number(size), guildId);
+  }
+
   @Get(':id')
   async get(@Param('id') id: string) {
-    return this.service.get(id);
+    return this.service.findOne(id);
   }
 
   @Get()

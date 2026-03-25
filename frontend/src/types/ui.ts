@@ -129,3 +129,26 @@ export interface Proposal {
   votes: Vote[]
   votingStats: VotingStats
 }
+
+// Dropzone Types
+export type DropzoneVariant = 'avatar' | 'banner'
+
+export interface DropzoneProps {
+  variant?: DropzoneVariant
+  value?: string | null
+  onChange?: (url: string | null) => void
+  onError?: (error: string) => void
+  disabled?: boolean
+  className?: string
+}
+
+export interface FileValidationResult {
+  isValid: boolean
+  error?: string
+}
+
+export interface UploadResult {
+  success: boolean
+  url?: string
+  error?: string
+}

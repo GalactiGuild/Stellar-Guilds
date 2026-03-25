@@ -102,9 +102,7 @@ describe('AuthController', () => {
         signature: '0x...',
       };
 
-      jest
-        .spyOn(authService, 'walletAuth')
-        .mockResolvedValue(mockAuthResponse);
+      jest.spyOn(authService, 'walletAuth').mockResolvedValue(mockAuthResponse);
 
       const result = await controller.walletAuth(walletAuthDto);
 

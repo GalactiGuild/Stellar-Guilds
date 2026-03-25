@@ -11,6 +11,7 @@ pub enum BountyStatus {
     Cancelled = 4,
     Expired = 5,
     AwaitingFunds = 6,
+    Funded = 7,
 }
 
 /// Bounty struct containing all bounty metadata and state
@@ -43,6 +44,16 @@ pub struct Bounty {
     pub created_at: u64,
     /// Expiration timestamp (seconds)
     pub expires_at: u64,
+}
+
+/// Represents the state of funds locked in escrow for a bounty
+#[contracttype]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct EscrowLockedState {
+    pub bounty_id: u64,
+    pub amount: i128,
+    pub token: Address,
+    pub is_locked: bool,
 }
 
 // ============ Events ============

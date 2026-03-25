@@ -1,4 +1,4 @@
-use crate::upgrade::types::{MigrationPlan, UpgradeProposal, UpgradeStatus, Version};
+﻿use crate::upgrade::types::{MigrationPlan, UpgradeProposal, UpgradeStatus, Version};
 use soroban_sdk::{symbol_short, Address, Env, Map, Symbol, Vec};
 
 // Storage keys for upgrade functionality
@@ -204,4 +204,5 @@ pub fn set_emergency_upgrade_enabled(env: &Env, enabled: bool) {
     env.storage()
         .persistent()
         .set(&EMERGENCY_UPGRADE_KEY, &enabled);
+    env.storage().persistent().set(&EMERGENCY_UPGRADE_KEY, &enabled);
 }

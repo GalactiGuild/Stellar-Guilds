@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, Address};
+﻿use soroban_sdk::{contracttype, Address};
 
 /// Role enum for guild members
 /// - Owner: Full control over the guild
@@ -46,6 +46,18 @@ pub struct Guild {
     pub created_at: u64,
     /// Total member count
     pub member_count: u32,
+}
+
+/// Guild configuration settings
+#[contracttype]
+#[derive(Clone, Debug)]
+pub struct GuildConfig {
+    /// Guild name
+    pub name: soroban_sdk::String,
+    /// Address of the guild admin/owner
+    pub admin: Address,
+    /// Maximum number of members allowed
+    pub member_limit: u32,
 }
 
 /// Member struct representing a guild member

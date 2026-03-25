@@ -152,9 +152,7 @@ describe('AuthService', () => {
         password: 'password123',
       };
 
-      jest
-        .spyOn(prisma.user, 'findUnique')
-        .mockResolvedValue(mockUser as any);
+      jest.spyOn(prisma.user, 'findUnique').mockResolvedValue(mockUser as any);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       jest.spyOn(prisma.user, 'update').mockResolvedValue(mockUser as any);
       jest.spyOn(jwtService, 'sign').mockReturnValue('token');
@@ -188,9 +186,7 @@ describe('AuthService', () => {
         password: 'wrongpassword',
       };
 
-      jest
-        .spyOn(prisma.user, 'findUnique')
-        .mockResolvedValue(mockUser as any);
+      jest.spyOn(prisma.user, 'findUnique').mockResolvedValue(mockUser as any);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       await expect(service.login(loginDto)).rejects.toThrow(
@@ -210,9 +206,7 @@ describe('AuthService', () => {
       (ethers.verifyMessage as jest.Mock).mockReturnValue(
         walletAuthDto.walletAddress,
       );
-      jest
-        .spyOn(prisma.user, 'findFirst')
-        .mockResolvedValue(mockUser as any);
+      jest.spyOn(prisma.user, 'findFirst').mockResolvedValue(mockUser as any);
       jest.spyOn(prisma.user, 'update').mockResolvedValue(mockUser as any);
       jest.spyOn(jwtService, 'sign').mockReturnValue('token');
 

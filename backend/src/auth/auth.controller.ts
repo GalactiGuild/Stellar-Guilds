@@ -45,7 +45,9 @@ export class AuthController {
    */
   @Post('wallet-auth')
   @HttpCode(HttpStatus.OK)
-  async walletAuth(@Body() walletAuthDto: WalletAuthDto): Promise<AuthResponseDto> {
+  async walletAuth(
+    @Body() walletAuthDto: WalletAuthDto,
+  ): Promise<AuthResponseDto> {
     return this.authService.walletAuth(walletAuthDto);
   }
 

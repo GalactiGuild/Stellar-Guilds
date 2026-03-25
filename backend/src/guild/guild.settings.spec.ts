@@ -1,4 +1,7 @@
-import { validateAndNormalizeSettings, DEFAULT_GUILD_SETTINGS } from './guild.settings';
+import {
+  validateAndNormalizeSettings,
+  DEFAULT_GUILD_SETTINGS,
+} from './guild.settings';
 import { BadRequestException } from '@nestjs/common';
 
 describe('Guild settings validation', () => {
@@ -17,10 +20,14 @@ describe('Guild settings validation', () => {
   });
 
   it('throws on invalid visibility', () => {
-    expect(() => validateAndNormalizeSettings({ visibility: 'invalid' })).toThrow(BadRequestException);
+    expect(() =>
+      validateAndNormalizeSettings({ visibility: 'invalid' }),
+    ).toThrow(BadRequestException);
   });
 
   it('throws on invalid maxMembers type', () => {
-    expect(() => validateAndNormalizeSettings({ maxMembers: -1 })).toThrow(BadRequestException);
+    expect(() => validateAndNormalizeSettings({ maxMembers: -1 })).toThrow(
+      BadRequestException,
+    );
   });
 });

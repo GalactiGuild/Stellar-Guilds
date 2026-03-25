@@ -8,20 +8,38 @@ import { AuthModule } from './auth/auth.module';
 import { GuildModule } from './guild/guild.module';
 import { BountyModule } from './bounty/bounty.module';
 import { SocialModule } from './social/social.module';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { HealthModule } from './health/health.module';
+import { LoggerModule } from './logger/logger.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 60 seconds in milliseconds
+        limit: 100, // 100 requests per 60 seconds
+      },
+    ]),
+    LoggerModule,
     PrismaModule,
     AuthModule,
     UserModule,
     GuildModule,
     BountyModule,
     SocialModule,
+    HealthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

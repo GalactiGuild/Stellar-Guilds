@@ -37,7 +37,7 @@ fn set_ledger_timestamp(env: &Env, timestamp: u64) {
 fn register_and_init_contract(env: &Env) -> Address {
     let contract_id = env.register_contract(None, StellarGuildsContract);
     let client = StellarGuildsContractClient::new(env, &contract_id);
-    client.initialize();
+    client.initialize(&Address::generate(&env));
     contract_id
 }
 
@@ -293,7 +293,7 @@ fn test_fund_bounty_success() {
 
     let bounty = client.get_bounty(&bounty_id);
     assert_eq!(bounty.funded_amount, 100);
-    assert_eq!(bounty.status, BountyStatus::Open);
+    assert_eq!(bounty.status, BountyStatus::Funded);
 }
 
 #[test]
@@ -335,7 +335,7 @@ fn test_fund_bounty_partial_funding() {
     client.fund_bounty(&bounty_id, &funder, &50i128);
     let bounty = client.get_bounty(&bounty_id);
     assert_eq!(bounty.funded_amount, 100);
-    assert_eq!(bounty.status, BountyStatus::Open);
+    assert_eq!(bounty.status, BountyStatus::Funded);
 }
 
 #[test]
@@ -1022,7 +1022,7 @@ fn test_expire_bounty_not_expired_yet() {
     assert_eq!(result, false);
 
     let bounty = client.get_bounty(&bounty_id);
-    assert_eq!(bounty.status, BountyStatus::Open);
+    assert_eq!(bounty.status, BountyStatus::Funded);
 }
 
 // ============ Query Tests ============
@@ -1119,7 +1119,7 @@ fn test_full_bounty_lifecycle() {
     // 2. Fund bounty
     client.fund_bounty(&bounty_id, &funder, &100i128);
     let bounty = client.get_bounty(&bounty_id);
-    assert_eq!(bounty.status, BountyStatus::Open);
+    assert_eq!(bounty.status, BountyStatus::Funded);
 
     // 3. Claim bounty
     client.claim_bounty(&bounty_id, &claimer);
@@ -1208,9 +1208,9 @@ fn test_multiple_bounties_per_guild() {
     let bounty_1 = client.get_bounty(&bounty_id_2);
     let bounty_2 = client.get_bounty(&bounty_id_3);
 
-    assert_eq!(bounty_0.status, BountyStatus::Open);
+    assert_eq!(bounty_0.status, BountyStatus::Funded);
     assert_eq!(bounty_1.status, BountyStatus::AwaitingFunds);
-    assert_eq!(bounty_2.status, BountyStatus::Open);
+    assert_eq!(bounty_2.status, BountyStatus::Funded);
 }
 
 // ============ Admin Operations Tests ============
@@ -1304,4 +1304,137 @@ fn test_admin_can_cancel_bounty() {
 
     let bounty = client.get_bounty(&bounty_id);
     assert_eq!(bounty.status, BountyStatus::Cancelled);
+}
+
+#[test]
+fn test_approve_bounty_success() {
+    let env = setup_env();
+    let owner = Address::generate(&env);
+    let admin = Address::generate(&env);
+    let funder = Address::generate(&env);
+    let assignee = Address::generate(&env);
+    let token = create_mock_token(&env, &owner);
+
+    set_ledger_timestamp(&env, 1000);
+    env.mock_all_auths();
+
+    let contract_id = register_and_init_contract(&env);
+    let client = StellarGuildsContractClient::new(&env, &contract_id);
+
+    let guild_id = setup_guild(&client, &env, &owner);
+    client.add_member(&guild_id, &admin, &Role::Admin, &owner);
+
+    mint_tokens(&env, &token, &funder, 1000);
+
+    let title = String::from_str(&env, "Direct Task");
+    let description = String::from_str(&env, "Directly Approved");
+    let bounty_id = client.create_bounty(
+        &guild_id,
+        &owner,
+        &title,
+        &description,
+        &100i128,
+        &token,
+        &2000u64,
+    );
+
+    client.fund_bounty(&bounty_id, &funder, &100i128);
+
+    let result = client.approve_bounty(&bounty_id, &admin, &assignee);
+    assert_eq!(result, true);
+
+    let bounty = client.get_bounty(&bounty_id);
+    assert_eq!(bounty.status, BountyStatus::Completed);
+    assert_eq!(bounty.claimer, Some(assignee.clone()));
+
+    // Escrow should be releasable to the assignee
+    let release_result = client.release_escrow(&bounty_id);
+    assert_eq!(release_result, true);
+    
+    let assignee_balance = get_token_balance(&env, &token, &assignee);
+    assert_eq!(assignee_balance, 100);
+}
+
+#[test]
+#[should_panic(expected = "Bounty is not funded")]
+fn test_approve_bounty_not_funded_fails() {
+    let env = setup_env();
+    let owner = Address::generate(&env);
+    let admin = Address::generate(&env);
+    let assignee = Address::generate(&env);
+    let token = create_mock_token(&env, &owner);
+
+    set_ledger_timestamp(&env, 1000);
+    env.mock_all_auths();
+
+    let contract_id = register_and_init_contract(&env);
+    let client = StellarGuildsContractClient::new(&env, &contract_id);
+
+    let guild_id = setup_guild(&client, &env, &owner);
+    client.add_member(&guild_id, &admin, &Role::Admin, &owner);
+
+    let title = String::from_str(&env, "Direct Task");
+    let description = String::from_str(&env, "Directly Approved");
+    let bounty_id = client.create_bounty(
+        &guild_id,
+        &owner,
+        &title,
+        &description,
+        &100i128,
+        &token,
+        &2000u64,
+    );
+
+    client.approve_bounty(&bounty_id, &admin, &assignee);
+}
+
+// ============ Serialization Tests ============
+
+#[test]
+fn test_bounty_serialization() {
+    use soroban_sdk::{IntoVal, TryFromVal, Val};
+    use crate::bounty::types::Bounty;
+
+    let env = Env::default();
+    let bounty = Bounty {
+        id: 1,
+        guild_id: 2,
+        creator: Address::generate(&env),
+        title: String::from_str(&env, "Title"),
+        description: String::from_str(&env, "Desc"),
+        reward_amount: 100,
+        funded_amount: 50,
+        token: Address::generate(&env),
+        status: BountyStatus::Open,
+        claimer: None,
+        submission_url: None,
+        created_at: 1000,
+        expires_at: 2000,
+    };
+    
+    let val: Val = bounty.clone().into_val(&env);
+    let deserialized: Bounty = Bounty::try_from_val(&env, &val).unwrap();
+    
+    assert_eq!(bounty.id, deserialized.id);
+    assert_eq!(bounty.status, deserialized.status);
+    assert_eq!(bounty.reward_amount, deserialized.reward_amount);
+}
+
+#[test]
+fn test_escrow_state_serialization() {
+    use soroban_sdk::{IntoVal, TryFromVal, Val};
+    use crate::bounty::types::EscrowLockedState;
+
+    let env = Env::default();
+    let state = EscrowLockedState {
+        bounty_id: 1,
+        amount: 100,
+        token: Address::generate(&env),
+        is_locked: true,
+    };
+    
+    let val: Val = state.clone().into_val(&env);
+    let deserialized: EscrowLockedState = EscrowLockedState::try_from_val(&env, &val).unwrap();
+    
+    assert_eq!(state, deserialized);
 }

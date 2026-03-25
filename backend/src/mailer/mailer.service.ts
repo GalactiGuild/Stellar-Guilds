@@ -8,7 +8,9 @@ export class MailerService {
 
   constructor() {
     const host = process.env.SMTP_HOST;
-    const port = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined;
+    const port = process.env.SMTP_PORT
+      ? Number(process.env.SMTP_PORT)
+      : undefined;
     const user = process.env.SMTP_USER;
     const pass = process.env.SMTP_PASS;
 
@@ -20,12 +22,22 @@ export class MailerService {
         auth: user && pass ? { user, pass } : undefined,
       });
     } else {
-      this.logger.warn('SMTP not configured — Mailer will log invites instead of sending');
+      this.logger.warn(
+        'SMTP not configured — Mailer will log invites instead of sending',
+      );
     }
   }
 
-  async sendInviteEmail(to: string, guildName: string, token: string, inviterEmail?: string) {
-    const from = process.env.MAIL_FROM || process.env.SMTP_USER || 'no-reply@stellar-guilds.local';
+  async sendInviteEmail(
+    to: string,
+    guildName: string,
+    token: string,
+    inviterEmail?: string,
+  ) {
+    const from =
+      process.env.MAIL_FROM ||
+      process.env.SMTP_USER ||
+      'no-reply@stellar-guilds.local';
     const inviteUrl = `${process.env.FRONTEND_URL || 'https://app.stellar-guilds.local'}/invites/accept?token=${token}`;
     const subject = `You are invited to join ${guildName}`;
     const text = `You have been invited to join ${guildName}.
@@ -38,12 +50,17 @@ If you weren't expecting this invite, ignore this message.`;
       this.logger.log(`Invite email sent to ${to}`);
     } else {
       // Fallback: log the invite details for manual delivery
-      this.logger.log(`Invite (not sent) -> to: ${to}, subject: ${subject}, token: ${token}`);
+      this.logger.log(
+        `Invite (not sent) -> to: ${to}, subject: ${subject}, token: ${token}`,
+      );
     }
   }
 
   async sendRevokeEmail(to: string, guildName: string, inviterEmail?: string) {
-    const from = process.env.MAIL_FROM || process.env.SMTP_USER || 'no-reply@stellar-guilds.local';
+    const from =
+      process.env.MAIL_FROM ||
+      process.env.SMTP_USER ||
+      'no-reply@stellar-guilds.local';
     const subject = `Your invite to ${guildName} was revoked`;
     const text = `Your invite to ${guildName} has been revoked.`;
     if (this.transporter) {

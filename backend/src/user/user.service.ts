@@ -50,7 +50,11 @@ export class UserService {
   /**
    * Get user details (sensitive info - admin/self only)
    */
-  async getUserDetails(userId: string, requesterId: string, requesterRole: UserRole) {
+  async getUserDetails(
+    userId: string,
+    requesterId: string,
+    requesterRole: UserRole,
+  ) {
     if (userId !== requesterId && requesterRole !== UserRole.ADMIN) {
       throw new ForbiddenException(
         'You do not have permission to view this user details',
@@ -105,10 +109,18 @@ export class UserService {
         ...(updateDto.firstName && { firstName: updateDto.firstName }),
         ...(updateDto.lastName && { lastName: updateDto.lastName }),
         ...(updateDto.bio !== undefined && { bio: updateDto.bio }),
-        ...(updateDto.profileBio !== undefined && { profileBio: updateDto.profileBio }),
-        ...(updateDto.profileUrl !== undefined && { profileUrl: updateDto.profileUrl }),
-        ...(updateDto.discordHandle !== undefined && { discordHandle: updateDto.discordHandle }),
-        ...(updateDto.twitterHandle !== undefined && { twitterHandle: updateDto.twitterHandle }),
+        ...(updateDto.profileBio !== undefined && {
+          profileBio: updateDto.profileBio,
+        }),
+        ...(updateDto.profileUrl !== undefined && {
+          profileUrl: updateDto.profileUrl,
+        }),
+        ...(updateDto.discordHandle !== undefined && {
+          discordHandle: updateDto.discordHandle,
+        }),
+        ...(updateDto.twitterHandle !== undefined && {
+          twitterHandle: updateDto.twitterHandle,
+        }),
       },
       select: {
         id: true,
@@ -143,7 +155,9 @@ export class UserService {
 
     // Prevent same password
     if (currentPassword === newPassword) {
-      throw new BadRequestException('New password must be different from current password');
+      throw new BadRequestException(
+        'New password must be different from current password',
+      );
     }
 
     const user = await this.prisma.user.findUnique({
@@ -155,7 +169,10 @@ export class UserService {
     }
 
     // Verify current password
-    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    const isPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
     if (!isPasswordValid) {
       throw new BadRequestException('Current password is incorrect');
     }
@@ -379,10 +396,7 @@ export class UserService {
     });
   }
 
-  async updateUser(params: {
-    where: any;
-    data: any;
-  }): Promise<any> {
+  async updateUser(params: { where: any; data: any }): Promise<any> {
     const { where, data } = params;
     return this.prisma.user.update({
       data,
