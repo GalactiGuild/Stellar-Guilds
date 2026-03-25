@@ -11,6 +11,7 @@ import { SocialModule } from './social/social.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { HealthModule } from './health/health.module';
+import { LoggerModule } from './logger/logger.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { HealthModule } from './health/health.module';
         limit: 100, // 100 requests per 60 seconds
       },
     ]),
+    LoggerModule,
     PrismaModule,
     AuthModule,
     UserModule,
