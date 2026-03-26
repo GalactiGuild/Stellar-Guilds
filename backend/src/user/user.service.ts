@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
@@ -17,6 +18,8 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
+
   constructor(
     private prisma: PrismaService,
     private storageService: StorageService,
@@ -211,10 +214,6 @@ export class UserService {
       file.originalname,
     );
 
-    if (user.avatarUrl) {
-      await this.storageService.deleteFile(user.avatarUrl);
-    }
-
     const updated = await this.prisma.user.update({
       where: { id: userId },
       data: { avatarUrl },
@@ -223,6 +222,16 @@ export class UserService {
         avatarUrl: true,
       },
     });
+
+    if (user.avatarUrl) {
+      try {
+        await this.storageService.deleteFile(user.avatarUrl);
+      } catch (error: any) {
+        this.logger.warn(
+          `Failed to delete previous avatar for user ${userId}: ${error?.message ?? 'unknown error'}`,
+        );
+      }
+    }
 
     return updated;
   }

@@ -210,7 +210,14 @@ export class StorageService {
       const relativePath = decodeURIComponent(
         parsedUrl.pathname.slice(uploadsPrefix.length),
       );
-      return path.join(this.getUploadsDir(), relativePath);
+      const uploadsDir = this.getUploadsDir();
+      const resolvedPath = path.resolve(uploadsDir, relativePath);
+
+      if (!resolvedPath.startsWith(path.resolve(uploadsDir))) {
+        return null;
+      }
+
+      return resolvedPath;
     } catch {
       return null;
     }
