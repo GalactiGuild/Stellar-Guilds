@@ -292,3 +292,15 @@ model PrivacySettings {
   allowMessagesFromNonFollowers Boolean @default(false)
   showAchievements              Boolean @default(true)
 }
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  action    String
+  entityType String?
+  entityId   String?
+  metadata  Json?
+
+  @@map("audit_logs")
+}
