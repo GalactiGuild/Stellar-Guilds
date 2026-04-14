@@ -13,6 +13,8 @@ import {
   UseInterceptors,
   HttpCode,
   HttpStatus,
+  CacheKey,
+  CacheTTL,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -52,11 +54,15 @@ export class GuildController {
   }
 
   @Get('by-slug/:slug')
+  @CacheKey('guilds:slug')
+  @CacheTTL(120_000) // 2 minutes
   async getBySlug(@Param('slug') slug: string): Promise<GuildDetailsDto> {
     return this.guildService.getBySlug(slug);
   }
 
   @Get()
+  @CacheKey('guilds:search')
+  @CacheTTL(60_000) // 1 minute — high-demand endpoint
   async search(@Query() query: SearchGuildDto) {
     return this.guildService.searchGuilds(query.q, query.page, query.size);
   }
