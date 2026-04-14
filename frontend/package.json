@@ -14,6 +14,7 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@stellar/freighter-api": "^6.0.1",
     "@stellar/stellar-sdk": "^14.5.0",
+    "@tanstack/react-table": "^8.21.3",
     "chart.js": "^4.5.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
