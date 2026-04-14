@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { QUEUE_NAMES } from './queue.constants';
-import { DummyJobData, EmailJobData, OnChainEventJobData } from './queue.interfaces';
+import { DummyJobData, EmailJobData, OnChainEventJobData, PayoutJobData } from './queue.interfaces';
 
 @Injectable()
 export class QueueService {
@@ -13,6 +13,8 @@ export class QueueService {
     @InjectQueue(QUEUE_NAMES.EMAIL) private readonly emailQueue: Queue,
     @InjectQueue(QUEUE_NAMES.ON_CHAIN_EVENTS)
     private readonly onChainEventsQueue: Queue,
+    @InjectQueue(QUEUE_NAMES.BOUNTY_PAYOUTS)
+    private readonly bountyPayoutsQueue: Queue,
   ) {}
 
   /**
@@ -62,6 +64,14 @@ export class QueueService {
   async addOnChainEventJob(data: OnChainEventJobData): Promise<void> {
     const job = await this.onChainEventsQueue.add('process-event', data);
     this.logger.log(`Added on-chain event job ${job.id} to queue`);
+  }
+
+  /**
+   * Add a bounty payout job to the queue
+   */
+  async addPayoutJob(data: PayoutJobData): Promise<void> {
+    const job = await this.bountyPayoutsQueue.add('process-payout', data);
+    this.logger.log(`Added payout job ${job.id} to bounty-payouts queue`);
   }
 
   /**

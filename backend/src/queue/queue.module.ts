@@ -3,6 +3,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { QUEUE_NAMES } from './queue.constants';
 import { DummyProcessor } from './processors/dummy.processor';
+import { PayoutConsumer } from './processors/payout.consumer';
 import { QueueService } from './queue.service';
 import { QueueController } from './queue.controller';
 
@@ -46,10 +47,13 @@ import { QueueController } from './queue.controller';
       {
         name: QUEUE_NAMES.ON_CHAIN_EVENTS,
       },
+      {
+        name: QUEUE_NAMES.BOUNTY_PAYOUTS,
+      },
     ),
   ],
   controllers: [QueueController],
-  providers: [QueueService, DummyProcessor],
+  providers: [QueueService, DummyProcessor, PayoutConsumer],
   exports: [QueueService, BullModule],
 })
 export class QueueModule {}

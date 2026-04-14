@@ -72,3 +72,18 @@ export interface OnChainEventJobData {
    */
   blockHeight: number;
 }
+
+/**
+ * Interface for bounty payout job data
+ */
+export interface PayoutJobData {
+  /**
+   * Bounty ID to process payout for
+   */
+  bountyId: string;
+
+  /**
+   * List of approved wallet addresses for payout
+   */
+  approvedAddresses: string[];
+}
