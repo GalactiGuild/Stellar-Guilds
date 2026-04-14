@@ -19,6 +19,7 @@ import { CreateMilestoneDto } from './dto/create-milestone.dto';
 import { ReviewWorkDto } from './dto/review-work.dto';
 import { SubmitBountyWorkDto } from './dto/submit-work.dto';
 import { FindBountyDto } from './dto/find-bounty.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('bounties')
 export class BountyController {
@@ -31,8 +32,8 @@ export class BountyController {
   }
 
   @Get('open')
-  async findAll(@Query() filters: FindBountyDto) {
-    return this.service.findAll(filters);
+  async findAll(@Query() filters: FindBountyDto, @Query() pagination: PaginationDto) {
+    return this.service.findAll({ ...filters, ...pagination });
   }
 
   @Get(':id')
