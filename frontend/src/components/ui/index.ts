@@ -14,3 +14,4 @@ export {
   DropdownMenuItem,
 } from "./DropdownMenu";
 export { Pagination } from "./Pagination";
+export { DataTable } from "./DataTable";
