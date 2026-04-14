@@ -405,6 +405,23 @@ export class UserService {
     return { message: 'User account reactivated successfully' };
   }
 
+  async banUser(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { banned: true, isActive: false },
+    });
+
+    return { message: 'User has been banned successfully' };
+  }
+
   // Existing basic CRUD methods (kept for compatibility)
   async user(userWhereUniqueInput: any): Promise<any | null> {
     return this.prisma.user.findUnique({

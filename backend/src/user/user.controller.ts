@@ -221,4 +221,16 @@ export class UserController {
   async reactivateUser(@Param('userId') userId: string) {
     return this.userService.reactivateUser(userId);
   }
+
+  /**
+   * Admin: Ban a user (disable their account globally)
+   */
+  @Post(':userId/ban')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Ban a user (admin only)' })
+  async banUser(@Param('userId') userId: string) {
+    return this.userService.banUser(userId);
+  }
 }

@@ -66,6 +66,7 @@ model User {
   avatarUrl     String?
   role          UserRole  @default(USER)
   isActive      Boolean   @default(true)
+  banned        Boolean   @default(false)
   lastLoginAt   DateTime?
   walletAddress String?   @unique
   refreshToken  String?
