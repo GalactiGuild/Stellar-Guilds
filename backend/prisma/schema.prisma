@@ -284,6 +284,23 @@ model Notification {
   metadata  Json?
 }
 
+/// Refresh tokens for secure session management
+/// Opaque random byte strings (not JWTs) mapped to users
+model RefreshToken {
+  id          String   @id @default(cuid())
+  token       String   @unique /// Opaque hashed token stored
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  replacedBy  String?  /// Points to the new token after rotation (for replay detection)
+  revokedAt   DateTime?
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
 model PrivacySettings {
   id                            String  @id @default(cuid())
   user                          User    @relation(fields: [userId], references: [id], onDelete: Cascade)

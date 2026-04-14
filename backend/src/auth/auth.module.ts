@@ -8,6 +8,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RoleGuard } from './guards/role.guard';
 import { PrismaModule } from '../prisma/prisma.module';
+import { RefreshTokenService } from './refresh-token.service';
 
 @Module({
   imports: [
@@ -19,14 +20,23 @@ import { PrismaModule } from '../prisma/prisma.module';
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET') || 'your-secret-key',
         signOptions: {
-          expiresIn: 900, // 15 minutes in seconds (default)
+          expiresIn: '15m', // 15 minutes — short-lived access token
         },
       }),
       inject: [ConfigService],
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard, RoleGuard],
-  exports: [AuthService, JwtStrategy, JwtAuthGuard, RoleGuard, PassportModule],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    JwtAuthGuard,
+    RoleGuard,
+    RefreshTokenService,
+  ],
+  exports: [
+    AuthService, JwtStrategy, JwtAuthGuard, RoleGuard,
+    PassportModule, RefreshTokenService,
+  ],
 })
 export class AuthModule {}

@@ -15,22 +15,20 @@ import {
   WalletAuthDto,
   RefreshTokenDto,
 } from './dto/auth.dto';
+import { RefreshTokenService } from './refresh-token.service';
 
 @Injectable()
 export class AuthService {
   private readonly jwtSecret: string;
-  private readonly refreshTokenSecret: string;
 
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService,
     private prisma: PrismaService,
+    private refreshTokenService: RefreshTokenService,
   ) {
     this.jwtSecret =
       this.configService.get<string>('JWT_SECRET') || 'your-secret-key';
-    this.refreshTokenSecret =
-      this.configService.get<string>('REFRESH_TOKEN_SECRET') ||
-      'your-refresh-secret-key';
   }
 
   /**
@@ -40,11 +38,8 @@ export class AuthService {
     const { email, username, password, firstName, lastName, walletAddress } =
       registerDto;
 
-    // Check if user already exists
     const existingUser = await this.prisma.user.findFirst({
-      where: {
-        OR: [{ email }, { username }],
-      },
+      where: { OR: [{ email }, { username }] },
     });
 
     if (existingUser) {
@@ -53,15 +48,12 @@ export class AuthService {
       );
     }
 
-    // Validate wallet address if provided
     if (walletAddress && !this.isValidWalletAddress(walletAddress)) {
       throw new BadRequestException('Invalid wallet address');
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
     const user = await this.prisma.user.create({
       data: {
         email,
@@ -73,30 +65,10 @@ export class AuthService {
       },
     });
 
-    // Generate tokens
-    const { accessToken, refreshToken } = await this.generateTokens(
-      user.id,
-      user.email,
-      user.walletAddress || undefined,
-      user.role,
-    );
+    const accessToken = this.signAccessToken(user);
+    const refreshToken = await this.refreshTokenService.generate(user.id);
 
-    // Save refresh token to database
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { refreshToken },
-    });
-
-    return {
-      accessToken,
-      refreshToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        walletAddress: user.walletAddress || undefined,
-      },
-    };
+    return { accessToken, refreshToken, user: this.sanitizeUser(user) };
   }
 
   /**
@@ -105,83 +77,51 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
 
-    // Find user
-    const user = await this.prisma.user.findUnique({
-      where: { email },
-    });
-
+    const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    // Update last login
     await this.prisma.user.update({
       where: { id: user.id },
       data: { lastLoginAt: new Date() },
     });
 
-    // Generate tokens
-    const { accessToken, refreshToken } = await this.generateTokens(
-      user.id,
-      user.email,
-      user.walletAddress || undefined,
-      user.role,
-    );
+    const accessToken = this.signAccessToken(user);
+    const refreshToken = await this.refreshTokenService.generate(user.id);
 
-    // Save refresh token to database
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { refreshToken },
-    });
-
-    return {
-      accessToken,
-      refreshToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        walletAddress: user.walletAddress || undefined,
-      },
-    };
+    return { accessToken, refreshToken, user: this.sanitizeUser(user) };
   }
 
   /**
-   * Authenticate user using wallet signature (Web3)
+   * Authenticate using wallet signature (Web3)
    */
   async walletAuth(walletAuthDto: WalletAuthDto) {
     const { walletAddress, message, signature } = walletAuthDto;
 
-    // Validate wallet address format
     if (!this.isValidWalletAddress(walletAddress)) {
       throw new BadRequestException('Invalid wallet address');
     }
 
-    // Verify signature
     const signerAddress = await this.verifySignature(message, signature);
     if (signerAddress.toLowerCase() !== walletAddress.toLowerCase()) {
       throw new UnauthorizedException('Invalid signature');
     }
 
-    // Find or create user
-    let user = await this.prisma.user.findFirst({
-      where: { walletAddress },
-    });
+    let user = await this.prisma.user.findFirst({ where: { walletAddress } });
 
     if (!user) {
-      // Create new user with wallet
       const username = `user_${walletAddress.slice(-6).toLowerCase()}`;
       user = await this.prisma.user.create({
         data: {
           email: `${username}@wallet.local`,
           username,
-          password: await bcrypt.hash(Math.random().toString(), 10), // Random password for wallet users
+          password: await bcrypt.hash(Math.random().toString(), 10),
           firstName: 'Wallet',
           lastName: 'User',
           walletAddress,
@@ -189,172 +129,111 @@ export class AuthService {
       });
     }
 
-    // Update last login
     await this.prisma.user.update({
       where: { id: user.id },
       data: { lastLoginAt: new Date() },
     });
 
-    // Generate tokens
-    const { accessToken, refreshToken } = await this.generateTokens(
-      user.id,
-      user.email,
-      user.walletAddress || undefined,
-      user.role,
-    );
+    const accessToken = this.signAccessToken(user);
+    const refreshToken = await this.refreshTokenService.generate(user.id);
 
-    // Save refresh token to database
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { refreshToken },
-    });
-
-    return {
-      accessToken,
-      refreshToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        walletAddress: user.walletAddress || undefined,
-      },
-    };
+    return { accessToken, refreshToken, user: this.sanitizeUser(user) };
   }
 
   /**
-   * Refresh access token using refresh token
+   * Refresh access token using opaque refresh token (with rotation)
+   *
+   * Security: Each refresh issues a NEW token and INVALIDATES the old one.
+   * Reusing an old token triggers a replay detection → all sessions revoked.
    */
   async refreshToken(refreshTokenDto: RefreshTokenDto) {
-    const { refreshToken } = refreshTokenDto;
+    const { refreshToken: rawToken } = refreshTokenDto;
 
     try {
-      // Verify refresh token
-      const payload = this.jwtService.verify(refreshToken, {
-        secret: this.refreshTokenSecret,
-      });
+      // Rotate the token — validates, invalidates old, issues new
+      const { newToken, userId } =
+        await this.refreshTokenService.rotate(rawToken);
 
-      // Find user and verify refresh token
-      const user = await this.prisma.user.findUnique({
-        where: { id: payload.sub },
-      });
-
-      if (!user || user.refreshToken !== refreshToken) {
-        throw new UnauthorizedException('Invalid refresh token');
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+      if (!user || !user.isActive) {
+        throw new UnauthorizedException('User not found or inactive');
       }
 
-      // Generate new tokens
-      const { accessToken, refreshToken: newRefreshToken } =
-        await this.generateTokens(
-          user.id,
-          user.email,
-          user.walletAddress || undefined,
-          user.role,
-        );
-
-      // Save new refresh token
-      await this.prisma.user.update({
-        where: { id: user.id },
-        data: { refreshToken: newRefreshToken },
-      });
+      const accessToken = this.signAccessToken(user);
 
       return {
         accessToken,
-        refreshToken: newRefreshToken,
-        user: {
-          id: user.id,
-          email: user.email,
-          username: user.username,
-          walletAddress: user.walletAddress || undefined,
-        },
+        refreshToken: newToken,
+        user: this.sanitizeUser(user),
       };
     } catch (error) {
-      throw new UnauthorizedException('Invalid refresh token');
+      if (error instanceof UnauthorizedException) throw error;
+      throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }
 
   /**
-   * Logout user by invalidating refresh token
+   * Logout — revoke the refresh token
    */
-  async logout(userId: string) {
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { refreshToken: null },
-    });
-
+  async logout(userId: string, rawRefreshToken?: string) {
+    if (rawRefreshToken) {
+      await this.refreshTokenService.revoke(rawRefreshToken);
+    }
     return { message: 'Logged out successfully' };
   }
 
-  /**
-   * Generate access and refresh tokens
-   */
-  private async generateTokens(
-    userId: string,
-    email: string,
-    walletAddress?: string,
-    role?: string,
-  ) {
+  /* ---- Token helpers ---- */
+
+  private signAccessToken(user: { id: string; email: string; role: string; walletAddress?: string | null }): string {
     const payload = {
-      sub: userId,
-      email,
-      role: role || 'USER',
-      ...(walletAddress && { walletAddress }),
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      ...(user.walletAddress && { walletAddress: user.walletAddress }),
     };
 
-    const accessToken = this.jwtService.sign(payload, {
+    return this.jwtService.sign(payload, {
       secret: this.jwtSecret,
-      expiresIn: 900, // 15 minutes in seconds
+      expiresIn: '15m', // 15 minutes — short-lived for security
     });
-
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: this.refreshTokenSecret,
-      expiresIn: 604800, // 7 days in seconds
-    });
-
-    return { accessToken, refreshToken };
   }
 
-  /**
-   * Verify wallet signature using ethers.js
-   */
+  private sanitizeUser(user: { id: string; email: string; username: string; walletAddress?: string | null }) {
+    return {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      walletAddress: user.walletAddress || undefined,
+    };
+  }
+
+  /* ---- Wallet helpers ---- */
+
   private verifySignature(message: string, signature: string): string {
     try {
-      const signerAddress = ethers.verifyMessage(message, signature);
-      return signerAddress;
-    } catch (error) {
+      return ethers.verifyMessage(message, signature);
+    } catch {
       throw new UnauthorizedException('Invalid signature');
     }
   }
 
-  /**
-   * Validate Ethereum wallet address format
-   */
   private isValidWalletAddress(address: string): boolean {
     return /^0x[a-fA-F0-9]{40}$/.test(address);
   }
 
-  /**
-   * Get current user by ID
-   */
+  /* ---- User lookup ---- */
+
   async getCurrentUser(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
-        id: true,
-        email: true,
-        username: true,
-        firstName: true,
-        lastName: true,
-        walletAddress: true,
-        role: true,
-        isActive: true,
-        createdAt: true,
+        id: true, email: true, username: true, firstName: true,
+        lastName: true, walletAddress: true, role: true,
+        isActive: true, createdAt: true,
       },
     });
 
-    if (!user) {
-      throw new UnauthorizedException('User not found');
-    }
-
+    if (!user) throw new UnauthorizedException('User not found');
     return user;
   }
 }
