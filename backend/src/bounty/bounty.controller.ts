@@ -11,6 +11,9 @@ import {
   Delete,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RoleGuard } from '../auth/guards/role.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../user/dto/user.dto';
 import { BountyService } from './bounty.service';
 import { CreateBountyDto } from './dto/create-bounty.dto';
 import { UpdateBountyDto } from './dto/update-bounty.dto';
@@ -50,7 +53,8 @@ export class BountyController {
     return this.service.search(q, Number(page), Number(size), guildId);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles(UserRole.ADMIN)
   @Patch(':id')
   async update(
     @Param('id') id: string,
@@ -60,7 +64,8 @@ export class BountyController {
     return this.service.update(id, dto, req.user.userId);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles(UserRole.ADMIN)
   @Post(':id/cancel')
   async cancel(@Param('id') id: string, @Request() req: any) {
     return this.service.cancel(id, req.user.userId);
@@ -82,7 +87,8 @@ export class BountyController {
     return this.service.listApplications(id, req.user.userId);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles(UserRole.ADMIN, UserRole.MODERATOR)
   @Post(':id/applications/:appId/review')
   async reviewApplication(
     @Param('id') id: string,
@@ -120,7 +126,8 @@ export class BountyController {
     return this.service.completeMilestone(id, mid, req.user.userId);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles(UserRole.ADMIN, UserRole.MODERATOR)
   @Post(':id/milestones/:mid/approve')
   async approveMilestone(
     @Param('id') id: string,
@@ -148,7 +155,8 @@ export class BountyController {
    * Admin endpoint to review submitted bounty work
    * POST /bounties/:id/review-work
    */
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles(UserRole.ADMIN)
   @Post(':id/review-work')
   async reviewWork(
     @Param('id') id: string,
