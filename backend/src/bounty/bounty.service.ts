@@ -86,6 +86,9 @@ export class BountyService {
       where.guildId = filters.guildId;
     }
 
+    // Exclude bounties belonging to soft-deleted guilds
+    where.guild = { deletedAt: null };
+
     const [items, total] = await Promise.all([
       this.prisma.bounty.findMany({
         where,
@@ -111,6 +114,9 @@ export class BountyService {
     const where: any = {};
     if (Object.keys(text).length) where.AND = [text];
     if (guildId) where.guildId = guildId;
+
+    // Exclude bounties belonging to soft-deleted guilds
+    where.guild = { deletedAt: null };
 
     const [items, total] = await Promise.all([
       this.prisma.bounty.findMany({ where, skip: page * size, take: size }),

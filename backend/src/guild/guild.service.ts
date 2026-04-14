@@ -172,7 +172,21 @@ export class GuildService {
     if (!guild) throw new NotFoundException('Guild not found');
     if (guild.ownerId !== userId)
       throw new ForbiddenException('Only owner can delete the guild');
-    return this.prisma.guild.delete({ where: { id: guildId } });
+
+    const now = new Date();
+
+    // Soft-delete the guild and cascade to all associated bounties
+    // within a transaction to prevent partial state
+    return this.prisma.$transaction(async (tx) => {
+      await tx.bounty.updateMany({
+        where: { guildId, deletedAt: null },
+        data: { deletedAt: now },
+      });
+      return tx.guild.update({
+        where: { id: guildId },
+        data: { deletedAt: now, isActive: false },
+      });
+    });
   }
 
   async searchGuilds(q: string | undefined, page = 0, size = 20) {
