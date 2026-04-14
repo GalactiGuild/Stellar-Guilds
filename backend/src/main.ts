@@ -11,6 +11,8 @@ import * as path from 'path';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: new WinstonLogger('Bootstrap'),
+    // Allow raw body buffers for webhook signature verification
+    rawBody: true,
   });
 
   const logger = new WinstonLogger('Main');
@@ -19,6 +21,10 @@ async function bootstrap() {
 
   // Apply response standardization globally
   app.useGlobalInterceptors(new ResponseInterceptor());
+
+  // Raw body parser for webhook routes (needed for HMAC signature verification)
+  app.use('/webhooks/fiat', express.raw({ type: 'application/json' }));
+
   app.use(
     '/uploads',
     express.static(
