@@ -110,6 +110,21 @@ export class UserController {
   }
 
   /**
+   * Mark onboarding as completed for the current user
+   */
+  @Post('me/complete-onboarding')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Mark onboarding as completed' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Onboarding marked as completed',
+  })
+  @HttpCode(HttpStatus.OK)
+  async completeOnboarding(@Request() req: any) {
+    return this.userService.completeOnboarding(req.user.userId);
+  }
+
+  /**
    * Upload user avatar
    * Accepts multipart/form-data with a single "file" field.
    * File must be JPEG, PNG, or WebP format and less than 5MB.
