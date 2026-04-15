@@ -1,160 +1,49 @@
-import {
-  Controller,
-  Post,
-  Body,
-  UseGuards,
-  Request,
-  Get,
-  Param,
-  Query,
-  Patch,
-  Delete,
-} from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { BountyService } from './bounty.service';
-import { CreateBountyDto } from './dto/create-bounty.dto';
-import { UpdateBountyDto } from './dto/update-bounty.dto';
-import { ApplyBountyDto } from './dto/apply-bounty.dto';
-import { CreateMilestoneDto } from './dto/create-milestone.dto';
-import { ReviewWorkDto } from './dto/review-work.dto';
-import { SubmitBountyWorkDto } from './dto/submit-work.dto';
-import { FindBountyDto } from './dto/find-bounty.dto';
+import { CreateBountyDto, UpdateBountyDto, SubmitBountyDto } from './dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RoleGuard } from '../auth/guards/role.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { Role } from '@prisma/client';
 
 @Controller('bounties')
+@UseGuards(JwtAuthGuard)
 export class BountyController {
-  constructor(private service: BountyService) {}
+  constructor(private readonly bountyService: BountyService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Post()
-  async create(@Body() dto: CreateBountyDto, @Request() req: any) {
-    return this.service.create(dto, req.user.userId);
-  }
-
-  @Get('open')
-  async findAll(@Query() filters: FindBountyDto) {
-    return this.service.findAll(filters);
-  }
-
-  @Get(':id')
-  async get(@Param('id') id: string) {
-    return this.service.findOne(id);
+  @UseGuards(RoleGuard)
+  @Roles(Role.ADMIN, Role.GUILD_OWNER)
+  create(@Body() createBountyDto: CreateBountyDto) {
+    return this.bountyService.create(createBountyDto);
   }
 
   @Get()
-  async search(
-    @Query('q') q: string,
-    @Query('page') page = '0',
-    @Query('size') size = '20',
-    @Query('guildId') guildId?: string,
-  ) {
-    return this.service.search(q, Number(page), Number(size), guildId);
+  findAll() {
+    return this.bountyService.findAll();
   }
 
-  @UseGuards(JwtAuthGuard)
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.bountyService.findOne(id);
+  }
+
   @Patch(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() dto: UpdateBountyDto,
-    @Request() req: any,
-  ) {
-    return this.service.update(id, dto, req.user.userId);
+  @UseGuards(RoleGuard)
+  @Roles(Role.ADMIN, Role.GUILD_OWNER)
+  update(@Param('id') id: string, @Body() updateBountyDto: UpdateBountyDto) {
+    return this.bountyService.update(id, updateBountyDto);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Post(':id/cancel')
-  async cancel(@Param('id') id: string, @Request() req: any) {
-    return this.service.cancel(id, req.user.userId);
+  @Delete(':id')
+  @UseGuards(RoleGuard)
+  @Roles(Role.ADMIN, Role.GUILD_OWNER)
+  remove(@Param('id') id: string) {
+    return this.bountyService.remove(id);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Post(':id/apply')
-  async apply(
-    @Param('id') id: string,
-    @Body() dto: ApplyBountyDto,
-    @Request() req: any,
-  ) {
-    return this.service.apply(id, dto, req.user.userId);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get(':id/applications')
-  async listApplications(@Param('id') id: string, @Request() req: any) {
-    return this.service.listApplications(id, req.user.userId);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post(':id/applications/:appId/review')
-  async reviewApplication(
-    @Param('id') id: string,
-    @Param('appId') appId: string,
-    @Body() body: any,
-    @Request() req: any,
-  ) {
-    const accept = !!body.accept;
-    return this.service.reviewApplication(
-      id,
-      appId,
-      accept,
-      req.user.userId,
-      body.message,
-    );
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post(':id/milestones')
-  async createMilestone(
-    @Param('id') id: string,
-    @Body() dto: CreateMilestoneDto,
-    @Request() req: any,
-  ) {
-    return this.service.createMilestone(id, dto, req.user.userId);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post(':id/milestones/:mid/complete')
-  async completeMilestone(
-    @Param('id') id: string,
-    @Param('mid') mid: string,
-    @Request() req: any,
-  ) {
-    return this.service.completeMilestone(id, mid, req.user.userId);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post(':id/milestones/:mid/approve')
-  async approveMilestone(
-    @Param('id') id: string,
-    @Param('mid') mid: string,
-    @Request() req: any,
-  ) {
-    return this.service.approveMilestone(id, mid, req.user.userId);
-  }
-
-  /**
-   * Submit work for an active, assigned bounty
-   * POST /bounties/:id/submit-work
-   */
-  @UseGuards(JwtAuthGuard)
-  @Post(':id/submit-work')
-  async submitWork(
-    @Param('id') id: string,
-    @Body() dto: SubmitBountyWorkDto,
-    @Request() req: any,
-  ) {
-    return this.service.submitWork(id, dto, req.user.userId);
-  }
-
-  /**
-   * Admin endpoint to review submitted bounty work
-   * POST /bounties/:id/review-work
-   */
-  @UseGuards(JwtAuthGuard)
-  @Post(':id/review-work')
-  async reviewWork(
-    @Param('id') id: string,
-    @Body() dto: ReviewWorkDto,
-    @Request() req: any,
-  ) {
-    return this.service.reviewWork(id, dto, req.user.userId);
+  @Post(':id/submit')
+  submitWork(@Param('id') id: string, @Body() submitBountyDto: SubmitBountyDto) {
+    return this.bountyService.submitWork(id, submitBountyDto);
   }
 }
