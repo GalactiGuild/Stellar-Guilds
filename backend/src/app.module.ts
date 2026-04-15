@@ -13,6 +13,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { HealthModule } from './health/health.module';
 import { LoggerModule } from './logger/logger.module';
 import { QueueModule } from './queue/queue.module';
+import { ContentTypeMiddleware } from './common/middleware/content-type.middleware';
+import { MiddlewareConsumer, NestModule } from '@nestjs/common';
 
 @Module({
   imports: [
@@ -44,4 +46,8 @@ import { QueueModule } from './queue/queue.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(ContentTypeMiddleware).forRoutes('*');
+  }
+}
