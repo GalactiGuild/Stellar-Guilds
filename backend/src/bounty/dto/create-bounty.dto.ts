@@ -1,38 +1,21 @@
-import {
-  IsString,
-  IsOptional,
-  IsNumber,
-  IsDecimal,
-  IsPositive,
-  MaxLength,
-  IsISO8601,
-} from 'class-validator';
-import { IsFutureDate } from '../decorators/future-date.decorator';
+import { IsString, IsNumber, IsOptional, IsDateString, Min } from 'class-validator';
 
 export class CreateBountyDto {
   @IsString()
-  @MaxLength(200)
-  title!: string;
+  title: string;
 
   @IsString()
-  @MaxLength(5000)
-  description!: string;
+  description: string;
 
-  @IsOptional()
   @IsNumber()
-  @IsPositive()
-  rewardAmount?: number;
+  @Min(0)
+  rewardAmount: number;
+
+  @IsOptional()
+  @IsDateString()
+  expiresAt?: string;
 
   @IsOptional()
   @IsString()
-  rewardToken?: string;
-
-  @IsOptional()
-  @IsISO8601()
-  @IsFutureDate({ message: 'Deadline must be a valid date in the future' })
-  deadline?: string;
-
-  @IsOptional()
-  @IsString()
-  guildId?: string;
+  requirements?: string;
 }
