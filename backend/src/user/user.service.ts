@@ -45,6 +45,7 @@ export class UserService {
         discordHandle: true,
         twitterHandle: true,
         githubHandle: true,
+        onboardingCompleted: true,
         createdAt: true,
         role: true,
       },
@@ -88,6 +89,7 @@ export class UserService {
         twitterHandle: true,
         githubHandle: true,
         walletAddress: true,
+        onboardingCompleted: true,
         role: true,
         isActive: true,
         lastLoginAt: true,
@@ -403,6 +405,31 @@ export class UserService {
     });
 
     return { message: 'User account reactivated successfully' };
+  }
+
+  /**
+   * Mark user onboarding as completed
+   */
+  async completeOnboarding(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { onboardingCompleted: true },
+      select: {
+        id: true,
+        username: true,
+        onboardingCompleted: true,
+      },
+    });
+
+    return updated;
   }
 
   // Existing basic CRUD methods (kept for compatibility)
