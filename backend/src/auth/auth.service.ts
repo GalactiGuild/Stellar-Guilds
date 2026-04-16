@@ -300,14 +300,23 @@ export class AuthService {
       ...(walletAddress && { walletAddress }),
     };
 
+    const accessTokenExpiration = this.configService.get<number>(
+      'JWT_ACCESS_EXPIRATION',
+      900,
+    );
+    const refreshTokenExpiration = this.configService.get<number>(
+      'JWT_REFRESH_EXPIRATION',
+      604800,
+    );
+
     const accessToken = this.jwtService.sign(payload, {
       secret: this.jwtSecret,
-      expiresIn: 900, // 15 minutes in seconds
+      expiresIn: accessTokenExpiration,
     });
 
     const refreshToken = this.jwtService.sign(payload, {
       secret: this.refreshTokenSecret,
-      expiresIn: 604800, // 7 days in seconds
+      expiresIn: refreshTokenExpiration,
     });
 
     return { accessToken, refreshToken };
