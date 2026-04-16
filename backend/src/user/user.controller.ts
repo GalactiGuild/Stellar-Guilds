@@ -165,6 +165,71 @@ export class UserController {
   }
 
   /**
+   * Get current user's favorite guilds
+   */
+  @Get('me/favorites')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get current user\'s favorite guilds' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'List of favorite guilds',
+  })
+  async getFavoriteGuilds(@Request() req: any) {
+    return this.userService.getFavoriteGuilds(req.user.userId);
+  }
+
+  /**
+   * Add a guild to current user's favorites
+   */
+  @Post('me/favorites/:guildId')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Add a guild to favorites' })
+  @ApiParam({ name: 'guildId', description: 'Guild ID to favorite' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Guild added to favorites',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Guild not found',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Guild already in favorites',
+  })
+  async addFavoriteGuild(
+    @Request() req: any,
+    @Param('guildId') guildId: string,
+  ) {
+    return this.userService.addFavoriteGuild(req.user.userId, guildId);
+  }
+
+  /**
+   * Remove a guild from current user's favorites
+   */
+  @Delete('me/favorites/:guildId')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Remove a guild from favorites' })
+  @ApiParam({ name: 'guildId', description: 'Guild ID to unfavorite' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Guild removed from favorites',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Guild not in favorites',
+  })
+  async removeFavoriteGuild(
+    @Request() req: any,
+    @Param('guildId') guildId: string,
+  ) {
+    return this.userService.removeFavoriteGuild(req.user.userId, guildId);
+  }
+
+  /**
    * Get user details (admin or self)
    */
   @Get('details/:userId')

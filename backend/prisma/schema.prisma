@@ -94,6 +94,7 @@ model User {
   privacySettings    PrivacySettings?
   bountyApplications BountyApplication[]
   bountyPayouts      BountyPayout[]
+  favoriteGuilds     UserFavoriteGuild[]
 
   @@map("users")
 }
@@ -117,6 +118,7 @@ model Guild {
   owner       User              @relation("UserOwnerGuilds", fields: [ownerId], references: [id])
   memberships GuildMembership[]
   bounties    Bounty[]          @relation("GuildBounties")
+  favoritedBy UserFavoriteGuild[]
 
   @@map("guilds")
 }
@@ -291,4 +293,17 @@ model PrivacySettings {
   showActivityFeed              Boolean @default(true)
   allowMessagesFromNonFollowers Boolean @default(false)
   showAchievements              Boolean @default(true)
+}
+
+model UserFavoriteGuild {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  guildId   String
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, guildId])
+  @@map("user_favorite_guilds")
 }

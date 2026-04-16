@@ -448,4 +448,95 @@ export class UserService {
       where,
     });
   }
+
+  /**
+   * Get current user's favorite guilds
+   */
+  async getFavoriteGuilds(userId: string) {
+    const favorites = await this.prisma.userFavoriteGuild.findMany({
+      where: { userId },
+      include: {
+        guild: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            description: true,
+            avatarUrl: true,
+            bannerUrl: true,
+            memberCount: true,
+            _count: { select: { bounties: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return {
+      data: favorites.map((f) => ({
+        favoritedAt: f.createdAt,
+        ...f.guild,
+        bountyCount: f.guild._count.bounties,
+      })),
+      total: favorites.length,
+    };
+  }
+
+  /**
+   * Add a guild to user's favorites
+   */
+  async addFavoriteGuild(userId: string, guildId: string) {
+    // Verify the guild exists
+    const guild = await this.prisma.guild.findUnique({
+      where: { id: guildId },
+    });
+    if (!guild) {
+      throw new NotFoundException('Guild not found');
+    }
+
+    // Check if already favorited (unique constraint will also catch this, but we can give a nicer error)
+    const existing = await this.prisma.userFavoriteGuild.findUnique({
+      where: { userId_guildId: { userId, guildId } },
+    });
+    if (existing) {
+      throw new BadRequestException('Guild is already in your favorites');
+    }
+
+    const favorite = await this.prisma.userFavoriteGuild.create({
+      data: { userId, guildId },
+      include: {
+        guild: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+
+    return {
+      message: 'Guild added to favorites',
+      favorite,
+    };
+  }
+
+  /**
+   * Remove a guild from user's favorites
+   */
+  async removeFavoriteGuild(userId: string, guildId: string) {
+    const existing = await this.prisma.userFavoriteGuild.findUnique({
+      where: { userId_guildId: { userId, guildId } },
+    });
+    if (!existing) {
+      throw new NotFoundException('Guild is not in your favorites');
+    }
+
+    await this.prisma.userFavoriteGuild.delete({
+      where: { userId_guildId: { userId, guildId } },
+    });
+
+    return { message: 'Guild removed from favorites' };
+  }
 }
