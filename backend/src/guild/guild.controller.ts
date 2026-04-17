@@ -21,6 +21,7 @@ import { GuildRoles } from './decorators/guild-roles.decorator';
 import { GuildService } from './guild.service';
 import { CreateGuildDto } from './dto/create-guild.dto';
 import { UpdateGuildDto } from './dto/update-guild.dto';
+import { UpdateBannerCidDto } from './dto/update-banner-cid.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
 import { ApproveInviteDto } from './dto/approve-invite.dto';
 import { SearchGuildDto } from './dto/search-guild.dto';
@@ -296,5 +297,37 @@ export class GuildController {
       bannerUrl: result.bannerUrl,
       message: 'Guild banner updated successfully',
     };
+  }
+
+  /**
+   * Update guild banner CID
+   * Accepts a CID (Content Identifier) string in the request body.
+   * Only admins and owners can update this field.
+   */
+  @Patch(':id/banner')
+  @UseGuards(JwtAuthGuard, GuildRoleGuard)
+  @GuildRoles('ADMIN', 'OWNER')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update guild banner CID' })
+  @ApiParam({ name: 'id', description: 'Guild ID (UUID)' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Banner CID updated successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Insufficient permissions',
+  })
+  async updateBannerCid(
+    @Param('id') id: string,
+    @Body() dto: UpdateBannerCidDto,
+    @Request() req: any,
+  ) {
+    const result = await this.guildService.updateGuildBannerCid(
+      id,
+      dto.bannerCid,
+      req.user.userId,
+    );
+    return result;
   }
 }

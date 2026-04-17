@@ -545,4 +545,31 @@ export class GuildService {
 
     return updated;
   }
+
+  /**
+   * Update guild banner CID (Content Identifier)
+   * Only admins and owners can update this field.
+   */
+  async updateGuildBannerCid(
+    guildId: string,
+    bannerCid: string,
+    userId: string,
+  ) {
+    await this.ensureManagePermission(guildId, userId);
+
+    const guild = await this.prisma.guild.findUnique({
+      where: { id: guildId },
+    });
+
+    if (!guild) {
+      throw new NotFoundException('Guild not found');
+    }
+
+    const updated = await this.prisma.guild.update({
+      where: { id: guildId },
+      data: { bannerCid },
+    });
+
+    return updated;
+  }
 }

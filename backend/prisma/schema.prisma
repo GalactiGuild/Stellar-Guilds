@@ -108,6 +108,7 @@ model Guild {
   description String?
   avatarUrl   String?
   bannerUrl   String?
+  bannerCid   String?
   ownerId     String
   settings    Json?
   memberCount Int       @default(1)
