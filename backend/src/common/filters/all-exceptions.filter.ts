@@ -25,6 +25,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
     } else if (
       exception &&
       typeof exception === 'object' &&
+      (exception.type === 'entity.too.large' || exception.status === 413)
+    ) {
+      // Handle Express body parser payload too large errors
+      httpStatus = HttpStatus.PAYLOAD_TOO_LARGE;
+      message = 'Payload too large';
+    } else if (
+      exception &&
+      typeof exception === 'object' &&
       (exception.constructor.name === 'PrismaClientKnownRequestError' ||
         exception.name === 'PrismaClientKnownRequestError')
     ) {

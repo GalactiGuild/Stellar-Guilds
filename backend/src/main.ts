@@ -19,6 +19,11 @@ async function bootstrap() {
 
   // Apply response standardization globally
   app.useGlobalInterceptors(new ResponseInterceptor());
+
+  // Configure body parser size limits to prevent DoS attacks
+  // Standard JSON requests limited to 100kb
+  app.use(express.json({ limit: '100kb' }));
+  app.use(express.urlencoded({ extended: true, limit: '100kb' }));
   app.use(
     '/uploads',
     express.static(
