@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { SanitizeResponseInterceptor } from './common/interceptors/sanitize-response.interceptor';
 import { WinstonLogger } from './logger/winston.logger';
 import * as express from 'express';
 import * as path from 'path';
@@ -18,6 +19,7 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapterHost));
 
   // Apply response standardization globally
+  app.useGlobalInterceptors(new SanitizeResponseInterceptor());
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.use(
     '/uploads',

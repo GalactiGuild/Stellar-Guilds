@@ -5,6 +5,7 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { AllExceptionsFilter } from '../src/common/filters/all-exceptions.filter';
 import { HttpAdapterHost } from '@nestjs/core';
 import { ResponseInterceptor } from '../src/common/interceptors/response.interceptor';
+import { SanitizeResponseInterceptor } from '../src/common/interceptors/sanitize-response.interceptor';
 
 export interface TestApp {
   app: INestApplication;
@@ -40,6 +41,7 @@ export async function createTestApp(): Promise<TestApp> {
     }),
   );
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapterHost));
+  app.useGlobalInterceptors(new SanitizeResponseInterceptor());
   app.useGlobalInterceptors(new ResponseInterceptor());
 
   await app.init();
