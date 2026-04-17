@@ -25,6 +25,8 @@ import { InviteMemberDto } from './dto/invite-member.dto';
 import { ApproveInviteDto } from './dto/approve-invite.dto';
 import { SearchGuildDto } from './dto/search-guild.dto';
 import { GuildDetailsDto } from './dto/guild-details.dto';
+import { CreateJoinRequestDto } from './dto/create-join-request.dto';
+import { ModerateJoinRequestDto } from './dto/moderate-join-request.dto';
 import { validateImageFile } from '../common/utils/file-upload.validator';
 import {
   ApiTags,
@@ -200,6 +202,75 @@ export class GuildController {
     @Request() req: any,
   ) {
     return this.guildService.assignRole(id, userId, body.role, req.user.userId);
+  }
+
+  /**
+   * Submit a join request to a guild (MODERATION_PENDING status)
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/join-request')
+  @ApiOperation({ summary: 'Submit a join request to a guild' })
+  @ApiParam({ name: 'id', description: 'Guild ID' })
+  @ApiResponse({ status: 201, description: 'Join request created' })
+  @ApiResponse({ status: 400, description: 'Already a member or request pending' })
+  @ApiResponse({ status: 404, description: 'Guild not found' })
+  async createJoinRequest(
+    @Param('id') id: string,
+    @Body() dto: CreateJoinRequestDto,
+    @Request() req: any,
+  ) {
+    return this.guildService.createJoinRequest(id, req.user.userId, dto.message);
+  }
+
+  /**
+   * Get moderation queue (MODERATION_PENDING requests)
+   * Only visible to high-level admins (ADMIN, OWNER)
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/moderation-queue')
+  @ApiOperation({ summary: 'Get join requests pending moderation' })
+  @ApiParam({ name: 'id', description: 'Guild ID' })
+  @ApiResponse({ status: 200, description: 'Moderation queue retrieved' })
+  @ApiResponse({ status: 403, description: 'Not authorized to view moderation queue' })
+  async getModerationQueue(
+    @Param('id') id: string,
+    @Request() req: any,
+    @Query('page') page?: string,
+    @Query('size') size?: string,
+  ) {
+    return this.guildService.getModerationQueue(
+      id,
+      req.user.userId,
+      page ? parseInt(page, 10) : 0,
+      size ? parseInt(size, 10) : 20,
+    );
+  }
+
+  /**
+   * Moderate a join request (approve to PENDING or reject)
+   * Only high-level admins (ADMIN, OWNER) can moderate
+   */
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/moderation-queue/:requestId')
+  @ApiOperation({ summary: 'Moderate a join request (approve or reject)' })
+  @ApiParam({ name: 'id', description: 'Guild ID' })
+  @ApiParam({ name: 'requestId', description: 'Join request ID' })
+  @ApiResponse({ status: 200, description: 'Request moderated successfully' })
+  @ApiResponse({ status: 403, description: 'Not authorized to moderate' })
+  @ApiResponse({ status: 404, description: 'Request not found' })
+  async moderateJoinRequest(
+    @Param('id') id: string,
+    @Param('requestId') requestId: string,
+    @Body() dto: ModerateJoinRequestDto,
+    @Request() req: any,
+  ) {
+    return this.guildService.moderateJoinRequest(
+      id,
+      requestId,
+      req.user.userId,
+      dto.action,
+      dto.reviewMessage,
+    );
   }
 
   /**

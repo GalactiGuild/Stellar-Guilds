@@ -503,7 +503,172 @@ export class GuildService {
   }
 
   /**
-   * Update guild banner
+   * Create a join request (MODERATION_PENDING status)
+   */
+  async createJoinRequest(guildId: string, userId: string, message?: string) {
+    // Check if guild exists
+    const guild = await this.prisma.guild.findUnique({
+      where: { id: guildId },
+    });
+    if (!guild) throw new NotFoundException('Guild not found');
+
+    // Check if user already has a membership or request
+    const existing = await this.prisma.guildMembership.findUnique({
+      where: { userId_guildId: { userId, guildId } },
+    });
+    if (existing) {
+      if (existing.status === 'APPROVED')
+        throw new BadRequestException('Already a member');
+      if (existing.status === 'MODERATION_PENDING')
+        throw new BadRequestException('Join request already pending moderation');
+      if (existing.status === 'PENDING')
+        throw new BadRequestException('Invite already pending');
+    }
+
+    const membership = await this.prisma.guildMembership.create({
+      data: {
+        userId,
+        guildId,
+        role: 'MEMBER',
+        status: 'MODERATION_PENDING',
+        message,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+
+    return membership;
+  }
+
+  /**
+   * Get moderation queue (MODERATION_PENDING requests)
+   * Only visible to high-level admins (ADMIN, OWNER)
+   */
+  async getModerationQueue(guildId: string, userId: string, page = 0, size = 20) {
+    // Verify guild exists
+    const guild = await this.prisma.guild.findUnique({
+      where: { id: guildId },
+    });
+    if (!guild) throw new NotFoundException('Guild not found');
+
+    // Check if user is ADMIN or OWNER
+    if (guild.ownerId !== userId) {
+      const membership = await this.prisma.guildMembership.findUnique({
+        where: { userId_guildId: { userId, guildId } },
+      });
+      if (!membership || !['ADMIN', 'OWNER'].includes(membership.role)) {
+        throw new ForbiddenException('Only admins can view moderation queue');
+      }
+    }
+
+    const where = { guildId, status: 'MODERATION_PENDING' as const };
+
+    const [items, total] = await Promise.all([
+      this.prisma.guildMembership.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              firstName: true,
+              lastName: true,
+              avatarUrl: true,
+              profileBio: true,
+              technicalTags: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'asc' },
+        skip: page * size,
+        take: size,
+      }),
+      this.prisma.guildMembership.count({ where }),
+    ]);
+
+    return { items, total, page, size };
+  }
+
+  /**
+   * Moderate a join request (approve to PENDING or reject)
+   * Only high-level admins (ADMIN, OWNER) can moderate
+   */
+  async moderateJoinRequest(
+    guildId: string,
+    requestId: string,
+    reviewerId: string,
+    action: 'APPROVE' | 'REJECT',
+    reviewMessage?: string,
+  ) {
+    // Verify guild exists
+    const guild = await this.prisma.guild.findUnique({
+      where: { id: guildId },
+    });
+    if (!guild) throw new NotFoundException('Guild not found');
+
+    // Check if reviewer is ADMIN or OWNER
+    if (guild.ownerId !== reviewerId) {
+      const membership = await this.prisma.guildMembership.findUnique({
+        where: { userId_guildId: { userId: reviewerId, guildId } },
+      });
+      if (!membership || !['ADMIN', 'OWNER'].includes(membership.role)) {
+        throw new ForbiddenException('Only admins can moderate join requests');
+      }
+    }
+
+    // Find the request
+    const request = await this.prisma.guildMembership.findUnique({
+      where: { id: requestId },
+    });
+    if (!request) throw new NotFoundException('Join request not found');
+    if (request.guildId !== guildId)
+      throw new BadRequestException('Request does not belong to this guild');
+    if (request.status !== 'MODERATION_PENDING')
+      throw new BadRequestException('Request is not in moderation pending status');
+
+    const newStatus = action === 'APPROVE' ? 'PENDING' : 'REJECTED';
+
+    const updated = await this.prisma.guildMembership.update({
+      where: { id: requestId },
+      data: {
+        status: newStatus,
+        reviewedById: reviewerId,
+        reviewMessage,
+        reviewedAt: new Date(),
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
+        reviewedBy: {
+          select: {
+            id: true,
+            username: true,
+          },
+        },
+      },
+    });
+
+    return updated;
+  }
+
+  /**
+   * Update guild logo (avatarUrl)
    */
   async updateGuildBanner(
     guildId: string,

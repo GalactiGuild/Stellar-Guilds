@@ -94,6 +94,7 @@ model User {
   privacySettings    PrivacySettings?
   bountyApplications BountyApplication[]
   bountyPayouts      BountyPayout[]
+  reviewedMemberships GuildMembership[]  @relation("UserReviewedMemberships")
 
   @@map("users")
 }
@@ -132,12 +133,17 @@ model GuildMembership {
   role                GuildRole        @default(MEMBER)
   userId              String
   guildId             String
+  message             String?          // Join request message from user
+  reviewedById        String?
+  reviewMessage       String?
+  reviewedAt          DateTime?
 
   // Relations
   user  User  @relation("UserJoinedGuilds", fields: [userId], references: [id], onDelete: Cascade)
   guild Guild @relation(fields: [guildId], references: [id], onDelete: Cascade)
 
-  invitedBy User? @relation("UserInvitedMemberships", fields: [invitedById], references: [id])
+  invitedBy  User? @relation("UserInvitedMemberships", fields: [invitedById], references: [id])
+  reviewedBy User? @relation("UserReviewedMemberships", fields: [reviewedById], references: [id])
 
   //  REVOKED
   @@unique([userId, guildId])
@@ -145,6 +151,7 @@ model GuildMembership {
 }
 
 enum MembershipStatus {
+  MODERATION_PENDING
   PENDING
   APPROVED
   REJECTED
