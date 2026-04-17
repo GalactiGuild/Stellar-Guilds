@@ -47,6 +47,7 @@ export class UserService {
         githubHandle: true,
         createdAt: true,
         role: true,
+        onboardingCompleted: true,
       },
     });
 
@@ -93,6 +94,7 @@ export class UserService {
         lastLoginAt: true,
         createdAt: true,
         updatedAt: true,
+        onboardingCompleted: true,
       },
     });
 
@@ -154,6 +156,7 @@ export class UserService {
         createdAt: true,
         updatedAt: true,
         role: true,
+        onboardingCompleted: true,
       },
     });
 
@@ -291,6 +294,7 @@ export class UserService {
           githubHandle: true,
           createdAt: true,
           role: true,
+          onboardingCompleted: true,
         },
         skip,
         take,
@@ -403,6 +407,26 @@ export class UserService {
     });
 
     return { message: 'User account reactivated successfully' };
+  }
+
+  /**
+   * Mark user onboarding as complete
+   */
+  async completeOnboarding(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { onboardingCompleted: true },
+    });
+
+    return { message: 'Onboarding marked as complete' };
   }
 
   // Existing basic CRUD methods (kept for compatibility)

@@ -155,6 +155,21 @@ export class UserController {
   }
 
   /**
+   * Mark current user's onboarding as complete
+   */
+  @Post('me/complete-onboarding')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Mark onboarding as complete' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Onboarding marked as complete',
+  })
+  async completeOnboarding(@Request() req: any) {
+    return this.userService.completeOnboarding(req.user.userId);
+  }
+
+  /**
    * Deactivate current user account
    */
   @Delete('me')

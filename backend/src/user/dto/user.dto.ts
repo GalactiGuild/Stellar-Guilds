@@ -116,6 +116,9 @@ export class UserProfileDto {
 
   @ApiProperty({ description: 'User role', enum: UserRole })
   role!: UserRole;
+
+  @ApiProperty({ description: 'Whether user has completed onboarding' })
+  onboardingCompleted!: boolean;
 }
 
 // Update user profile
