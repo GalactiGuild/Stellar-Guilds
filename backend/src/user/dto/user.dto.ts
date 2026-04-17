@@ -116,6 +116,9 @@ export class UserProfileDto {
 
   @ApiProperty({ description: 'User role', enum: UserRole })
   role!: UserRole;
+
+  @ApiPropertyOptional({ description: 'Profile view count' })
+  profileViewCount?: number;
 }
 
 // Update user profile

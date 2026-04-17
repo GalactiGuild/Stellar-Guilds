@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { ProfileViewService } from './profile-view.service';
 import {
   CreateUserDto,
   UpdateUserDto,
@@ -24,6 +25,7 @@ export class UserService {
   constructor(
     private prisma: PrismaService,
     private storageService: StorageService,
+    private profileViewService: ProfileViewService,
   ) {}
 
   /**
@@ -54,7 +56,13 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
-    return user;
+    // Fetch profile view count from Redis
+    const profileViewCount = await this.profileViewService.getViewCount(userId);
+
+    return {
+      ...user,
+      profileViewCount,
+    };
   }
 
   /**

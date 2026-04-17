@@ -26,6 +26,7 @@ import {
   ApiConsumes,
 } from '@nestjs/swagger';
 import { UserService } from './user.service';
+import { ProfileViewService } from './profile-view.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RoleGuard } from '../auth/guards/role.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -41,7 +42,10 @@ import { validateImageFile } from '../common/utils/file-upload.validator';
 
 @Controller('users')
 export class UserController {
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private profileViewService: ProfileViewService,
+  ) {}
 
   /**
    * Get current authenticated user profile
@@ -65,6 +69,7 @@ export class UserController {
   /**
    * Get user profile by ID (public)
    * Returns user profile excluding sensitive fields like password, email, walletAddress
+   * Increments the profile view counter (rate-limited per viewer)
    */
   @Get(':userId')
   @ApiOperation({ summary: 'Get user profile by ID (public)' })
@@ -79,7 +84,14 @@ export class UserController {
     description: 'User not found',
   })
   @HttpCode(HttpStatus.OK)
-  async getUserProfile(@Param('userId') userId: string) {
+  async getUserProfile(@Param('userId') userId: string, @Request() req: any) {
+    // Record the profile view (fire-and-forget, non-blocking)
+    // Use authenticated user ID if available, otherwise use IP address
+    const viewerId = req.user?.userId ?? req.ip ?? 'anonymous';
+    this.profileViewService.recordView(userId, viewerId).catch(() => {
+      // Silently ignore view recording errors - don't block profile retrieval
+    });
+
     return this.userService.getUserProfile(userId);
   }
 
