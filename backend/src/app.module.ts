@@ -14,6 +14,7 @@ import { HealthModule } from './health/health.module';
 import { LoggerModule } from './logger/logger.module';
 import { QueueModule } from './queue/queue.module';
 import { CommonModule } from './common/common.module';
+import { ReputationModule } from './reputation/reputation.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { CommonModule } from './common/common.module';
     HealthModule,
     QueueModule,
     CommonModule,
+    ReputationModule,
   ],
   controllers: [AppController],
   providers: [

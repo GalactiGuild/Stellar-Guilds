@@ -69,6 +69,7 @@ model User {
   lastLoginAt   DateTime?
   walletAddress String?   @unique
   refreshToken  String?
+  reputation    Int       @default(0)
 
   // Profile fields
   profileBio    String?
@@ -94,8 +95,49 @@ model User {
   privacySettings    PrivacySettings?
   bountyApplications BountyApplication[]
   bountyPayouts      BountyPayout[]
+  activityLogs       ActivityLog[]
+  reputationHistory  ReputationHistory[]
 
   @@map("users")
+}
+
+enum ActivityType {
+  LOGIN
+  BOUNTY_CREATED
+  BOUNTY_COMPLETED
+  GUILD_JOINED
+  FORUM_POST
+  REPUTATION_DECAY
+}
+
+model ActivityLog {
+  id        String       @id @default(cuid())
+  createdAt DateTime     @default(now())
+  userId    String
+  type      ActivityType
+  metadata  Json?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+model ReputationHistory {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  userId      String
+  amount      Int
+  reason      String
+  metadata    Json?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("reputation_history")
 }
 
 model Guild {

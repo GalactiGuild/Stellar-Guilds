@@ -72,3 +72,23 @@ export interface OnChainEventJobData {
    */
   blockHeight: number;
 }
+
+/**
+ * Interface for reputation decay job data
+ */
+export interface ReputationDecayJobData {
+  /**
+   * Timestamp when the decay job was triggered
+   */
+  triggeredAt: Date;
+
+  /**
+   * Number of days of inactivity before decay applies
+   */
+  inactivityDays: number;
+
+  /**
+   * Percentage of reputation to decay (e.g., 5 for 5%)
+   */
+  decayPercentage: number;
+}

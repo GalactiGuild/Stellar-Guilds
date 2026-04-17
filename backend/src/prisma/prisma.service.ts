@@ -82,6 +82,14 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     return this.prisma.notification;
   }
 
+  get activityLog() {
+    return this.prisma.activityLog;
+  }
+
+  get reputationHistory() {
+    return this.prisma.reputationHistory;
+  }
+
   // Expose Prisma utilities
   get $transaction() {
     return this.prisma.$transaction.bind(this.prisma);

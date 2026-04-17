@@ -16,6 +16,11 @@ export const QUEUE_NAMES = {
    * Dummy queue for testing/proof of concept
    */
   DUMMY: 'dummy',
+
+  /**
+   * Queue for reputation decay processing
+   */
+  REPUTATION_DECAY: 'reputation-decay',
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
