@@ -13,6 +13,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { HealthModule } from './health/health.module';
 import { LoggerModule } from './logger/logger.module';
 import { QueueModule } from './queue/queue.module';
+import { TreasuryModule } from './treasury/treasury.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { QueueModule } from './queue/queue.module';
     SocialModule,
     HealthModule,
     QueueModule,
+    TreasuryModule,
   ],
   controllers: [AppController],
   providers: [

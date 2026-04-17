@@ -16,6 +16,11 @@ export const QUEUE_NAMES = {
    * Dummy queue for testing/proof of concept
    */
   DUMMY: 'dummy',
+
+  /**
+   * Queue for treasury monitoring and balance alerts
+   */
+  TREASURY_MONITOR: 'treasury-monitor',
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];

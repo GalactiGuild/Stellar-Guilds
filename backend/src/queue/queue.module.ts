@@ -46,6 +46,9 @@ import { QueueController } from './queue.controller';
       {
         name: QUEUE_NAMES.ON_CHAIN_EVENTS,
       },
+      {
+        name: QUEUE_NAMES.TREASURY_MONITOR,
+      },
     ),
   ],
   controllers: [QueueController],

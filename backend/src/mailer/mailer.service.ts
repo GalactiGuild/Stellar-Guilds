@@ -70,4 +70,42 @@ If you weren't expecting this invite, ignore this message.`;
       this.logger.log(`Revoke (not sent) -> to: ${to}, subject: ${subject}`);
     }
   }
+
+  async sendTreasuryAlertEmail(
+    to: string,
+    guildName: string,
+    alert: {
+      currentBalance: { xlm: number; usdc: number };
+      threshold: number;
+      detectedAt: Date;
+    },
+  ) {
+    const from =
+      process.env.MAIL_FROM ||
+      process.env.SMTP_USER ||
+      'no-reply@stellar-guilds.local';
+    const subject = `[Stellar Guilds] Low Treasury Balance Alert - ${guildName}`;
+    const text = `Low Treasury Balance Alert
+
+Guild: ${guildName}
+Current Balance:
+  - XLM: ${alert.currentBalance.xlm}
+  - USDC: ${alert.currentBalance.usdc}
+Threshold: ${alert.threshold} XLM equivalent
+Detected at: ${alert.detectedAt.toISOString()}
+
+Your guild's treasury balance has fallen below the configured threshold.
+Please consider depositing funds to ensure bounties and other guild operations can continue.
+
+This is an automated alert from Stellar Guilds.`;
+
+    if (this.transporter) {
+      await this.transporter.sendMail({ from, to, subject, text });
+      this.logger.log(`Treasury alert email sent to ${to}`);
+    } else {
+      this.logger.log(
+        `Treasury alert (not sent) -> to: ${to}, subject: ${subject}`,
+      );
+    }
+  }
 }
