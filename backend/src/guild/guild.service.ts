@@ -14,6 +14,7 @@ import { CreateGuildDto } from './dto/create-guild.dto';
 import { UpdateGuildDto } from './dto/update-guild.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
 import { randomUUID } from 'crypto';
+import { parse } from 'csv-parse/sync';
 
 @Injectable()
 export class GuildService {
@@ -456,6 +457,116 @@ export class GuildService {
       where: { id: targetMembership.id },
       data: { role: role as any },
     });
+  }
+
+  /**
+   * Bulk invite members from a CSV file buffer.
+   * CSV should have a single column with email or username per row.
+   */
+  async bulkInviteMembers(
+    guildId: string,
+    fileBuffer: Buffer,
+    invitedBy: string,
+  ) {
+    await this.ensureManagePermission(guildId, invitedBy);
+
+    const guild = await this.prisma.guild.findUnique({
+      where: { id: guildId },
+    });
+    if (!guild) throw new NotFoundException('Guild not found');
+
+    let records: string[];
+    try {
+      const raw = parse(fileBuffer, {
+        columns: false,
+        skip_empty_lines: true,
+        trim: true,
+      }) as string[][];
+      records = raw.map((row) => row[0]).filter((v) => v && v.length > 0);
+    } catch {
+      throw new BadRequestException('Invalid CSV file');
+    }
+
+    if (records.length === 0) {
+      throw new BadRequestException('CSV file is empty or has no valid rows');
+    }
+
+    const details: { identifier: string; status: 'invited' | 'skipped'; reason?: string }[] = [];
+    let invited = 0;
+    let skipped = 0;
+
+    const ttlDays = process.env.INVITE_TTL_DAYS
+      ? Number(process.env.INVITE_TTL_DAYS)
+      : 7;
+
+    for (const identifier of records) {
+      // Look up user by email or username
+      const user = await this.prisma.user.findFirst({
+        where: {
+          OR: [{ email: identifier }, { username: identifier }],
+        },
+      });
+
+      if (!user) {
+        details.push({ identifier, status: 'skipped', reason: 'User not found' });
+        skipped++;
+        continue;
+      }
+
+      // Check for existing membership
+      const existing = await this.prisma.guildMembership.findUnique({
+        where: { userId_guildId: { userId: user.id, guildId } },
+      });
+
+      if (existing) {
+        details.push({
+          identifier,
+          status: 'skipped',
+          reason: `Already ${existing.status.toLowerCase().replace('_', ' ')}`,
+        });
+        skipped++;
+        continue;
+      }
+
+      const token = randomUUID();
+      const expiresAt = new Date(Date.now() + ttlDays * 24 * 60 * 60 * 1000);
+
+      await this.prisma.guildMembership.create({
+        data: {
+          userId: user.id,
+          guildId,
+          role: 'MEMBER',
+          status: 'PENDING',
+          invitationToken: token,
+          invitedById: invitedBy,
+          invitationExpiresAt: expiresAt,
+        },
+      });
+
+      // Try to send invite email (non-blocking)
+      try {
+        if (user.email) {
+          await this.mailer.sendInviteEmail(
+            user.email,
+            guild.name || 'a guild',
+            token,
+            undefined,
+          );
+        }
+      } catch {
+        // don't fail on email errors
+      }
+
+      details.push({ identifier, status: 'invited' });
+      invited++;
+    }
+
+    return {
+      invited,
+      skipped,
+      message: `Invited ${invited} users, ${skipped} invalid addresses skipped`,
+      details,
+    };
   }
 
   /**

@@ -13,6 +13,7 @@ import {
   UseInterceptors,
   HttpCode,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -91,6 +92,50 @@ export class GuildController {
     @Request() req: any,
   ) {
     return this.guildService.inviteMember(id, dto, req.user.userId);
+  }
+
+  /**
+   * Bulk invite members via CSV file upload.
+   * CSV should contain a single column of email addresses or usernames.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/members/bulk-invite')
+  @UseGuards(GuildRoleGuard)
+  @GuildRoles('ADMIN', 'OWNER')
+  @UseInterceptors(FileInterceptor('file'))
+  @HttpCode(HttpStatus.OK)
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'CSV file with one email or username per row',
+        },
+      },
+    },
+  })
+  @ApiOperation({ summary: 'Bulk invite members via CSV upload' })
+  @ApiParam({ name: 'id', description: 'Guild ID (UUID)' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Bulk invite processed successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid CSV file or empty input',
+  })
+  async bulkInvite(
+    @Param('id') id: string,
+    @UploadedFile() file: any,
+    @Request() req: any,
+  ) {
+    if (!file?.buffer) {
+      throw new BadRequestException('CSV file is required');
+    }
+    return this.guildService.bulkInviteMembers(id, file.buffer, req.user.userId);
   }
 
   @UseGuards(JwtAuthGuard)

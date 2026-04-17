@@ -19,7 +19,7 @@ const mockPrisma = () => ({
     findUnique: jest.fn(),
     findFirst: jest.fn(),
   },
-  user: { findUnique: jest.fn() },
+  user: { findUnique: jest.fn(), findFirst: jest.fn() },
 });
 
 const mockMailer = () => ({
@@ -184,5 +184,67 @@ describe('GuildService (settings integration)', () => {
     });
     expect(result._count.memberships).toBe(8);
     expect(result._count.bounties).toBe(2);
+  });
+
+  describe('bulkInviteMembers', () => {
+    it('invites valid users from CSV', async () => {
+      prisma.guild.findUnique.mockResolvedValue({ id: 'g1', name: 'Test Guild' });
+      prisma.guildMembership.findUnique
+        .mockResolvedValueOnce({ role: 'OWNER' }) // ensureManagePermission
+        .mockResolvedValueOnce(null); // existing membership check
+      prisma.user.findFirst.mockResolvedValue({ id: 'u1', email: 'a@test.com' });
+      prisma.guildMembership.create.mockResolvedValue({ id: 'm1' });
+
+      const csv = Buffer.from('a@test.com\nb@test.com\n');
+      prisma.user.findFirst
+        .mockResolvedValueOnce({ id: 'u1', email: 'a@test.com' })
+        .mockResolvedValueOnce(null); // user not found
+      prisma.guildMembership.findUnique
+        .mockResolvedValueOnce({ role: 'OWNER' }) // ensureManagePermission
+        .mockResolvedValueOnce(null) // no existing membership for u1
+        .mockResolvedValueOnce({ role: 'OWNER' }); // ensureManagePermission called again? No — it's called once
+
+      const result = await service.bulkInviteMembers('g1', csv, 'admin1');
+      expect(result.invited).toBe(1);
+      expect(result.skipped).toBe(1);
+      expect(result.message).toContain('Invited 1 users');
+      expect(result.message).toContain('1 invalid addresses skipped');
+    });
+
+    it('skips users already in guild', async () => {
+      prisma.guild.findUnique.mockResolvedValue({ id: 'g1', name: 'Test Guild' });
+      prisma.guildMembership.findUnique.mockResolvedValue({ role: 'OWNER' });
+      prisma.user.findFirst.mockResolvedValue({ id: 'u1', email: 'a@test.com' });
+      // Existing membership
+      prisma.guildMembership.findUnique
+        .mockResolvedValueOnce({ role: 'OWNER' }) // ensureManagePermission
+        .mockResolvedValueOnce({ status: 'APPROVED' }); // existing membership
+
+      const csv = Buffer.from('a@test.com\n');
+      const result = await service.bulkInviteMembers('g1', csv, 'admin1');
+      expect(result.invited).toBe(0);
+      expect(result.skipped).toBe(1);
+      expect(result.details[0].reason).toContain('Already approved');
+    });
+
+    it('rejects empty CSV', async () => {
+      prisma.guild.findUnique.mockResolvedValue({ id: 'g1', name: 'Test Guild' });
+      prisma.guildMembership.findUnique.mockResolvedValue({ role: 'OWNER' });
+
+      const csv = Buffer.from('\n\n');
+      await expect(
+        service.bulkInviteMembers('g1', csv, 'admin1'),
+      ).rejects.toThrow('CSV file is empty or has no valid rows');
+    });
+
+    it('rejects invalid CSV', async () => {
+      prisma.guild.findUnique.mockResolvedValue({ id: 'g1', name: 'Test Guild' });
+      prisma.guildMembership.findUnique.mockResolvedValue({ role: 'OWNER' });
+
+      const csv = Buffer.from('"unclosed quote');
+      await expect(
+        service.bulkInviteMembers('g1', csv, 'admin1'),
+      ).rejects.toThrow('Invalid CSV file');
+    });
   });
 });
