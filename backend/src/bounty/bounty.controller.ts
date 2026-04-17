@@ -157,4 +157,13 @@ export class BountyController {
   ) {
     return this.service.reviewWork(id, dto, req.user.userId);
   }
+
+  /**
+   * Get payout history for a bounty with USD conversion values
+   * GET /bounties/:id/payouts
+   */
+  @Get(':id/payouts')
+  async getPayoutHistory(@Param('id') id: string) {
+    return this.service.getPayoutHistory(id);
+  }
 }

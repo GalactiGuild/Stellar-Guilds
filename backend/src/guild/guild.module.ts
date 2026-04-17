@@ -6,9 +6,10 @@ import { GuildRoleGuard } from './guards/guild-role.guard';
 import { Reflector } from '@nestjs/core';
 import { MailerModule } from '../mailer/mailer.module';
 import { StorageModule } from '../storage/storage.module';
+import { BountyModule } from '../bounty/bounty.module';
 
 @Module({
-  imports: [PrismaModule, MailerModule, StorageModule],
+  imports: [PrismaModule, MailerModule, StorageModule, BountyModule],
   providers: [GuildService, GuildRoleGuard, Reflector],
   controllers: [GuildController],
   exports: [GuildService],

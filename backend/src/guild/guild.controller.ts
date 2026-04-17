@@ -20,6 +20,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GuildRoleGuard } from './guards/guild-role.guard';
 import { GuildRoles } from './decorators/guild-roles.decorator';
 import { GuildService } from './guild.service';
+import { BountyService } from '../bounty/bounty.service';
 import { CreateGuildDto } from './dto/create-guild.dto';
 import { UpdateGuildDto } from './dto/update-guild.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
@@ -39,7 +40,10 @@ import {
 
 @Controller('guilds')
 export class GuildController {
-  constructor(private guildService: GuildService) {}
+  constructor(
+    private guildService: GuildService,
+    private bountyService: BountyService,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -341,5 +345,24 @@ export class GuildController {
       bannerUrl: result.bannerUrl,
       message: 'Guild banner updated successfully',
     };
+  }
+
+  /**
+   * Get payout history for a guild with USD conversion values
+   * GET /guilds/:id/payouts
+   */
+  @Get(':id/payouts')
+  @ApiOperation({ summary: 'Get guild payout history with asset conversion' })
+  @ApiParam({ name: 'id', description: 'Guild ID (UUID)' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Payout history retrieved successfully',
+  })
+  async getPayoutHistory(
+    @Param('id') id: string,
+    @Query('page') page = '0',
+    @Query('size') size = '20',
+  ) {
+    return this.bountyService.getGuildPayoutHistory(id, Number(page), Number(size));
   }
 }

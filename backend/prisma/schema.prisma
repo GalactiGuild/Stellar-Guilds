@@ -222,6 +222,10 @@ model BountyPayout {
   status      String    @default("PENDING") // PENDING, SENT, FAILED
   processedAt DateTime?
 
+  // Asset conversion fields
+  exchangeRate Decimal? @default(1.0) // Exchange rate at time of payout (token to USD)
+  usdValue     Decimal? // Calculated USD value (amount * exchangeRate)
+
   bounty Bounty @relation(fields: [bountyId], references: [id], onDelete: Cascade)
   toUser User   @relation(fields: [toUserId], references: [id])
 

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailerService } from '../mailer/mailer.service';
+import { ExchangeRateService } from '../common/services/exchange-rate.service';
 import { CreateBountyDto } from './dto/create-bounty.dto';
 import { UpdateBountyDto } from './dto/update-bounty.dto';
 import { ApplyBountyDto } from './dto/apply-bounty.dto';
@@ -18,6 +19,7 @@ export class BountyService {
   constructor(
     private prisma: PrismaService,
     private mailer: MailerService,
+    private exchangeRateService: ExchangeRateService,
   ) {}
 
   async create(dto: CreateBountyDto, creatorId: string) {
@@ -289,15 +291,21 @@ export class BountyService {
     if (milestone.status !== 'COMPLETE')
       throw new BadRequestException('Milestone not completed');
 
-    // create payout record
+    // create payout record with exchange rate conversion
+    const token = bounty.rewardToken || 'STELLAR';
+    const exchangeRate = this.exchangeRateService.getExchangeRate(token);
+    const usdValue = Number(milestone.amount) * exchangeRate;
+
     const payout = await this.prisma.bountyPayout.create({
       data: {
         bountyId,
         toUserId: bounty.assigneeId as string,
         amount: milestone.amount,
-        token: bounty.rewardToken || 'STELLAR',
+        token,
         status: 'SENT',
         processedAt: new Date(),
+        exchangeRate,
+        usdValue,
       },
     });
 
@@ -521,5 +529,108 @@ export class BountyService {
         feedback: dto.feedback,
       };
     }
+  }
+
+  /**
+   * Get payout history for a bounty with conversion details
+   * @param bountyId The bounty ID to get payouts for
+   * @returns List of payouts with USD conversion values
+   */
+  async getPayoutHistory(bountyId: string) {
+    const bounty = await this.prisma.bounty.findUnique({
+      where: { id: bountyId },
+    });
+    if (!bounty) throw new NotFoundException('Bounty not found');
+
+    const payouts = await this.prisma.bountyPayout.findMany({
+      where: { bountyId },
+      include: {
+        toUser: {
+          select: {
+            id: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Map payouts with conversion details
+    return payouts.map((payout: any) => ({
+      id: payout.id,
+      createdAt: payout.createdAt,
+      amount: payout.amount,
+      token: payout.token,
+      status: payout.status,
+      processedAt: payout.processedAt,
+      txRef: payout.txRef,
+      // Asset conversion details
+      exchangeRate: payout.exchangeRate,
+      usdValue: payout.usdValue,
+      // User info
+      recipient: payout.toUser,
+    }));
+  }
+
+  /**
+   * Get payout history for a guild with conversion details
+   * @param guildId The guild ID to get payouts for
+   * @param page Page number (0-indexed)
+   * @param size Page size
+   * @returns Paginated list of payouts with USD conversion values
+   */
+  async getGuildPayoutHistory(guildId: string, page = 0, size = 20) {
+    const where = {
+      bounty: {
+        guildId,
+      },
+    };
+
+    const [items, total] = await Promise.all([
+      this.prisma.bountyPayout.findMany({
+        where,
+        include: {
+          toUser: {
+            select: {
+              id: true,
+              username: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+          bounty: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+        skip: page * size,
+        take: size,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.bountyPayout.count({ where }),
+    ]);
+
+    // Map payouts with conversion details
+    const mappedItems = items.map((payout: any) => ({
+      id: payout.id,
+      createdAt: payout.createdAt,
+      amount: payout.amount,
+      token: payout.token,
+      status: payout.status,
+      processedAt: payout.processedAt,
+      txRef: payout.txRef,
+      // Asset conversion details
+      exchangeRate: payout.exchangeRate,
+      usdValue: payout.usdValue,
+      // Related info
+      recipient: payout.toUser,
+      bounty: payout.bounty,
+    }));
+
+    return { items: mappedItems, total, page, size };
   }
 }
