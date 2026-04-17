@@ -259,7 +259,7 @@ export class UserService {
    * Search and filter users (paginated)
    */
   async searchUsers(searchDto: SearchUserDto) {
-    const { query, role, isActive, skip = 0, take = 20 } = searchDto;
+    const { query, role, isActive, tags, skip = 0, take = 20 } = searchDto;
 
     // Build where clause
     const where: any = {};
@@ -281,6 +281,13 @@ export class UserService {
       where.isActive = isActive;
     }
 
+    // Filter by technical tags (case-insensitive, match ANY of the provided tags)
+    if (tags && tags.length > 0) {
+      where.technicalTags = {
+        hasSome: tags,
+      };
+    }
+
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
         where,
@@ -297,6 +304,7 @@ export class UserService {
           discordHandle: true,
           twitterHandle: true,
           githubHandle: true,
+          technicalTags: true,
           createdAt: true,
           role: true,
         },

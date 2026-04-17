@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
+import { ProfileViewService } from './profile-view.service';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -23,6 +24,13 @@ describe('UserController', () => {
             getUsersByRole: jest.fn(),
             assignRole: jest.fn(),
             reactivateUser: jest.fn(),
+          },
+        },
+        {
+          provide: ProfileViewService,
+          useValue: {
+            recordView: jest.fn(),
+            getViewCount: jest.fn(),
           },
         },
       ],
@@ -50,5 +58,34 @@ describe('UserController', () => {
       id: 'user-1',
       bio: 'Updated bio',
     });
+  });
+
+  it('searches users by technical tags', async () => {
+    userService.searchUsers.mockResolvedValue({
+      data: [
+        {
+          id: 'user-1',
+          username: 'rustdev',
+          technicalTags: ['rust', 'wasm'],
+        },
+      ],
+      total: 1,
+      skip: 0,
+      take: 20,
+    });
+
+    const result = await controller.searchUsers({
+      tags: ['rust'],
+      skip: 0,
+      take: 20,
+    });
+
+    expect(userService.searchUsers).toHaveBeenCalledWith({
+      tags: ['rust'],
+      skip: 0,
+      take: 20,
+    });
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0].technicalTags).toContain('rust');
   });
 });

@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { ProfileViewService } from './profile-view.service';
 import { NotFoundException } from '@nestjs/common';
 
 describe('UserService', () => {
@@ -9,6 +10,8 @@ describe('UserService', () => {
   let prisma: {
     user: {
       findUnique: jest.Mock;
+      findMany: jest.Mock;
+      count: jest.Mock;
       update: jest.Mock;
     };
   };
@@ -16,11 +19,16 @@ describe('UserService', () => {
     uploadFile: jest.Mock;
     deleteFile: jest.Mock;
   };
+  let profileViewService: {
+    getViewCount: jest.Mock;
+  };
 
   beforeEach(async () => {
     prisma = {
       user: {
         findUnique: jest.fn(),
+        findMany: jest.fn(),
+        count: jest.fn(),
         update: jest.fn(),
       },
     };
@@ -28,12 +36,16 @@ describe('UserService', () => {
       uploadFile: jest.fn(),
       deleteFile: jest.fn(),
     };
+    profileViewService = {
+      getViewCount: jest.fn().mockResolvedValue(0),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
         { provide: PrismaService, useValue: prisma },
         { provide: StorageService, useValue: storageService },
+        { provide: ProfileViewService, useValue: profileViewService },
       ],
     }).compile();
 
@@ -105,7 +117,7 @@ describe('UserService', () => {
 
       const result = await service.getUserProfile('user-1');
 
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual({ ...mockUser, profileViewCount: 0 });
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
         where: { id: 'user-1' },
         select: {
@@ -191,6 +203,108 @@ describe('UserService', () => {
         },
       });
       expect(result.bio).toBe('Updated bio');
+    });
+  });
+
+  describe('searchUsers', () => {
+    it('filters users by technical tags using hasSome', async () => {
+      const mockUsers = [
+        {
+          id: 'user-1',
+          username: 'rustdev',
+          firstName: 'Alice',
+          lastName: 'Smith',
+          bio: null,
+          location: null,
+          avatarUrl: null,
+          profileBio: null,
+          profileUrl: null,
+          discordHandle: null,
+          twitterHandle: null,
+          githubHandle: null,
+          technicalTags: ['rust', 'wasm'],
+          createdAt: new Date('2024-01-01'),
+          role: 'USER',
+        },
+      ];
+      prisma.user.findMany.mockResolvedValue(mockUsers);
+      prisma.user.count.mockResolvedValue(1);
+
+      const result = await service.searchUsers({ tags: ['rust'] });
+
+      expect(prisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            technicalTags: { hasSome: ['rust'] },
+          },
+        }),
+      );
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].technicalTags).toContain('rust');
+      expect(result.total).toBe(1);
+    });
+
+    it('returns users matching any of the provided tags', async () => {
+      prisma.user.findMany.mockResolvedValue([
+        { id: 'user-1', username: 'dev1', technicalTags: ['rust'] },
+        { id: 'user-2', username: 'dev2', technicalTags: ['nextjs'] },
+      ]);
+      prisma.user.count.mockResolvedValue(2);
+
+      const result = await service.searchUsers({
+        tags: ['rust', 'nextjs'],
+      });
+
+      expect(prisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            technicalTags: { hasSome: ['rust', 'nextjs'] },
+          },
+        }),
+      );
+      expect(result.total).toBe(2);
+    });
+
+    it('does not filter by tags when tags param is empty', async () => {
+      prisma.user.findMany.mockResolvedValue([]);
+      prisma.user.count.mockResolvedValue(0);
+
+      await service.searchUsers({ tags: [] });
+
+      expect(prisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {},
+        }),
+      );
+    });
+
+    it('does not filter by tags when tags param is undefined', async () => {
+      prisma.user.findMany.mockResolvedValue([]);
+      prisma.user.count.mockResolvedValue(0);
+
+      await service.searchUsers({});
+
+      expect(prisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {},
+        }),
+      );
+    });
+
+    it('combines tags filter with query filter', async () => {
+      prisma.user.findMany.mockResolvedValue([]);
+      prisma.user.count.mockResolvedValue(0);
+
+      await service.searchUsers({ query: 'alice', tags: ['rust'] });
+
+      expect(prisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: expect.any(Array),
+            technicalTags: { hasSome: ['rust'] },
+          }),
+        }),
+      );
     });
   });
 });

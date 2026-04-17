@@ -228,6 +228,18 @@ export class SearchUserDto {
   isActive?: boolean;
 
   @IsOptional()
+  @IsString()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string'
+      ? value
+          .split(',')
+          .map((t) => t.trim().toLowerCase())
+          .filter(Boolean)
+      : value,
+  )
+  tags?: string[]; // Comma-separated technical tags for filtering
+
+  @IsOptional()
   @IsNumber()
   @Min(0)
   skip?: number;
