@@ -35,7 +35,7 @@ export class BountyService {
 
   async findOne(id: string) {
     const bounty = await this.prisma.bounty.findUnique({
-      where: { id },
+      where: { id, deletedAt: null },
       include: {
         creator: true,
         assignee: true,
@@ -47,7 +47,7 @@ export class BountyService {
 
   async get(id: string) {
     const bounty = await this.prisma.bounty.findUnique({
-      where: { id },
+      where: { id, deletedAt: null },
       include: { creator: true, assignee: true },
     });
     if (!bounty) throw new NotFoundException('Bounty not found');
@@ -65,7 +65,7 @@ export class BountyService {
     const page = filters.page ?? 0;
     const size = filters.size ?? 20;
 
-    const where: any = {};
+    const where: any = { deletedAt: null };
 
     // Default to OPEN status if no status filter provided
     if (filters.status) {
@@ -108,7 +108,7 @@ export class BountyService {
         }
       : {};
 
-    const where: any = {};
+    const where: any = { deletedAt: null };
     if (Object.keys(text).length) where.AND = [text];
     if (guildId) where.guildId = guildId;
 
@@ -522,4 +522,23 @@ export class BountyService {
       };
     }
   }
+
+  /**
+   * Soft delete a bounty (sets deletedAt timestamp)
+   * Only the creator can delete their own bounty
+   */
+  async remove(id: string, userId: string) {
+    const bounty = await this.prisma.bounty.findUnique({
+      where: { id, deletedAt: null },
+    });
+    if (!bounty) throw new NotFoundException('Bounty not found');
+    if (bounty.creatorId !== userId)
+      throw new ForbiddenException('Only creator can delete bounty');
+
+    return this.prisma.bounty.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+  }
+
 }
