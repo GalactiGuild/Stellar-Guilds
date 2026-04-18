@@ -545,4 +545,19 @@ export class GuildService {
 
     return updated;
   }
+
+  /**
+   * Normalize join dates for guild members.
+   * Finds records with null joinedAt and sets them to the record's createdAt.
+   * Returns the number of updated records.
+   */
+  async normalizeJoinDates(): Promise<{ updated: number }> {
+    const result = await this.prisma.$executeRaw`
+      UPDATE guild_memberships
+      SET "joinedAt" = "createdAt"
+      WHERE "joinedAt" IS NULL
+    `;
+
+    return { updated: result };
+  }
 }

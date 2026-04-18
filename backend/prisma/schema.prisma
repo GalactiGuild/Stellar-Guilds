@@ -127,7 +127,7 @@ model Guild {
 model GuildMembership {
   id                  String           @id @default(cuid())
   createdAt           DateTime         @default(now())
-  joinedAt            DateTime?
+  joinedAt            DateTime?         @default(now())
   status              MembershipStatus @default(APPROVED)
   invitationToken     String?
   invitedById         String?

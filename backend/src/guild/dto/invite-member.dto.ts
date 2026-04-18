@@ -1,4 +1,4 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsDateString } from 'class-validator';
 
 export class InviteMemberDto {
   @IsString()
@@ -7,4 +7,8 @@ export class InviteMemberDto {
   @IsOptional()
   @IsString()
   role?: string; // GuildRole
+
+  @IsOptional()
+  @IsDateString()
+  joinedAt?: string;
 }
