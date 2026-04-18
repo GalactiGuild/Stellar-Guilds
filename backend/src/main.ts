@@ -7,11 +7,15 @@ import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { WinstonLogger } from './logger/winston.logger';
 import * as express from 'express';
 import * as path from 'path';
+import compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: new WinstonLogger('Bootstrap'),
   });
+
+  // Enable gzip compression for all responses
+  app.use(compression());
 
   const logger = new WinstonLogger('Main');
   const httpAdapterHost = app.get(HttpAdapterHost);
