@@ -36,6 +36,7 @@ import {
   AssignRoleDto,
   UserRole,
   UserProfileDto,
+  UpdateNotificationSettingsDto,
 } from './dto/user.dto';
 import { validateImageFile } from '../common/utils/file-upload.validator';
 
@@ -94,6 +95,31 @@ export class UserController {
     @Body() updateDto: UpdateUserDto,
   ) {
     return this.userService.updateUserProfile(req.user.userId, updateDto);
+  }
+
+  /**
+   * Update current user notification preferences
+   */
+  @Patch('me/notifications')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update user notification preferences' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Notification preferences updated successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Not authenticated',
+  })
+  async updateNotificationSettings(
+    @Request() req: any,
+    @Body() updateDto: UpdateNotificationSettingsDto,
+  ) {
+    return this.userService.updateNotificationSettings(
+      req.user.userId,
+      updateDto,
+    );
   }
 
   /**

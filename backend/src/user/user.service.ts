@@ -14,6 +14,7 @@ import {
   SearchUserDto,
   AssignRoleDto,
   UserRole,
+  UpdateNotificationSettingsDto,
 } from './dto/user.dto';
 import * as bcrypt from 'bcrypt';
 
@@ -158,6 +159,59 @@ export class UserService {
     });
 
     return updated;
+  }
+
+  /**
+   * Update user notification preferences
+   */
+  async updateNotificationSettings(
+    userId: string,
+    updateDto: UpdateNotificationSettingsDto,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Get current notification settings or use defaults
+    const defaultSettings = {
+      emailOnBounty: true,
+      emailOnMention: true,
+      weeklyDigest: true,
+    };
+
+    const currentSettings = (user.notificationSettings as any) || defaultSettings;
+
+    // Merge with update
+    const updatedSettings = {
+      ...currentSettings,
+      ...(updateDto.emailOnBounty !== undefined && {
+        emailOnBounty: updateDto.emailOnBounty,
+      }),
+      ...(updateDto.emailOnMention !== undefined && {
+        emailOnMention: updateDto.emailOnMention,
+      }),
+      ...(updateDto.weeklyDigest !== undefined && {
+        weeklyDigest: updateDto.weeklyDigest,
+      }),
+    };
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { notificationSettings: updatedSettings },
+      select: {
+        id: true,
+        notificationSettings: true,
+      },
+    });
+
+    return {
+      message: 'Notification preferences updated successfully',
+      notificationSettings: updated.notificationSettings,
+    };
   }
 
   /**

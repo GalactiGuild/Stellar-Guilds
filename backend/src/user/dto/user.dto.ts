@@ -271,4 +271,43 @@ export class UserDetailsDto extends UserProfileDto {
   isActive!: boolean;
   lastLoginAt?: Date;
   updatedAt!: Date;
+  notificationSettings?: NotificationSettingsDto;
+}
+
+// Notification settings
+export class NotificationSettingsDto {
+  @IsBoolean()
+  emailOnBounty!: boolean;
+
+  @IsBoolean()
+  emailOnMention!: boolean;
+
+  @IsBoolean()
+  weeklyDigest!: boolean;
+}
+
+export class UpdateNotificationSettingsDto {
+  @ApiPropertyOptional({
+    description: 'Receive email on bounty updates',
+    example: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  emailOnBounty?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Receive email on mentions',
+    example: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  emailOnMention?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Receive weekly digest email',
+    example: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  weeklyDigest?: boolean;
 }
