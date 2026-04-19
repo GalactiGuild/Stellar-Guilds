@@ -50,6 +50,10 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     return this.prisma.guild;
   }
 
+  get guildActivityLog() {
+    return this.prisma.guildActivityLog;
+  }
+
   get guildMembership() {
     return this.prisma.guildMembership;
   }
