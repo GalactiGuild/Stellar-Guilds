@@ -97,6 +97,7 @@ pub fn create_bounty(
         submission_url: None,
         created_at,
         expires_at: expiry,
+        category: types::BountyCategory::Development,
     };
     store_bounty(env, &bounty);
 

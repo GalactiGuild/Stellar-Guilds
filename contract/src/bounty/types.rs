@@ -14,6 +14,17 @@ pub enum BountyStatus {
     Funded = 7,
 }
 
+/// Category of the bounty
+#[contracttype]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BountyCategory {
+    Development = 0,
+    Design = 1,
+    Documentation = 2,
+    Research = 3,
+    Other = 4,
+}
+
 /// Bounty struct containing all bounty metadata and state
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -44,6 +55,8 @@ pub struct Bounty {
     pub created_at: u64,
     /// Expiration timestamp (seconds)
     pub expires_at: u64,
+    /// Category of the bounty
+    pub category: BountyCategory,
 }
 
 /// Represents the state of funds locked in escrow for a bounty

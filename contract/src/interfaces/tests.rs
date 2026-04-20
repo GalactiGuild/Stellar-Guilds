@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::bounty::types::{Bounty, BountyStatus};
+    use crate::bounty::types::{Bounty, BountyStatus, BountyCategory};
     use crate::dispute::types::{Dispute, DisputeReference, DisputeStatus};
     use crate::governance::types::{ExecutionPayload, Proposal, ProposalStatus, ProposalType};
     use crate::guild::types::{Member, Role};
@@ -73,6 +73,7 @@ mod tests {
                 submission_url: None,
                 created_at: 1,
                 expires_at: 2,
+                category: BountyCategory::Development,
             }
         }
 

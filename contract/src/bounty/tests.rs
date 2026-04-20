@@ -1822,7 +1822,7 @@ fn test_claim_payout_no_funds_to_claim() {
 
 #[test]
 fn test_bounty_serialization() {
-    use crate::bounty::types::Bounty;
+    use crate::bounty::types::{Bounty, BountyCategory};
     use soroban_sdk::{IntoVal, TryFromVal, Val};
 
     let env = Env::default();
@@ -1840,6 +1840,7 @@ fn test_bounty_serialization() {
         submission_url: None,
         created_at: 1000,
         expires_at: 2000,
+        category: BountyCategory::Development,
     };
 
     let val: Val = bounty.clone().into_val(&env);
@@ -1848,6 +1849,7 @@ fn test_bounty_serialization() {
     assert_eq!(bounty.id, deserialized.id);
     assert_eq!(bounty.status, deserialized.status);
     assert_eq!(bounty.reward_amount, deserialized.reward_amount);
+    assert_eq!(bounty.category, deserialized.category);
 }
 
 #[test]
