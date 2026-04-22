@@ -5,6 +5,7 @@ import { Button } from "@/components/ui";
 import Link from "next/link";
 import LanguageSelector from "@/components/LanguageSelector";
 import { useTranslations } from 'next-intl';
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export default function Navbar() {
   const t = useTranslations('navigation');
@@ -71,6 +72,7 @@ export default function Navbar() {
 
             {/* Desktop CTA */}
             <div className="hidden md:flex items-center gap-4">
+              <ThemeToggle />
               <LanguageSelector />
               <Link href="/onboarding">
                 <Button
@@ -125,7 +127,8 @@ export default function Navbar() {
                   </Link>
                 ))}
                 <div className="pt-4 border-t border-slate-800 space-y-3">
-                  <div className="w-full flex justify-center">
+                  <div className="w-full flex justify-center gap-3">
+                    <ThemeToggle />
                     <LanguageSelector />
                   </div>
                   <Link href="/onboarding" className="block" onClick={() => setIsMobileMenuOpen(false)}>
