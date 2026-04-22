@@ -37,8 +37,8 @@ export default async function RootLayout({
       <body className={inter.className}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="dark"
+          enableSystem={false}
         >
           <NextIntlClientProvider locale={locale} messages={messages}>
             <ErrorBoundary>
