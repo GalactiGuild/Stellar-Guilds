@@ -189,6 +189,20 @@ export class UpdateUserDto {
 
 export class UpdateUserProfileDto extends UpdateUserDto {}
 
+export class UpdateBackgroundDto {
+  @ApiProperty({
+    description: 'IPFS CID for background image',
+    example: 'QmX4zF8k9vN2pR7bT3jL6mW1qY5cH8dE0fG9aB2xK4iM7n',
+  })
+  @IsString()
+  @Matches(/^[a-zA-Z0-9]+$/, {
+    message: 'backgroundCid must be a valid IPFS CID format',
+  })
+  @MinLength(1)
+  @MaxLength(200)
+  backgroundCid!: string;
+}
+
 // Change password
 export class ChangePasswordDto {
   @IsString()

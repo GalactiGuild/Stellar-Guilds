@@ -76,6 +76,7 @@ model User {
   discordHandle String?
   twitterHandle String?
   githubHandle  String?
+  backgroundCid String?
 
   // Relations
   ownedGuilds        Guild[]             @relation("UserOwnerGuilds")

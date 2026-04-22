@@ -248,6 +248,30 @@ export class UserService {
   }
 
   /**
+   * Update user background image CID
+   */
+  async updateBackground(userId: string, backgroundCid: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { backgroundCid },
+      select: {
+        id: true,
+        backgroundCid: true,
+      },
+    });
+
+    return updated;
+  }
+
+  /**
    * Search and filter users (paginated)
    */
   async searchUsers(searchDto: SearchUserDto) {

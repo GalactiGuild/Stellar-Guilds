@@ -36,6 +36,7 @@ import {
   AssignRoleDto,
   UserRole,
   UserProfileDto,
+  UpdateBackgroundDto,
 } from './dto/user.dto';
 import { validateImageFile } from '../common/utils/file-upload.validator';
 
@@ -151,6 +152,35 @@ export class UserController {
     return {
       avatarUrl: result.avatarUrl,
       message: 'Avatar updated successfully',
+    };
+  }
+
+  /**
+   * Update user background image CID
+   */
+  @Patch('me/background')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update user background image CID' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Background image updated successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid CID format',
+  })
+  async updateBackground(
+    @Request() req: any,
+    @Body() updateBackgroundDto: UpdateBackgroundDto,
+  ) {
+    const result = await this.userService.updateBackground(
+      req.user.userId,
+      updateBackgroundDto.backgroundCid,
+    );
+    return {
+      backgroundCid: result.backgroundCid,
+      message: 'Background image updated successfully',
     };
   }
 

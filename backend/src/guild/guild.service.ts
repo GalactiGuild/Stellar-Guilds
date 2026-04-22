@@ -212,9 +212,9 @@ export class GuildService {
       });
 
       // Calculate TVL for each guild
-      const guildsWithTvl = allGuilds.map((guild) => {
+      const guildsWithTvl = allGuilds.map((guild: any) => {
         const tvl = guild.bounties.reduce(
-          (sum, bounty) => sum + (bounty.rewardAmount || 0),
+          (sum: number, bounty: any) => sum + Number(bounty.rewardAmount || 0),
           0,
         );
         return {
@@ -225,7 +225,7 @@ export class GuildService {
       });
 
       // Sort by TVL descending
-      guildsWithTvl.sort((a, b) => b.tvl - a.tvl);
+      guildsWithTvl.sort((a: any, b: any) => b.tvl - a.tvl);
 
       // Apply pagination
       const paginatedItems = guildsWithTvl.slice(page * size, (page + 1) * size);
