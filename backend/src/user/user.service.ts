@@ -15,6 +15,7 @@ import {
   AssignRoleDto,
   UserRole,
 } from './dto/user.dto';
+import { UpdateNotificationPreferencesDto } from './dto/notification-preferences.dto';
 import * as bcrypt from 'bcrypt';
 import { ProfileUtil } from '../common/utils/profile.util';
 
@@ -536,5 +537,117 @@ export class UserService {
     return this.prisma.user.delete({
       where,
     });
+  }
+
+  /**
+   * Update user notification preferences
+   */
+  async updateNotificationPreferences(
+    userId: string,
+    preferences: UpdateNotificationPreferencesDto,
+  ) {
+    // Get current user with notification settings
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { notificationSettings: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Parse existing settings or use defaults
+    const currentSettings = (user.notificationSettings as any) || {
+      emailOnBounty: true,
+      emailOnMention: true,
+      weeklyDigest: true,
+    };
+
+    // Merge with new preferences
+    const updatedSettings = {
+      ...currentSettings,
+      ...preferences,
+    };
+
+    // Update user with new notification settings
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: { notificationSettings: updatedSettings },
+      select: {
+        id: true,
+        notificationSettings: true,
+      },
+    });
+
+    this.logger.log(`User ${userId} updated notification preferences`);
+
+    return {
+      message: 'Notification preferences updated successfully',
+      preferences: updatedSettings,
+    };
+  }
+
+  /**
+   * Get user notification preferences
+   */
+  async getNotificationPreferences(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { notificationSettings: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Return settings or defaults
+    const settings = (user.notificationSettings as any) || {
+      emailOnBounty: true,
+      emailOnMention: true,
+      weeklyDigest: true,
+    };
+
+    return { preferences: settings };
+  }
+
+  /**
+   * Check if user wants to receive a specific type of email notification
+   * This method is used by MailerService before sending emails
+   */
+  async shouldSendEmail(
+    userId: string,
+    notificationType: 'emailOnBounty' | 'emailOnMention' | 'weeklyDigest',
+  ): Promise<boolean> {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { notificationSettings: true },
+      });
+
+      if (!user || !user.notificationSettings) {
+        // Default to true if no settings exist
+        return true;
+      }
+
+      const settings = user.notificationSettings as any;
+      return settings[notificationType] !== false;
+    } catch (error) {
+      this.logger.error(
+        `Failed to check notification preferences for user ${userId}: ${error}`,
+      );
+      // Default to true on error to avoid blocking notifications
+      return true;
+    }
+  }
+
+  /**
+   * Set default notification preferences for a new user
+   */
+  getDefaultNotificationSettings(): any {
+    return {
+      emailOnBounty: true,
+      emailOnMention: true,
+      weeklyDigest: true,
+    };
   }
 }

@@ -63,7 +63,7 @@ export class AuthService {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    // Create user with default notification settings
     const user = await this.prisma.user.create({
       data: {
         email,
@@ -72,6 +72,11 @@ export class AuthService {
         firstName,
         lastName,
         ...(walletAddress && { walletAddress }),
+        notificationSettings: {
+          emailOnBounty: true,
+          emailOnMention: true,
+          weeklyDigest: true,
+        },
       },
     });
 
@@ -187,6 +192,11 @@ export class AuthService {
           firstName: 'Wallet',
           lastName: 'User',
           walletAddress,
+          notificationSettings: {
+            emailOnBounty: true,
+            emailOnMention: true,
+            weeklyDigest: true,
+          },
         },
       });
     }

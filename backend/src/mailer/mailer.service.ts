@@ -1,12 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class MailerService {
   private transporter: nodemailer.Transporter | null = null;
   private readonly logger = new Logger(MailerService.name);
 
-  constructor() {
+  constructor(private prisma: PrismaService) {
     const host = process.env.SMTP_HOST;
     const port = process.env.SMTP_PORT
       ? Number(process.env.SMTP_PORT)
@@ -25,6 +26,35 @@ export class MailerService {
       this.logger.warn(
         'SMTP not configured — Mailer will log invites instead of sending',
       );
+    }
+  }
+
+  /**
+   * Check if user wants to receive a specific type of email notification
+   */
+  private async shouldSendEmail(
+    userEmail: string,
+    notificationType: 'emailOnBounty' | 'emailOnMention' | 'weeklyDigest',
+  ): Promise<boolean> {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { email: userEmail },
+        select: { id: true, notificationSettings: true },
+      });
+
+      if (!user || !user.notificationSettings) {
+        // Default to true if no settings exist
+        return true;
+      }
+
+      const settings = user.notificationSettings as any;
+      return settings[notificationType] !== false;
+    } catch (error) {
+      this.logger.error(
+        `Failed to check notification preferences for ${userEmail}: ${error}`,
+      );
+      // Default to true on error to avoid blocking notifications
+      return true;
     }
   }
 
@@ -84,6 +114,15 @@ If you weren't expecting this invite, ignore this message.`;
     deadline: Date,
     bountyId: string,
   ): Promise<void> {
+    // Check if user wants to receive bounty emails
+    const shouldSend = await this.shouldSendEmail(to, 'emailOnBounty');
+    if (!shouldSend) {
+      this.logger.log(
+        `Bounty reminder skipped for ${to} - user disabled emailOnBounty`,
+      );
+      return;
+    }
+
     const from =
       process.env.MAIL_FROM ||
       process.env.SMTP_USER ||

@@ -38,6 +38,10 @@ import {
   UserProfileDto,
   UpdateBackgroundDto,
 } from './dto/user.dto';
+import {
+  UpdateNotificationPreferencesDto,
+  NotificationPreferencesDto,
+} from './dto/notification-preferences.dto';
 import { validateImageFile } from '../common/utils/file-upload.validator';
 
 @Controller('users')
@@ -176,6 +180,48 @@ export class UserController {
       backgroundCid: result.backgroundCid,
       message: 'Background image updated successfully',
     };
+  }
+
+  /**
+   * Update current user notification preferences
+   */
+  @Patch('me/notifications')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update user notification preferences' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Notification preferences updated successfully',
+    type: NotificationPreferencesDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid notification preferences',
+  })
+  async updateNotificationPreferences(
+    @Request() req: any,
+    @Body() updateDto: UpdateNotificationPreferencesDto,
+  ) {
+    return this.userService.updateNotificationPreferences(
+      req.user.userId,
+      updateDto,
+    );
+  }
+
+  /**
+   * Get current user notification preferences
+   */
+  @Get('me/notifications')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get user notification preferences' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Notification preferences retrieved successfully',
+    type: NotificationPreferencesDto,
+  })
+  async getNotificationPreferences(@Request() req: any) {
+    return this.userService.getNotificationPreferences(req.user.userId);
   }
 
   /**

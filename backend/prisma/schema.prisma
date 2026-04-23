@@ -82,6 +82,9 @@ model User {
   hasCompletionBonus Boolean @default(false)
   xp                 Int     @default(0)
 
+  // Notification preferences
+  notificationSettings Json? @default("{\"emailOnBounty\":true,\"emailOnMention\":true,\"weeklyDigest\":true}")
+
   // Relations
   ownedGuilds        Guild[]             @relation("UserOwnerGuilds")
   joinedGuilds       GuildMembership[]   @relation("UserJoinedGuilds")
