@@ -3,6 +3,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { QUEUE_NAMES } from '../queue/queue.constants';
 import { TreasuryService } from './treasury.service';
 import { TreasuryEventProcessor } from './treasury-event.processor';
+import { PayoutReportService } from './payout-report.service';
 
 @Module({
   imports: [
@@ -10,7 +11,7 @@ import { TreasuryEventProcessor } from './treasury-event.processor';
       name: QUEUE_NAMES.ON_CHAIN_EVENTS,
     }),
   ],
-  providers: [TreasuryService, TreasuryEventProcessor],
-  exports: [TreasuryService],
+  providers: [TreasuryService, TreasuryEventProcessor, PayoutReportService],
+  exports: [TreasuryService, PayoutReportService],
 })
 export class TreasuryModule {}
