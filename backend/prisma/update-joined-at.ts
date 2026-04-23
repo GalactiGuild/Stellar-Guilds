@@ -5,26 +5,12 @@ const prisma = new PrismaClient();
 async function updateJoinedAt() {
   console.log('Starting joinedAt update...');
 
-  // Get all memberships with null joinedAt
-  const memberships = await prisma.guildMembership.findMany({
-    where: {
-      joinedAt: null,
-    },
-    select: {
-      id: true,
-      createdAt: true,
-    },
-  });
-
-  console.log(`Found ${memberships.length} records to update`);
-
-  // Update each one
-  for (const membership of memberships) {
-    await prisma.guildMembership.update({
-      where: { id: membership.id },
-      data: { joinedAt: membership.createdAt },
-    });
-  }
+  // Use raw SQL to update records where joinedAt is null, set to createdAt
+  await prisma.$executeRaw`
+    UPDATE "guild_memberships"
+    SET "joinedAt" = "createdAt"
+    WHERE "joinedAt" IS NULL
+  `;
 
   console.log('Update completed');
 
