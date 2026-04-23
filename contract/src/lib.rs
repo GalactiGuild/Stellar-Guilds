@@ -106,9 +106,10 @@ use allowance::{
 
 mod emergency;
 use emergency::{
-    is_paused as emerg_is_paused, pause_contract as emerg_pause_contract,
-    resume_contract as emerg_resume_contract,
+    halt_contract as emerg_halt_contract, is_paused as emerg_is_paused,
+    pause_contract as emerg_pause_contract, resume_contract as emerg_resume_contract, HaltKey,
 };
+pub use emergency::ensure_not_halted;
 
 mod multisig;
 use multisig::{
@@ -2484,6 +2485,26 @@ impl StellarGuildsContract {
             Ok(_) => true,
             Err(_) => false,
         }
+    }
+
+    // ── Emergency Halt Interface (Issue #393) ────────────────────────────────
+
+    /// Immediately halt all contract interactions. Admin only.
+    pub fn halt_contract(env: Env, caller: Address) {
+        emerg_halt_contract(&env, &caller);
+    }
+
+    /// Resume contract after a halt. Admin only.
+    pub fn resume_halted_contract(env: Env, caller: Address) {
+        emerg_resume_contract(&env, &caller);
+    }
+
+    /// Returns true if the contract is currently halted.
+    pub fn is_halted(env: Env) -> bool {
+        env.storage()
+            .instance()
+            .get(&HaltKey::IsHalted)
+            .unwrap_or(false)
     }
 }
 

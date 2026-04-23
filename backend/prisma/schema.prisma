@@ -102,6 +102,7 @@ model User {
   privacySettings    PrivacySettings?
   bountyApplications BountyApplication[]
   bountyPayouts      BountyPayout[]
+  reputationEvents   ReputationEvent[]
 
   @@index([role])
   @@index([isActive])
@@ -187,9 +188,10 @@ model Bounty {
   creator      User                @relation("UserCreatedBounties", fields: [creatorId], references: [id])
   assignee     User?               @relation("UserAssignedBounties", fields: [assigneeId], references: [id])
   guild        Guild?              @relation("GuildBounties", fields: [guildId], references: [id])
-  applications BountyApplication[]
-  milestones   BountyMilestone[]
-  payouts      BountyPayout[]
+  applications     BountyApplication[]
+  milestones       BountyMilestone[]
+  payouts          BountyPayout[]
+  reputationEvents ReputationEvent[]
 
   @@index([guildId])
   @@index([status])
@@ -356,4 +358,29 @@ model TreasuryTransaction {
   @@index([guildId])
   @@index([txHash])
   @@map("treasury_transactions")
+}
+
+enum ReputationReason {
+  BOUNTY_COMPLETED
+  BOUNTY_CREATED
+  PEER_REVIEW
+  MILESTONE_REACHED
+  PENALTY
+  MANUAL_ADJUSTMENT
+}
+
+model ReputationEvent {
+  id             String           @id @default(cuid())
+  userId         String
+  amount         Int
+  reason         ReputationReason
+  linkedBountyId String?
+  timestamp      DateTime         @default(now())
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bounty Bounty? @relation(fields: [linkedBountyId], references: [id])
+
+  @@index([userId])
+  @@index([timestamp])
+  @@map("reputation_events")
 }
