@@ -15,6 +15,7 @@ import { LoggerModule } from './logger/logger.module';
 import { QueueModule } from './queue/queue.module';
 import { ProxylModule } from './proxyl/proxyl.module';
 import { ReputationModule } from './reputation/reputation.module';
+import { ErrorReportingModule } from './common/modules/error-reporting.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ReputationModule } from './reputation/reputation.module';
       },
     ]),
     LoggerModule,
+    ErrorReportingModule,
     PrismaModule,
     AuthModule,
     UserModule,

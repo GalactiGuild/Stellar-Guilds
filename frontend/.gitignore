@@ -19,7 +19,8 @@
 
 # production
 /build
-
+/ADDITIONAL_BACKEND_ISSUES.md
+/WAVES_ISSUES_BACKLOG.md
 # misc
 .DS_Store
 *.pem

@@ -63,7 +63,7 @@ export const Navbar = () => {
             <a
               key={link.name}
               href={link.href}
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-md"
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-slate-800/50 rounded-md"
               onClick={() => setIsOpen(false)} // Close menu on click
             >
               {link.name}

@@ -26,11 +26,11 @@ const OnboardingProgressIndicator = () => {
       <div className="mb-8">
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-medium text-stellar-slate">Onboarding Progress</span>
-          <span className="text-sm font-medium text-gold-400">{progress}%</span>
+          <span className="text-sm font-medium text-violet-400">{progress}%</span>
         </div>
         <div className="w-full bg-stellar-lightNavy rounded-full h-2.5">
           <motion.div
-            className="bg-gradient-to-r from-gold-500 to-gold-600 h-2.5 rounded-full"
+            className="bg-gradient-to-r from-violet-500 to-violet-600 h-2.5 rounded-full"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.5, ease: 'easeInOut' }}
@@ -43,7 +43,7 @@ const OnboardingProgressIndicator = () => {
         {/* Connecting line */}
         <div className="absolute top-4 left-0 w-full h-0.5 bg-stellar-lightNavy -z-10" />
         <div
-          className="absolute top-4 left-0 h-0.5 bg-gradient-to-r from-gold-500 to-gold-600 -z-10"
+          className="absolute top-4 left-0 h-0.5 bg-gradient-to-r from-violet-500 to-violet-600 -z-10"
           style={{ width: `${(completedSteps.length / steps.length) * 100}%` }}
         />
 
@@ -57,7 +57,7 @@ const OnboardingProgressIndicator = () => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 className={`w-8 h-8 rounded-full flex items-center justify-center ${isCurrent
-                  ? 'bg-gradient-to-r from-gold-500 to-gold-600 text-stellar-navy shadow-lg shadow-gold-500/30'
+                  ? 'bg-gradient-to-r from-violet-500 to-violet-600 text-stellar-navy shadow-lg shadow-violet-500/30'
                   : isCompleted
                     ? 'bg-emerald-500 text-white'
                     : 'bg-stellar-lightNavy text-stellar-slate border border-stellar-slate/20'
@@ -71,7 +71,7 @@ const OnboardingProgressIndicator = () => {
               </motion.button>
 
               <span
-                className={`mt-2 text-xs text-center max-w-[80px] ${isCurrent ? 'text-gold-400 font-medium' : 'text-stellar-slate'
+                className={`mt-2 text-xs text-center max-w-[80px] ${isCurrent ? 'text-violet-400 font-medium' : 'text-stellar-slate'
                   }`}
               >
                 {STEP_LABELS[step]}

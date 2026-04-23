@@ -45,10 +45,10 @@ const WelcomeStep = () => {
         transition={{ delay: 0.2 }}
         className="mb-8"
       >
-        <div className="w-20 h-20 bg-gradient-to-r from-gold-500 to-gold-600 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="w-20 h-20 bg-gradient-to-r from-violet-500 to-violet-600 rounded-full flex items-center justify-center mx-auto mb-6">
           <Sparkles className="w-10 h-10 text-stellar-navy" />
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text text-transparent mb-4">
+        <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-violet-400 to-violet-600 bg-clip-text text-transparent mb-4">
           Welcome to Stellar Guilds
         </h1>
         <p className="text-xl text-stellar-slate max-w-2xl mx-auto">
@@ -65,7 +65,7 @@ const WelcomeStep = () => {
             transition={{ delay: 0.3 + index * 0.1 }}
             className="bg-stellar-lightNavy/50 border border-stellar-lightNavy rounded-xl p-6 text-left hover:bg-stellar-lightNavy/70 transition-all duration-300"
           >
-            <div className="w-12 h-12 bg-stellar-darkNavy rounded-lg flex items-center justify-center mb-4 text-gold-400">
+            <div className="w-12 h-12 bg-stellar-darkNavy rounded-lg flex items-center justify-center mb-4 text-violet-400">
               {feature.icon}
             </div>
             <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
@@ -83,19 +83,19 @@ const WelcomeStep = () => {
         <h3 className="text-xl font-semibold text-white mb-2">What to Expect</h3>
         <ul className="text-stellar-slate space-y-2 text-left max-w-lg mx-auto">
           <li className="flex items-start">
-            <span className="text-gold-400 mr-2">•</span>
+            <span className="text-violet-400 mr-2">•</span>
             <span>Secure wallet setup for Stellar network interactions</span>
           </li>
           <li className="flex items-start">
-            <span className="text-gold-400 mr-2">•</span>
+            <span className="text-violet-400 mr-2">•</span>
             <span>Profile creation to showcase your skills and reputation</span>
           </li>
           <li className="flex items-start">
-            <span className="text-gold-400 mr-2">•</span>
+            <span className="text-violet-400 mr-2">•</span>
             <span>Join or create guilds to collaborate on projects</span>
           </li>
           <li className="flex items-start">
-            <span className="text-gold-400 mr-2">•</span>
+            <span className="text-violet-400 mr-2">•</span>
             <span>Discover and participate in bounty programs</span>
           </li>
         </ul>
@@ -108,7 +108,7 @@ const WelcomeStep = () => {
       >
         <Button 
           onClick={nextStep}
-          className="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-stellar-navy px-8 py-3 text-lg font-semibold rounded-xl"
+          className="bg-gradient-to-r from-violet-500 to-violet-600 hover:from-violet-400 hover:to-violet-500 text-stellar-navy px-8 py-3 text-lg font-semibold rounded-xl"
         >
           Get Started
           <svg xmlns="http://www.w3.org/2000/svg" className="ml-2 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">

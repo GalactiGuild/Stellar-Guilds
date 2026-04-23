@@ -35,13 +35,13 @@ export default function CreateGuildPage() {
 
   if (showSuccess) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
         <div className="text-center">
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          <h2 className="text-2xl font-bold text-white mb-2">
             Guild Created Successfully!
           </h2>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-slate-400">
             Redirecting to your new guild...
           </p>
         </div>
@@ -50,7 +50,7 @@ export default function CreateGuildPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-slate-950">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <Link href="/guilds">
@@ -61,16 +61,16 @@ export default function CreateGuildPage() {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-3xl font-bold text-white mb-2">
             Create a New Guild
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-slate-400">
             Start your community and bring together like-minded members
           </p>
         </div>
 
         {/* Form Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-slate-900/40 rounded-lg shadow-sm border border-slate-800/50 p-6">
           <GuildForm onSubmit={handleSubmit} isLoading={isLoading} submitLabel="Create Guild" />
         </div>
 

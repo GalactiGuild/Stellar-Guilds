@@ -63,7 +63,7 @@ export function GuildForm({
         <textarea
           placeholder="Describe your guild's purpose and goals"
           rows={4}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
+          className="w-full px-3 py-2 border border-slate-700/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-900/40 text-white"
           {...register('description')}
         />
         {errors.description && (
@@ -76,7 +76,7 @@ export function GuildForm({
           Category
         </label>
         <select
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
+          className="w-full px-3 py-2 border border-slate-700/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-900/40 text-white"
           {...register('category')}
         >
           <option value="">Select a category</option>

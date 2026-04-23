@@ -38,6 +38,19 @@ body {
     animation: border-pulse 3s infinite;
   }
 
+  /* Rank Badge Animations */
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .animate-rotate-shimmer {
+    animation: rotate-shimmer 3s linear infinite;
+  }
+
+  .animate-shimmer-overlay {
+    animation: shimmer-overlay 2s ease-in-out infinite;
+  }
+
   @keyframes border-pulse {
     0% {
       border-color: #d946ef;
@@ -50,6 +63,35 @@ body {
     100% {
       border-color: #d946ef;
       box-shadow: 0 0 10px rgba(217, 70, 239, 0.3);
+    }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      opacity: 0.3;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.6;
+      transform: scale(1.05);
+    }
+  }
+
+  @keyframes rotate-shimmer {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes shimmer-overlay {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
     }
   }
 }

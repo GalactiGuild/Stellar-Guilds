@@ -35,7 +35,7 @@ export class BountyService {
 
   async findOne(id: string) {
     const bounty = await this.prisma.bounty.findUnique({
-      where: { id },
+      where: { id, deletedAt: null },
       include: {
         creator: true,
         assignee: true,
@@ -47,16 +47,44 @@ export class BountyService {
 
   async get(id: string) {
     const bounty = await this.prisma.bounty.findUnique({
-      where: { id },
+      where: { id, deletedAt: null },
       include: { creator: true, assignee: true },
     });
     if (!bounty) throw new NotFoundException('Bounty not found');
     return bounty;
   }
 
-  async findAll(page = 0, size = 20, guildId?: string) {
-    const where: any = { status: 'OPEN' };
-    if (guildId) where.guildId = guildId;
+  async findAll(filters: {
+    page?: number;
+    size?: number;
+    status?: string;
+    tokenType?: string;
+    minReward?: number;
+    guildId?: string;
+  }) {
+    const page = filters.page ?? 0;
+    const size = filters.size ?? 20;
+
+    const where: any = { deletedAt: null };
+
+    // Default to OPEN status if no status filter provided
+    if (filters.status) {
+      where.status = filters.status;
+    } else {
+      where.status = 'OPEN';
+    }
+
+    if (filters.tokenType) {
+      where.rewardToken = filters.tokenType;
+    }
+
+    if (filters.minReward !== undefined) {
+      where.rewardAmount = { gte: filters.minReward };
+    }
+
+    if (filters.guildId) {
+      where.guildId = filters.guildId;
+    }
 
     const [items, total] = await Promise.all([
       this.prisma.bounty.findMany({
@@ -80,7 +108,7 @@ export class BountyService {
         }
       : {};
 
-    const where: any = {};
+    const where: any = { deletedAt: null };
     if (Object.keys(text).length) where.AND = [text];
     if (guildId) where.guildId = guildId;
 
@@ -299,11 +327,7 @@ export class BountyService {
    * Submit work for review
    * State machine transition: IN_PROGRESS -> IN_REVIEW
    */
-  async submitWork(
-    bountyId: string,
-    dto: SubmitBountyWorkDto,
-    userId: string,
-  ) {
+  async submitWork(bountyId: string, dto: SubmitBountyWorkDto, userId: string) {
     const bounty = await this.prisma.bounty.findUnique({
       where: { id: bountyId },
       include: { creator: true },
@@ -325,7 +349,7 @@ export class BountyService {
       );
     }
 
-    const updatedBounty = await this.prisma.$transaction(async (tx) => {
+    const updatedBounty = await this.prisma.$transaction(async (tx: any) => {
       const updateResult = await tx.bounty.updateMany({
         where: {
           id: bountyId,
@@ -360,38 +384,7 @@ export class BountyService {
       return tx.bounty.findUnique({
         where: { id: bountyId },
       });
-    // Build submission data from DTO
-    const submissionData = {
-      submissions: dto.submissions.map((sub) => ({
-        prUrl: sub.prUrl,
-        description: sub.description,
-      })),
-      attachmentUrls: dto.attachmentUrls || [],
-      additionalComments: dto.additionalComments || null,
-      submittedAt: new Date(),
-    };
-
-    const updatedBounty = await this.prisma.bounty.update({
-      where: { id: bountyId },
-      data: {
-        status: 'SUBMITTED_FOR_REVIEW',
-      },
     });
-
-    // Store submission details in metadata or a separate table
-    // For now, we'll create a notification with the submission data
-    try {
-      await this.prisma.notification.create({
-        data: {
-          userId: bounty.creatorId,
-          message: `Work submitted for "${bounty.title}"`,
-          type: 'BOUNTY_WORK_SUBMITTED',
-          metadata: submissionData,
-        },
-      });
-    } catch (_) {
-      // Ignore notification errors
-    }
 
     // Notify bounty creator of submission
     try {
@@ -408,7 +401,6 @@ export class BountyService {
 
     return {
       bounty: updatedBounty,
-      submission: submissionData,
       message: 'Work submitted successfully. Awaiting review.',
     };
   }
@@ -419,11 +411,7 @@ export class BountyService {
    * - IN_REVIEW + approve -> COMPLETED_PENDING_CLAIM
    * - IN_REVIEW + reject -> IN_PROGRESS (with feedback)
    */
-  async reviewWork(
-    bountyId: string,
-    dto: ReviewWorkDto,
-    reviewerId: string,
-  ) {
+  async reviewWork(bountyId: string, dto: ReviewWorkDto, reviewerId: string) {
     const bounty = await this.prisma.bounty.findUnique({
       where: { id: bountyId },
       include: { assignee: true },
@@ -525,5 +513,23 @@ export class BountyService {
         feedback: dto.feedback,
       };
     }
+  }
+
+  /**
+   * Soft delete a bounty (sets deletedAt timestamp)
+   * Only the creator can delete their own bounty
+   */
+  async remove(id: string, userId: string) {
+    const bounty = await this.prisma.bounty.findUnique({
+      where: { id, deletedAt: null },
+    });
+    if (!bounty) throw new NotFoundException('Bounty not found');
+    if (bounty.creatorId !== userId)
+      throw new ForbiddenException('Only creator can delete bounty');
+
+    return this.prisma.bounty.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
   }
 }

@@ -12,7 +12,7 @@ interface GuildCardProps {
 
 const tierColors = {
   bronze: 'bg-amber-700 text-amber-100',
-  silver: 'bg-gray-400 text-gray-900',
+  silver: 'bg-gray-400 text-white',
   gold: 'bg-yellow-500 text-yellow-900',
   platinum: 'bg-purple-500 text-purple-100'
 }
@@ -38,16 +38,16 @@ export function GuildCard({ guild }: GuildCardProps) {
 
           {/* Guild Info */}
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            <h3 className="text-xl font-bold text-white mb-2">
               {guild.name}
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-2 mb-4">
+            <p className="text-slate-400 text-sm line-clamp-2 mb-4">
               {guild.description}
             </p>
           </div>
 
           {/* Stats */}
-          <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between text-sm text-slate-500 dark:text-gray-400 pt-4 border-t border-slate-800/50">
             <div className="flex items-center gap-1">
               <Users className="w-4 h-4" />
               <span>{guild.memberCount}</span>

@@ -3,6 +3,11 @@ export { Button } from './ui/Button'
 export { Input } from './ui/Input'
 export { Card } from './ui/Card'
 export { Modal } from './ui/Modal'
+export { RankBadge, RankBadgeShowcase } from './ui/RankBadge'
+export type { RankTier } from './ui/RankBadge'
+export { ExportCSVButton } from './ui/ExportCSVButton'
+export { StepWizard, StepWizardDemo } from './ui/StepWizard'
+export type { Step } from './ui/StepWizard'
 
 // Error Boundary
 export { ErrorBoundary } from './ErrorBoundary'

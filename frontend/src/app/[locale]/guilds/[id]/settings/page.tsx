@@ -27,10 +27,10 @@ export default function GuildSettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading guild settings...</p>
+          <p className="text-slate-400">Loading guild settings...</p>
         </div>
       </div>
     )
@@ -38,12 +38,12 @@ export default function GuildSettingsPage() {
 
   if (!currentGuild) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          <h2 className="text-2xl font-bold text-white mb-2">
             Guild Not Found
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <p className="text-slate-400 mb-4">
             The guild you&apos;re looking for doesn&apos;t exist
           </p>
           <Link href="/guilds">
@@ -87,7 +87,7 @@ export default function GuildSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-slate-950">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <Link href={`/guilds/${guildId}`}>
@@ -98,10 +98,10 @@ export default function GuildSettingsPage() {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-3xl font-bold text-white mb-2">
             Guild Settings
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-slate-400">
             Manage your guild&apos;s information and preferences
           </p>
         </div>
@@ -116,8 +116,8 @@ export default function GuildSettingsPage() {
         )}
 
         {/* Settings Form */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+        <div className="bg-slate-900/40 rounded-lg shadow-sm border border-slate-800/50 p-6 mb-6">
+          <h2 className="text-xl font-semibold text-white mb-6">
             Basic Information
           </h2>
           <GuildForm
@@ -129,16 +129,16 @@ export default function GuildSettingsPage() {
         </div>
 
         {/* Danger Zone */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-red-200 dark:border-red-800 p-6">
+        <div className="bg-slate-900/40 rounded-lg shadow-sm border border-red-200 dark:border-red-800 p-6">
           <h2 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-4">
             Danger Zone
           </h2>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h3 className="font-medium text-gray-900 dark:text-white mb-1">
+              <h3 className="font-medium text-white mb-1">
                 Delete Guild
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-slate-400">
                 Once you delete a guild, there is no going back. This action cannot be undone.
               </p>
             </div>
@@ -159,7 +159,7 @@ export default function GuildSettingsPage() {
           title="Delete Guild"
         >
           <div className="space-y-4">
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-slate-400">
               Are you sure you want to delete <strong>{currentGuild.name}</strong>? This action
               cannot be undone and all guild data will be permanently removed.
             </p>

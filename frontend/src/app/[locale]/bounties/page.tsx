@@ -50,7 +50,7 @@ export default function MarketplacePage() {
   }, [search, filterStatus, sortBy]);
 
   return (
-    <div className="min-h-screen w-full bg-[#050505] text-white selection:bg-violet-500/30">
+    <div className="min-h-screen w-full bg-slate-950 text-white selection:bg-violet-500/30">
       <div className="w-full bg-violet-500/5 border-b border-violet-500/10 py-2 overflow-hidden whitespace-nowrap">
         <motion.div
           animate={{ x: [0, -1000] }}
@@ -76,7 +76,7 @@ export default function MarketplacePage() {
         </motion.div>
       </div>
 
-      <div className="relative border-b border-white/5 bg-[#080808] overflow-hidden">
+      <div className="relative border-b border-slate-800/5 bg-slate-900/30 overflow-hidden">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-violet-500/10 blur-[140px] rounded-full -translate-y-1/2 translate-x-1/4" />
         <div className="max-w-7xl mx-auto px-6 py-16 relative z-10">
           <motion.div
@@ -128,14 +128,14 @@ export default function MarketplacePage() {
             </h4>
             <div className="relative group">
               <Search
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
                 size={16}
               />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Find missions..."
-                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-sm focus:border-violet-500/50 transition-all outline-none"
+                className="w-full bg-white/5 border border-slate-800/10 rounded-2xl py-4 pl-12 pr-4 text-sm focus:border-violet-500/50 transition-all outline-none"
               />
             </div>
           </div>
@@ -183,8 +183,8 @@ export default function MarketplacePage() {
                   onClick={() => setFilterStatus(status)}
                   className={`text-left px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
                     filterStatus === status
-                      ? "bg-white text-black border-white"
-                      : "text-slate-500 border-white/5 hover:bg-white/5"
+                      ? "bg-white text-black border-slate-800"
+                      : "text-slate-500 border-slate-800/5 hover:bg-white/5"
                   }`}
                 >
                   {status}
@@ -195,7 +195,7 @@ export default function MarketplacePage() {
         </aside>
 
         <main className="lg:col-span-9">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-10 pb-6 border-b border-white/5 gap-4">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-10 pb-6 border-b border-slate-800/5 gap-4">
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
                 <Target size={14} className="text-violet-500" />
@@ -211,15 +211,15 @@ export default function MarketplacePage() {
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
                 className="bg-transparent text-[10px] font-black text-slate-400 uppercase tracking-widest outline-none cursor-pointer focus:text-white"
               >
-                <option value="Newest" className="bg-[#0A0A0A]">
+                <option value="Newest" className="bg-slate-900">
                   Sort // Newest
                 </option>
 
-                <option value="Highest Reward" className="bg-[#0A0A0A]">
+                <option value="Highest Reward" className="bg-slate-900">
                   Sort // Max Yield
                 </option>
 
-                <option value="Expiring Soon" className="bg-[#0A0A0A]">
+                <option value="Expiring Soon" className="bg-slate-900">
                   Sort // Urgent
                 </option>
               </select>
@@ -247,7 +247,7 @@ export default function MarketplacePage() {
                   description="There are no missions matching your filters right now."
                   createLabel="Create Bounty"
                   onCreate={() => router.push('/bounties/create')}
-                  className="col-span-full border-white/10 bg-white/[0.02]"
+                  className="col-span-full border-slate-800/10 bg-white/[0.02]"
                 />
               )}
             </AnimatePresence>
@@ -264,7 +264,7 @@ const CategoryBtn = ({ icon, label, active, onClick }: { icon: React.ReactNode; 
     className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
       active
         ? "bg-violet-500 border-violet-500 text-black"
-        : "bg-white/5 border-white/10 text-slate-500 hover:text-white"
+        : "bg-white/5 border-slate-800/10 text-slate-500 hover:text-white"
     }`}
   >
     {icon} {label}

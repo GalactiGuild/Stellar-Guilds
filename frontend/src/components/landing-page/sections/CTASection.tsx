@@ -63,7 +63,7 @@ export default function CTASection() {
 
             <Button
               size="lg"
-              className="group px-10 py-7 text-lg bg-white text-slate-900 hover:bg-slate-100 rounded-xl shadow-xl transition-all duration-300"
+              className="group px-10 py-7 text-lg bg-white text-white hover:bg-slate-100 rounded-xl shadow-xl transition-all duration-300"
             >
               Create Account
             </Button>

@@ -8,6 +8,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import {
+  CreateUserDto,
   UpdateUserDto,
   ChangePasswordDto,
   SearchUserDto,
@@ -15,6 +16,7 @@ import {
   UserRole,
 } from './dto/user.dto';
 import * as bcrypt from 'bcrypt';
+import { ProfileUtil } from '../common/utils/profile.util';
 
 @Injectable()
 export class UserService {
@@ -120,7 +122,9 @@ export class UserService {
         ...(updateDto.firstName && { firstName: updateDto.firstName }),
         ...(updateDto.lastName && { lastName: updateDto.lastName }),
         ...(updateDto.bio !== undefined && { bio: updateDto.bio }),
-        ...(updateDto.location !== undefined && { location: updateDto.location }),
+        ...(updateDto.location !== undefined && {
+          location: updateDto.location,
+        }),
         ...(updateDto.profileBio !== undefined && {
           profileBio: updateDto.profileBio,
         }),
@@ -153,10 +157,72 @@ export class UserService {
         createdAt: true,
         updatedAt: true,
         role: true,
+        hasCompletionBonus: true,
+        xp: true,
       },
     });
 
+    // Check profile completeness and award XP bonus if applicable
+    await this.checkAndAwardCompletionBonus(userId, updated);
+
     return updated;
+  }
+
+  /**
+   * Check if user has completed their profile and award XP bonus
+   */
+  private async checkAndAwardCompletionBonus(userId: string, user: any) {
+    // Skip if user already received the bonus
+    if (user.hasCompletionBonus) {
+      return;
+    }
+
+    // Calculate profile completeness
+    const completeness = ProfileUtil.calculateCompleteness({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      bio: user.bio,
+      location: user.location,
+      profileBio: user.profileBio,
+      profileUrl: user.profileUrl,
+      discordHandle: user.discordHandle,
+      twitterHandle: user.twitterHandle,
+      githubHandle: user.githubHandle,
+      avatarUrl: user.avatarUrl,
+      backgroundCid: user.backgroundCid,
+    });
+
+    // Award 50 XP if profile is 100% complete
+    if (completeness === 100) {
+      this.logger.log(
+        `User ${userId} achieved 100% profile completeness. Awarding 50 XP bonus.`,
+      );
+
+      await this.prisma.$transaction(async (tx: any) => {
+        // Update user XP and mark bonus as received
+        await tx.user.update({
+          where: { id: userId },
+          data: {
+            xp: { increment: 50 },
+            hasCompletionBonus: true,
+          },
+        });
+
+        // Log the reward in reputation history (notifications table)
+        await tx.notification.create({
+          data: {
+            userId,
+            message:
+              '🎉 Congratulations! You earned 50 XP for completing your profile!',
+            type: 'PROFILE_COMPLETION_BONUS',
+            metadata: {
+              xpAwarded: 50,
+              completeness,
+            },
+          },
+        });
+      });
+    }
   }
 
   /**
@@ -242,6 +308,30 @@ export class UserService {
         );
       }
     }
+
+    return updated;
+  }
+
+  /**
+   * Update user background image CID
+   */
+  async updateBackground(userId: string, backgroundCid: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { backgroundCid },
+      select: {
+        id: true,
+        backgroundCid: true,
+      },
+    });
 
     return updated;
   }
@@ -428,7 +518,7 @@ export class UserService {
     });
   }
 
-  async createUser(data: any): Promise<any> {
+  async createUser(data: CreateUserDto): Promise<any> {
     return this.prisma.user.create({
       data,
     });

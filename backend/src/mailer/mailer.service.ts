@@ -70,4 +70,54 @@ If you weren't expecting this invite, ignore this message.`;
       this.logger.log(`Revoke (not sent) -> to: ${to}, subject: ${subject}`);
     }
   }
+
+  /**
+   * Send a reminder email for a bounty nearing expiration.
+   * @param to - Recipient email address
+   * @param bountyTitle - Title of the bounty
+   * @param deadline - Expiration date/time of the bounty
+   * @param bountyId - Unique identifier for the bounty
+   */
+  async sendBountyReminderEmail(
+    to: string,
+    bountyTitle: string,
+    deadline: Date,
+    bountyId: string,
+  ): Promise<void> {
+    const from =
+      process.env.MAIL_FROM ||
+      process.env.SMTP_USER ||
+      'no-reply@stellar-guilds.local';
+
+    const formattedDeadline = deadline.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short',
+    });
+
+    const subject = `Reminder: Bounty "${bountyTitle}" expires in 24 hours`;
+    const text = `Hello,
+
+This is a reminder that your bounty "${bountyTitle}" is set to expire on ${formattedDeadline}.
+
+If you need to extend the deadline or review current submissions, please visit your guild dashboard before the bounty expires.
+
+Bounty ID: ${bountyId}
+
+Best regards,
+Stellar Guilds Team`;
+
+    if (this.transporter) {
+      await this.transporter.sendMail({ from, to, subject, text });
+      this.logger.log(`Bounty reminder sent to ${to} for bounty ${bountyId}`);
+    } else {
+      this.logger.log(
+        `Bounty reminder (not sent) -> to: ${to}, bounty: "${bountyTitle}", deadline: ${formattedDeadline}`,
+      );
+    }
+  }
 }

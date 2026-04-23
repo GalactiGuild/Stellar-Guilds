@@ -23,7 +23,7 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
 }) => {
   return (
     <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100 h-full transition-shadow duration-300 hover:shadow-xl">
-      <h3 className="mb-4 text-lg font-bold text-gray-900">Recent Activity</h3>
+      <h3 className="mb-4 text-lg font-bold text-white">Recent Activity</h3>
       <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
         <div className="relative space-y-6 pl-4 border-l-2 border-gray-100">
           {activities.map((activity) => {
@@ -32,15 +32,15 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
             return (
               <div key={activity.id} className="relative pl-2">
                 {/* Timeline Dot */}
-                <div className={`absolute -left-[25px] flex h-8 w-8 items-center justify-center rounded-full border-2 border-white shadow-sm ${activityColors[activity.type]}`}>
+                <div className={`absolute -left-[25px] flex h-8 w-8 items-center justify-center rounded-full border-2 border-slate-800 shadow-sm ${activityColors[activity.type]}`}>
                   <Icon className="h-4 w-4" />
                 </div>
                 
                 <div className="flex flex-col">
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm font-medium text-white">
                     {activity.title}
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-slate-500">
                     {activity.timestamp}
                   </span>
                 </div>
@@ -49,7 +49,7 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
           })}
           
           {activities.length === 0 && (
-            <p className="text-sm text-gray-500 italic">No recent activity.</p>
+            <p className="text-sm text-slate-500 italic">No recent activity.</p>
           )}
         </div>
       </div>

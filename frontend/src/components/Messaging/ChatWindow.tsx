@@ -13,7 +13,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ messages }) => {
           key={msg.id}
           className={
             "p-2 rounded-lg " +
-            (msg.from === "me" ? "bg-blue-100 self-end" : "bg-gray-100 self-start")
+            (msg.from === "me" ? "bg-blue-100 self-end" : "bg-slate-800/50 self-start")
           }
         >
           <div className="text-sm text-gray-700">{msg.body}</div>

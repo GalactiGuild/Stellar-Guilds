@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import ReactMarkdown from "react-markdown";
+import { CodeBlock } from "@/components/markdown/CodeBlock";
 import {
   Edit3,
   Eye,
@@ -71,7 +72,7 @@ export default function CreateBountyPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#050505] text-white p-6 lg:p-12">
+    <div className="min-h-screen w-full bg-slate-950 text-white p-6 lg:p-12">
       <div className="max-w-5xl mx-auto">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <div className="space-y-2">
@@ -86,7 +87,7 @@ export default function CreateBountyPage() {
             </h1>
           </div>
 
-          <div className="flex bg-white/5 p-1 rounded-xl border border-white/10 h-fit">
+          <div className="flex bg-white/5 p-1 rounded-xl border border-slate-800/10 h-fit">
             <TabButton
               active={!isPreview}
               onClick={() => setIsPreview(false)}
@@ -126,7 +127,7 @@ export default function CreateBountyPage() {
                         />
                         <input
                           {...register("title")}
-                          className={`w-full bg-white/5 border rounded-2xl py-4 px-6 outline-none transition-all text-lg font-bold italic ${errors.title ? "border-red-500/50 bg-red-500/5" : "border-white/10 focus:border-violet-500/50"}`}
+                          className={`w-full bg-white/5 border rounded-2xl py-4 px-6 outline-none transition-all text-lg font-bold italic ${errors.title ? "border-red-500/50 bg-red-500/5" : "border-slate-800/10 focus:border-violet-500/50"}`}
                           placeholder="Project Name..."
                         />
                       </div>
@@ -143,7 +144,7 @@ export default function CreateBountyPage() {
                                 key={guild}
                                 type="button"
                                 onClick={() => handleGuildSelect(guild)}
-                                className={`p-4 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${formData.guild === guild ? "bg-violet-500 border-violet-500 text-black shadow-[0_0_20px_rgba(16,185,129,0.2)]" : "bg-white/5 border-white/10 text-slate-500 hover:border-white/20"}`}
+                                className={`p-4 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${formData.guild === guild ? "bg-violet-500 border-violet-500 text-black shadow-[0_0_20px_rgba(16,185,129,0.2)]" : "bg-white/5 border-slate-800/10 text-slate-500 hover:border-slate-800/20"}`}
                               >
                                 {guild}
                               </button>
@@ -164,7 +165,7 @@ export default function CreateBountyPage() {
                       <textarea
                         {...register("description")}
                         rows={8}
-                        className={`w-full bg-white/5 border rounded-2xl py-4 px-6 outline-none transition-all font-mono text-sm leading-relaxed ${errors.description ? "border-red-500/50 bg-red-500/5" : "border-white/10 focus:border-violet-500/50"}`}
+                        className={`w-full bg-white/5 border rounded-2xl py-4 px-6 outline-none transition-all font-mono text-sm leading-relaxed ${errors.description ? "border-red-500/50 bg-red-500/5" : "border-slate-800/10 focus:border-violet-500/50"}`}
                         placeholder="Detail the parameters of the mission..."
                       />
                     </div>
@@ -174,13 +175,19 @@ export default function CreateBountyPage() {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="bg-white/[0.02] border border-white/5 rounded-[40px] p-10 min-h-[500px]"
+                  className="bg-white/[0.02] border border-slate-800/5 rounded-[40px] p-10 min-h-[500px]"
                 >
                   <h2 className="text-4xl font-black italic uppercase tracking-tighter mb-8">
                     {formData.title || "Untitled Mission"}
                   </h2>
                   <div className="prose prose-invert max-w-none prose-violet">
-                    <ReactMarkdown>
+                    <ReactMarkdown
+                      components={{
+                        pre: ({ children, className }) => (
+                          <CodeBlock className={className}>{children}</CodeBlock>
+                        ),
+                      }}
+                    >
                       {formData.description || "_Intel pending..._"}
                     </ReactMarkdown>
                   </div>
@@ -190,7 +197,7 @@ export default function CreateBountyPage() {
           </div>
 
           <div className="lg:col-span-4">
-            <div className="bg-[#0A0A0A] border border-white/10 rounded-[32px] p-8 space-y-8 sticky top-12">
+            <div className="bg-slate-900 border border-slate-800/10 rounded-[32px] p-8 space-y-8 sticky top-12">
               <div className="space-y-6">
                 <div>
                   <FieldLabel
@@ -201,7 +208,7 @@ export default function CreateBountyPage() {
                     <input
                       {...register("reward")}
                       placeholder="0.00"
-                      className="flex-grow bg-white/5 border border-white/10 rounded-xl py-3 px-4 outline-none focus:border-violet-500/50 font-bold"
+                      className="flex-grow bg-white/5 border border-slate-800/10 rounded-xl py-3 px-4 outline-none focus:border-violet-500/50 font-bold"
                     />
                   </div>
                 </div>
@@ -214,18 +221,18 @@ export default function CreateBountyPage() {
                   <input
                     type="date"
                     {...register("deadline")}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 outline-none focus:border-violet-500/50 text-xs font-mono uppercase"
+                    className="w-full bg-white/5 border border-slate-800/10 rounded-xl py-3 px-4 outline-none focus:border-violet-500/50 text-xs font-mono uppercase"
                   />
                 </div>
               </div>
 
-              <div className="pt-8 border-t border-white/5 space-y-4">
+              <div className="pt-8 border-t border-slate-800/5 space-y-4">
                 <SummaryRow label="Security Audit" value="PASS" highlight />
                 <SummaryRow label="Protocol Fee" value="2.5%" />
 
                 <button
                   disabled={isSubmitting}
-                  className={`w-full py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all flex items-center justify-center gap-2 ${isValid ? "bg-violet-500 text-black shadow-[0_0_30px_rgba(16,185,129,0.2)] hover:bg-violet-400" : "bg-white/5 text-slate-600 cursor-not-allowed"}`}
+                  className={`w-full py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all flex items-center justify-center gap-2 ${isValid ? "bg-violet-500 text-black shadow-[0_0_30px_rgba(16,185,129,0.2)] hover:bg-violet-400" : "bg-white/5 text-slate-400 cursor-not-allowed"}`}
                 >
                   {isSubmitting ? (
                     "Syncing..."
@@ -237,7 +244,7 @@ export default function CreateBountyPage() {
                 </button>
               </div>
 
-              <div className="flex items-start gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+              <div className="flex items-start gap-3 p-4 bg-white/5 rounded-2xl border border-slate-800/5">
                 <Info size={16} className="text-slate-500 shrink-0 mt-0.5" />
                 <p className="text-[9px] text-slate-500 leading-relaxed uppercase tracking-tighter">
                   Deployment requires gas. Ensure your linked wallet contains

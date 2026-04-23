@@ -36,6 +36,7 @@ import {
   AssignRoleDto,
   UserRole,
   UserProfileDto,
+  UpdateBackgroundDto,
 } from './dto/user.dto';
 import { validateImageFile } from '../common/utils/file-upload.validator';
 
@@ -89,10 +90,7 @@ export class UserController {
   @Patch('me')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async update(
-    @Request() req: any,
-    @Body() updateDto: UpdateUserDto,
-  ) {
+  async update(@Request() req: any, @Body() updateDto: UpdateUserDto) {
     return this.userService.updateUserProfile(req.user.userId, updateDto);
   }
 
@@ -140,17 +138,43 @@ export class UserController {
     status: HttpStatus.BAD_REQUEST,
     description: 'Invalid file size or type',
   })
-  async uploadAvatar(
-    @Request() req: any,
-    @UploadedFile() file: any,
-  ) {
+  async uploadAvatar(@Request() req: any, @UploadedFile() file: any) {
     // Validate file before passing to service
     validateImageFile(file);
-    
+
     const result = await this.userService.updateAvatar(req.user.userId, file);
     return {
       avatarUrl: result.avatarUrl,
       message: 'Avatar updated successfully',
+    };
+  }
+
+  /**
+   * Update user background image CID
+   */
+  @Patch('me/background')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update user background image CID' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Background image updated successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid CID format',
+  })
+  async updateBackground(
+    @Request() req: any,
+    @Body() updateBackgroundDto: UpdateBackgroundDto,
+  ) {
+    const result = await this.userService.updateBackground(
+      req.user.userId,
+      updateBackgroundDto.backgroundCid,
+    );
+    return {
+      backgroundCid: result.backgroundCid,
+      message: 'Background image updated successfully',
     };
   }
 

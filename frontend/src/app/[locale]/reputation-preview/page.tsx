@@ -7,11 +7,11 @@ const tiers: ReputationTier[] = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamon
 
 export default function ReputationPreviewPage() {
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-950 text-white py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-slate-900">Reputation Tier Styles</h1>
-          <p className="text-slate-600">Preview of all reputation card tier variations</p>
+          <h1 className="text-3xl font-bold text-white">Reputation Tier Styles</h1>
+          <p className="text-slate-400">Preview of all reputation card tier variations</p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -25,7 +25,7 @@ export default function ReputationPreviewPage() {
 
             return (
               <div key={tier} className="space-y-2">
-                <h2 className="text-lg font-semibold text-slate-700">{tier}</h2>
+                <h2 className="text-lg font-semibold text-slate-300">{tier}</h2>
                 <ReputationCard user={tierUser} />
               </div>
             );

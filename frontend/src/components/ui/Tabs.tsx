@@ -28,7 +28,7 @@ export function Tabs({ tabs, defaultTab, className = "" }: TabsProps) {
       {/* Tab bar */}
       <div
         role="tablist"
-        className="relative flex bg-[#13162a] border-b border-white/[0.07] px-2"
+        className="relative flex bg-[#13162a] border-b border-slate-800/[0.07] px-2"
       >
         {tabs.map((tab) => (
           <button

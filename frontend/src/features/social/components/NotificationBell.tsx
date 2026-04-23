@@ -14,7 +14,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   const unreadCount = notifications.filter((n) => !n.read).length;
   return (
     <button
-      className="relative p-2 rounded-full hover:bg-gray-100"
+      className="relative p-2 rounded-full hover:bg-slate-800/50"
       onClick={onOpen}
     >
       <Bell className="h-6 w-6 text-gray-700" />

@@ -38,7 +38,7 @@ export function MemberList({
       {members.map((member) => (
         <div
           key={member.id}
-          className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors"
+          className="flex items-center justify-between p-4 bg-slate-900/40 rounded-lg border border-slate-800/50 hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors"
         >
           <div className="flex items-center gap-3 flex-1">
             {/* Avatar */}
@@ -52,16 +52,16 @@ export function MemberList({
 
             {/* Member Info */}
             <div className="flex-1">
-              <h4 className="font-semibold text-gray-900 dark:text-white">
+              <h4 className="font-semibold text-white">
                 {member.username}
               </h4>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-slate-500 dark:text-gray-400">
                 Joined {new Date(member.joinedAt).toLocaleDateString()}
               </p>
             </div>
 
             {/* Reputation */}
-            <div className="hidden sm:flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <div className="hidden sm:flex items-center gap-2 text-sm text-slate-400">
               <span className="font-medium">{member.reputation}</span>
               <span className="text-xs">REP</span>
             </div>
@@ -75,7 +75,7 @@ export function MemberList({
             <div className="relative ml-2">
               <button
                 onClick={() => setActiveMenu(activeMenu === member.id ? null : member.id)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-2 hover:bg-slate-800/50 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
                 <MoreVertical className="w-4 h-4" />
               </button>
@@ -86,13 +86,13 @@ export function MemberList({
                     className="fixed inset-0 z-10"
                     onClick={() => setActiveMenu(null)}
                   />
-                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-20">
+                  <div className="absolute right-0 mt-2 w-48 bg-slate-900/40 rounded-lg shadow-lg border border-slate-800/50 py-1 z-20">
                     {currentUserRole === 'owner' && (
                       <>
                         {member.role !== 'admin' && (
                           <button
                             onClick={() => handleRoleChange(member.id, 'admin')}
-                            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                            className="w-full px-4 py-2 text-left text-sm hover:bg-slate-800/50 dark:hover:bg-gray-700 flex items-center gap-2"
                           >
                             <Shield className="w-4 h-4" />
                             Promote to Admin
@@ -101,7 +101,7 @@ export function MemberList({
                         {member.role === 'admin' && (
                           <button
                             onClick={() => handleRoleChange(member.id, 'member')}
-                            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                            className="w-full px-4 py-2 text-left text-sm hover:bg-slate-800/50 dark:hover:bg-gray-700 flex items-center gap-2"
                           >
                             <User className="w-4 h-4" />
                             Demote to Member

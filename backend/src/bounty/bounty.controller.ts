@@ -18,6 +18,7 @@ import { ApplyBountyDto } from './dto/apply-bounty.dto';
 import { CreateMilestoneDto } from './dto/create-milestone.dto';
 import { ReviewWorkDto } from './dto/review-work.dto';
 import { SubmitBountyWorkDto } from './dto/submit-work.dto';
+import { FindBountyDto } from './dto/find-bounty.dto';
 
 @Controller('bounties')
 export class BountyController {
@@ -30,12 +31,8 @@ export class BountyController {
   }
 
   @Get('open')
-  async findAll(
-    @Query('page') page = '0',
-    @Query('size') size = '20',
-    @Query('guildId') guildId?: string,
-  ) {
-    return this.service.findAll(Number(page), Number(size), guildId);
+  async findAll(@Query() filters: FindBountyDto) {
+    return this.service.findAll(filters);
   }
 
   @Get(':id')
@@ -144,8 +141,6 @@ export class BountyController {
     @Body() dto: SubmitBountyWorkDto,
     @Request() req: any,
   ) {
-    const userId = req.user.userId;
-    return this.service.submitWork(id, dto.submissionUrl, userId);
     return this.service.submitWork(id, dto, req.user.userId);
   }
 
@@ -161,5 +156,15 @@ export class BountyController {
     @Request() req: any,
   ) {
     return this.service.reviewWork(id, dto, req.user.userId);
+  }
+
+  /**
+   * Soft delete a bounty
+   * DELETE /bounties/:id
+   */
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  async remove(@Param('id') id: string, @Request() req: any) {
+    return this.service.remove(id, req.user.userId);
   }
 }
