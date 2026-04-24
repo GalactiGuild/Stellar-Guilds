@@ -29,6 +29,7 @@ use treasury::{
     grant_allowance as core_grant_allowance, initialize_treasury as core_initialize_treasury,
     cancel_withdrawal as core_cancel_withdrawal, propose_withdrawal as core_propose_withdrawal,
     set_budget as core_set_budget, Transaction,
+    };
 
 mod analytics;
 use analytics::{
