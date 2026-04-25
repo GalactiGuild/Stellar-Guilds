@@ -5,6 +5,7 @@ import { Button } from "@/components/ui";
 import Link from "next/link";
 import LanguageSelector from "@/components/LanguageSelector";
 import { useTranslations } from 'next-intl';
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export default function Navbar() {
   const t = useTranslations('navigation');
@@ -36,7 +37,7 @@ export default function Navbar() {
         className={`
           fixed top-0 left-0 right-0 z-50 transition-all duration-300
           ${isScrolled
-            ? "bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50 shadow-lg shadow-black/20"
+            ? "bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-slate-800/50 shadow-lg"
             : "bg-transparent"
           }
         `}
@@ -51,7 +52,7 @@ export default function Navbar() {
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+              <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
                 Stellar Guilds
               </span>
             </div>
@@ -62,7 +63,7 @@ export default function Navbar() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="text-slate-300 hover:text-white transition-colors duration-200 text-sm font-medium"
+                  className="text-gray-700 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 text-sm font-medium"
                 >
                   {link.label}
                 </Link>
@@ -71,11 +72,12 @@ export default function Navbar() {
 
             {/* Desktop CTA */}
             <div className="hidden md:flex items-center gap-4">
+              <ThemeToggle />
               <LanguageSelector />
               <Link href="/onboarding">
                 <Button
                   variant="ghost"
-                  className="text-slate-300 hover:text-white hover:bg-white/5"
+                  className="text-gray-700 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5"
                 >
                   {t('login')}
                 </Button>
@@ -87,17 +89,20 @@ export default function Navbar() {
               </Link>
             </div>
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 text-slate-300 hover:text-white transition-colors"
-            >
-              {isMobileMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
-            </button>
+            {/* Mobile Menu Button and Theme Toggle */}
+            <div className="md:hidden flex items-center gap-2">
+              <ThemeToggle />
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="p-2 text-gray-700 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+              >
+                {isMobileMenuOpen ? (
+                  <X className="w-6 h-6" />
+                ) : (
+                  <Menu className="w-6 h-6" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </motion.nav>
@@ -112,26 +117,26 @@ export default function Navbar() {
             transition={{ duration: 0.2 }}
             className="fixed inset-x-0 top-20 z-40 md:hidden"
           >
-            <div className="bg-slate-900/95 backdrop-blur-xl border-b border-slate-800 shadow-2xl">
+            <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-gray-200 dark:border-slate-800 shadow-2xl">
               <div className="px-4 py-6 space-y-4">
                 {navLinks.map((link) => (
                   <Link
                     key={link.label}
                     href={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="block w-full text-left px-4 py-3 text-slate-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                    className="block w-full text-left px-4 py-3 text-gray-700 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"
                   >
                     {link.label}
                   </Link>
                 ))}
-                <div className="pt-4 border-t border-slate-800 space-y-3">
+                <div className="pt-4 border-t border-gray-200 dark:border-slate-800 space-y-3">
                   <div className="w-full flex justify-center">
                     <LanguageSelector />
                   </div>
                   <Link href="/onboarding" className="block" onClick={() => setIsMobileMenuOpen(false)}>
                     <Button
                       variant="ghost"
-                      className="w-full justify-center text-slate-300"
+                      className="w-full justify-center text-gray-700 dark:text-slate-300"
                     >
                       Sign In
                     </Button>

@@ -37,7 +37,7 @@ const OnboardingTrigger = () => {
     <div className="fixed bottom-6 right-6 z-50">
       <Button
         onClick={completedSteps.length > 0 ? resumeOnboarding : startOnboarding}
-        className="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-stellar-navy shadow-lg shadow-gold-500/30"
+        className="bg-gradient-to-r from-violet-500 to-violet-600 hover:from-violet-400 hover:to-violet-500 text-stellar-navy shadow-lg shadow-violet-500/30"
       >
         {completedSteps.length > 0 
           ? `Resume Onboarding (${completedSteps.length}/5)` 

@@ -55,12 +55,14 @@ model User {
   id            String    @id @default(cuid())
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
   email         String    @unique
   username      String    @unique
   password      String
   firstName     String
   lastName      String
   bio           String?
+  location      String?
   avatarUrl     String?
   role          UserRole  @default(USER)
   isActive      Boolean   @default(true)
@@ -73,6 +75,16 @@ model User {
   profileUrl    String?
   discordHandle String?
   twitterHandle String?
+  githubHandle  String?
+  backgroundCid String?
+
+  // Profile completion tracking
+  hasCompletionBonus Boolean @default(false)
+  xp                 Int     @default(0)
+  totalViews         Int     @default(0)
+
+  // Notification preferences
+  notificationSettings Json? @default("{\"emailOnBounty\":true,\"emailOnMention\":true,\"weeklyDigest\":true}")
 
   // Relations
   ownedGuilds        Guild[]             @relation("UserOwnerGuilds")
@@ -92,14 +104,19 @@ model User {
   bountyApplications BountyApplication[]
   bountyPayouts      BountyPayout[]
   favoriteGuilds     UserFavoriteGuild[] @relation("UserFavoriteGuilds")
+  apiKeys            ApiKey[]
 
+  @@index([role])
+  @@index([isActive])
+  @@index([createdAt])
   @@map("users")
 }
 
 model Guild {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id          String    @id @default(cuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
   name        String
   slug        String   @unique
   description String?
@@ -107,8 +124,8 @@ model Guild {
   bannerUrl   String?
   ownerId     String
   settings    Json?
-  memberCount Int      @default(1)
-  isActive    Boolean  @default(true)
+  memberCount Int       @default(1)
+  isActive    Boolean   @default(true)
 
   // Relations
   owner       User                @relation("UserOwnerGuilds", fields: [ownerId], references: [id])
@@ -116,18 +133,22 @@ model Guild {
   bounties    Bounty[]            @relation("GuildBounties")
   favoritedBy UserFavoriteGuild[] @relation("GuildFavoritedBy")
 
+  @@index([ownerId])
+  @@index([isActive])
+  @@index([createdAt])
   @@map("guilds")
 }
 
 model GuildMembership {
   id                  String           @id @default(cuid())
   createdAt           DateTime         @default(now())
-  joinedAt            DateTime?
+  joinedAt            DateTime         @default(now())
   status              MembershipStatus @default(APPROVED)
   invitationToken     String?
   invitedById         String?
   invitationExpiresAt DateTime?
   role                GuildRole        @default(MEMBER)
+  bio                 String?
   userId              String
   guildId             String
 
@@ -139,6 +160,9 @@ model GuildMembership {
 
   //  REVOKED
   @@unique([userId, guildId])
+  @@index([status])
+  @@index([guildId])
+  @@index([userId])
   @@map("guild_memberships")
 }
 
@@ -167,6 +191,7 @@ model Bounty {
   id           String    @id @default(cuid())
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
   title        String
   description  String
   status       String    @default("OPEN") // OPEN, IN_PROGRESS, COMPLETED, CANCELLED
@@ -176,6 +201,7 @@ model Bounty {
   creatorId    String
   assigneeId   String?
   guildId      String?
+  reminderSent Boolean   @default(false)
 
   // Relations
   creator      User                @relation("UserCreatedBounties", fields: [creatorId], references: [id])
@@ -185,6 +211,12 @@ model Bounty {
   milestones   BountyMilestone[]
   payouts      BountyPayout[]
 
+  @@index([guildId])
+  @@index([status])
+  @@index([creatorId])
+  @@index([assigneeId])
+  @@index([createdAt])
+  @@index([status, guildId])
   @@map("bounties")
 }
 
@@ -203,6 +235,9 @@ model BountyApplication {
   bounty    Bounty @relation(fields: [bountyId], references: [id], onDelete: Cascade)
   applicant User   @relation(fields: [applicantId], references: [id])
 
+  @@index([bountyId])
+  @@index([applicantId])
+  @@index([status])
   @@map("bounty_applications")
 }
 
@@ -220,6 +255,8 @@ model BountyMilestone {
 
   bounty Bounty @relation(fields: [bountyId], references: [id], onDelete: Cascade)
 
+  @@index([bountyId])
+  @@index([status])
   @@map("bounty_milestones")
 }
 
@@ -237,6 +274,9 @@ model BountyPayout {
   bounty Bounty @relation(fields: [bountyId], references: [id], onDelete: Cascade)
   toUser User   @relation(fields: [toUserId], references: [id])
 
+  @@index([bountyId])
+  @@index([toUserId])
+  @@index([status])
   @@map("bounty_payouts")
 }
 
@@ -263,6 +303,11 @@ model Message {
   body      String
   encrypted Boolean  @default(false)
   read      Boolean  @default(false)
+
+  @@index([fromId])
+  @@index([toId])
+  @@index([read])
+  @@index([createdAt])
 }
 
 model ForumThread {
@@ -272,6 +317,9 @@ model ForumThread {
   creator   User        @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   creatorId String
   posts     ForumPost[]
+
+  @@index([creatorId])
+  @@index([createdAt])
 }
 
 model ForumPost {
@@ -283,6 +331,10 @@ model ForumPost {
   authorId  String
   content   String
   editedAt  DateTime?
+
+  @@index([threadId])
+  @@index([authorId])
+  @@index([createdAt])
 }
 
 model Notification {
@@ -294,6 +346,11 @@ model Notification {
   read      Boolean  @default(false)
   type      String?
   metadata  Json?
+
+  @@index([userId])
+  @@index([read])
+  @@index([type])
+  @@index([createdAt])
 }
 
 model PrivacySettings {
@@ -303,4 +360,62 @@ model PrivacySettings {
   showActivityFeed              Boolean @default(true)
   allowMessagesFromNonFollowers Boolean @default(false)
   showAchievements              Boolean @default(true)
+}
+
+model TreasuryTransaction {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  guildId     String
+  amount      Decimal
+  asset       String
+  fromAddress String
+  toAddress   String
+  txHash      String   @unique
+  timestamp   DateTime
+
+  @@index([guildId])
+  @@index([txHash])
+  @@map("treasury_transactions")
+}
+
+model ApiKey {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  keyHash   String   @unique
+  label     String?
+  revokedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("api_keys")
+}
+
+model ReputationEntry {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  points    Int
+  reason    String?
+  metadata  Json?
+
+  @@index([userId])
+  @@map("reputation_entries")
+}
+
+model GuildPayout {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  guildId     String
+  recipientId String
+  amount      Decimal
+  asset       String
+  txHash      String?
+  status      String   @default("PENDING")
+  processedAt DateTime?
+
+  @@index([guildId])
+  @@index([recipientId])
+  @@map("guild_payouts")
 }

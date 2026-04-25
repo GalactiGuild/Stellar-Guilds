@@ -43,6 +43,8 @@ lerna-debug.log*
 .env.development.local
 .env.test.local
 .env.production.local
+/ADDITIONAL_BACKEND_ISSUES.md
+/WAVES_ISSUES_BACKLOG.md
 
 # Vercel
 .vercel

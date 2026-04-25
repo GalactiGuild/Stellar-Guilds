@@ -26,24 +26,24 @@ export default async function ProfilePage({
   return (
 
 
-    <main className="min-h-screen bg-slate-50 pb-20 pt-10 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-slate-950 text-white pb-20 pt-10 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl space-y-8">
 
         {/* Header Section */}
-        <div className="relative rounded-2xl bg-white p-6 shadow-md border border-gray-100 sm:p-8 transition-shadow duration-300 hover:shadow-xl">
+        <div className="relative rounded-2xl bg-slate-900/40 p-6 shadow-md border border-slate-800/50 sm:p-8 transition-shadow duration-300 hover:shadow-xl">
           <div className="absolute right-6 top-6 flex gap-3">
-            <button className="rounded-full bg-gray-100 p-2 text-gray-600 hover:bg-gray-200 transition-colors">
+            <button className="rounded-full bg-slate-800/50 p-2 text-slate-400 hover:bg-slate-800 transition-colors">
               <Share2 className="h-5 w-5" />
             </button>
             <Link href="/profile/settings">
-              <button className="rounded-full bg-gray-100 p-2 text-gray-600 hover:bg-gray-200 transition-colors">
+              <button className="rounded-full bg-slate-800/50 p-2 text-slate-400 hover:bg-slate-800 transition-colors">
                 <Settings className="h-5 w-5" />
               </button>
             </Link>
           </div>
 
           <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
-            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full border-4 border-white shadow-lg sm:h-32 sm:w-32">
+            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full border-4 border-slate-800 shadow-lg sm:h-32 sm:w-32">
               <Image
                 src={mockUser.avatarUrl}
                 alt={mockUser.displayName}
@@ -54,19 +54,19 @@ export default async function ProfilePage({
             </div>
 
             <div className="flex-1 text-center sm:text-left sm:pt-2">
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-white">
                 {mockUser.displayName}
               </h1>
               <div className="mt-1 flex flex-wrap items-center justify-center gap-3 sm:justify-start">
-                <span className="font-mono text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                <span className="font-mono text-sm text-slate-500 bg-slate-800/50 px-2 py-1 rounded">
                   {mockUser.address}
                 </span>
                 <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border
-                  ${mockUser.tier === 'Gold' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 'bg-gray-100 text-gray-800 border-gray-200'}`}>
+                  ${mockUser.tier === 'Gold' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 'bg-slate-800/50 text-gray-800 border-gray-200'}`}>
                   {mockUser.tier} Member
                 </span>
               </div>
-              <p className="mt-4 max-w-2xl text-gray-600">
+              <p className="mt-4 max-w-2xl text-slate-400">
                 {mockUser.bio}
               </p>
             </div>
@@ -111,8 +111,8 @@ export default async function ProfilePage({
 
       {/* user profile  */}
       {/* <div className="z-10 max-w-5xl w-full items-center justify-center font-mono text-sm lg:flex flex-col gap-6 text-center">
-        <h1 className="text-4xl font-bold text-gray-900">Stellar Guilds</h1>
-        <p className="text-xl text-gray-600">User Profile & Reputation Dashboard</p>
+        <h1 className="text-4xl font-bold text-white">Stellar Guilds</h1>
+        <p className="text-xl text-slate-400">User Profile & Reputation Dashboard</p>
         
         <Link 
           href="/profile/GABX...9KLM"

@@ -37,16 +37,16 @@ export default function SettingsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 pb-20 pt-10 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-slate-950 text-white pb-20 pt-10 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-2xl">
         <div className="mb-6 flex items-center gap-4">
           <Link
             href={`/profile/${mockUser.address}`}
-            className="rounded-full bg-white p-2 text-gray-500 shadow-sm transition-colors hover:text-gray-900"
+            className="rounded-full bg-white p-2 text-slate-500 shadow-sm transition-colors hover:text-white"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
+          <h1 className="text-2xl font-bold text-white">Profile Settings</h1>
         </div>
 
         <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100 sm:p-8">
@@ -56,7 +56,7 @@ export default function SettingsPage() {
             <div>
               <label
                 htmlFor="displayName"
-                className="mb-2 block text-sm font-medium text-gray-900"
+                className="mb-2 block text-sm font-medium text-white"
               >
                 Display Name
               </label>
@@ -70,7 +70,7 @@ export default function SettingsPage() {
                   id="displayName"
                   value={formData.displayName}
                   onChange={handleChange}
-                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 pl-10 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 pl-10 text-white focus:border-blue-500 focus:ring-blue-500"
                   placeholder="Your display name"
                 />
               </div>
@@ -80,7 +80,7 @@ export default function SettingsPage() {
             <div>
               <label
                 htmlFor="bio"
-                className="mb-2 block text-sm font-medium text-gray-900"
+                className="mb-2 block text-sm font-medium text-white"
               >
                 Bio
               </label>
@@ -91,7 +91,7 @@ export default function SettingsPage() {
                 maxLength={250}
                 value={formData.bio}
                 onChange={handleChange}
-                className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-white focus:border-blue-500 focus:ring-blue-500"
                 placeholder="Tell us about yourself..."
               />
             </div>
@@ -100,7 +100,7 @@ export default function SettingsPage() {
             <div>
               <label
                 htmlFor="avatarUrl"
-                className="mb-2 block text-sm font-medium text-gray-900"
+                className="mb-2 block text-sm font-medium text-white"
               >
                 Avatar URL
               </label>
@@ -114,7 +114,7 @@ export default function SettingsPage() {
                   id="avatarUrl"
                   value={formData.avatarUrl}
                   onChange={handleChange}
-                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 pl-10 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 pl-10 text-white focus:border-blue-500 focus:ring-blue-500"
                   placeholder="https://..."
                 />
               </div>
@@ -122,7 +122,7 @@ export default function SettingsPage() {
 
             {/* Social Links */}
             <div className="border-t border-gray-100 pt-6">
-              <h3 className="mb-4 text-lg font-medium text-gray-900">
+              <h3 className="mb-4 text-lg font-medium text-white">
                 Social Links
               </h3>
 
@@ -130,7 +130,7 @@ export default function SettingsPage() {
                 <div>
                   <label
                     htmlFor="twitter"
-                    className="mb-2 block text-sm font-medium text-gray-900"
+                    className="mb-2 block text-sm font-medium text-white"
                   >
                     Twitter / X
                   </label>
@@ -144,7 +144,7 @@ export default function SettingsPage() {
                       id="twitter"
                       value={formData.twitter}
                       onChange={handleChange}
-                      className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 pl-10 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                      className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 pl-10 text-white focus:border-blue-500 focus:ring-blue-500"
                       placeholder="https://twitter.com/..."
                     />
                   </div>
@@ -153,7 +153,7 @@ export default function SettingsPage() {
                 <div>
                   <label
                     htmlFor="github"
-                    className="mb-2 block text-sm font-medium text-gray-900"
+                    className="mb-2 block text-sm font-medium text-white"
                   >
                     GitHub
                   </label>
@@ -167,7 +167,7 @@ export default function SettingsPage() {
                       id="github"
                       value={formData.github}
                       onChange={handleChange}
-                      className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 pl-10 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                      className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 pl-10 text-white focus:border-blue-500 focus:ring-blue-500"
                       placeholder="https://github.com/..."
                     />
                   </div>
@@ -178,7 +178,7 @@ export default function SettingsPage() {
             {/* Privacy & Social Controls */}
             <div className="border-t border-gray-100 pt-6">
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-900">
+                <h3 className="text-lg font-medium text-white">
                   Privacy & Social
                 </h3>
                 <Link

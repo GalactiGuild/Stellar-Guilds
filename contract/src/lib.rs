@@ -4,17 +4,22 @@ use soroban_sdk::{contract, contractimpl, Address, Env, String, Vec};
 
 mod events;
 mod guild;
+mod integration;
+mod interfaces;
+mod utils;
 use guild::membership::{
     add_member, create_guild, get_all_members, get_member, has_permission, is_member, join_guild,
-    remove_member, update_role,
+    remove_member, reque_permissions as guild_reque_permissions,
+    update_guild_info as guild_update_guild_info, update_role,
 };
 use guild::storage;
 use guild::types::{Member, Role};
 
 mod bounty;
 use bounty::{
-    approve_bounty, approve_completion, cancel_bounty, claim_bounty, create_bounty, expire_bounty,
-    fund_bounty, get_bounty_data, get_guild_bounties_list, release_escrow, submit_work, Bounty,
+    approve_bounty, approve_completion, cancel_bounty, claim_bounty, claim_payout, create_bounty,
+    expire_bounty, fund_bounty, get_bounty_data, get_guild_bounties_list, release_escrow,
+    submit_work, Bounty, PayoutSplit,
 };
 
 mod treasury;
@@ -37,8 +42,8 @@ mod reputation;
 use reputation::{
     compute_governance_weight as rep_governance_weight, get_badges as rep_get_badges,
     get_contributions as rep_get_contributions, get_decayed_profile, get_global_reputation,
-    record_contribution as rep_record_contribution, Badge, ContributionRecord, ContributionType,
-    ReputationProfile,
+    get_token_metadata as rep_get_token_metadata, record_contribution as rep_record_contribution,
+    Badge, ContributionRecord, ContributionType, ReputationProfile,
 };
 
 mod governance;
@@ -150,9 +155,17 @@ use upgrade::storage as upgrade_storage;
 use upgrade::types::Version;
 
 mod proxy;
+use integration::types::{
+    ContractType, ContractVersion, CrossContractPermission, EventFilter, EventType, PlatformEvent,
+};
+use interfaces::{
+    BountyContractCall, ContractCallResponse, ContractCallResult, GuildContractCall,
+    PaymentContractCall,
+};
 use proxy::implementation as proxy_impl;
 use proxy::storage as proxy_storage;
 use proxy::types::ProxyConfig;
+use utils::errors::IntegrationErrorCode;
 
 /// Stellar Guilds - Main Contract Entry Point
 ///
@@ -188,6 +201,8 @@ impl StellarGuildsContract {
         env.storage().instance().set(&DataKey::Initialized, &true);
 
         storage::initialize(&env);
+        integration::registry::initialize(&env);
+        integration::events::initialize(&env);
         subscription::storage::initialize_subscription_storage(&env);
         true
     }
@@ -195,6 +210,200 @@ impl StellarGuildsContract {
     /// Get contract version
     pub fn version(_env: Env) -> String {
         String::from_str(&_env, "0.1.0")
+    }
+
+    // ============ Integration Layer ============
+
+    pub fn register_contract(
+        env: Env,
+        contract_type: ContractType,
+        address: Address,
+        version: Version,
+        caller: Address,
+    ) -> bool {
+        integration::auth::require_admin(&env, &caller);
+        integration::registry::register_contract(&env, contract_type, address, version)
+    }
+
+    pub fn get_contract_address(env: Env, contract_type: ContractType) -> Address {
+        integration::registry::get_contract_address(&env, contract_type)
+    }
+
+    pub fn update_contract(
+        env: Env,
+        contract_type: ContractType,
+        new_address: Address,
+        new_version: Version,
+        caller: Address,
+    ) -> bool {
+        integration::auth::require_admin(&env, &caller);
+        integration::registry::update_contract(&env, contract_type, new_address, new_version)
+    }
+
+    pub fn get_all_contracts(env: Env) -> Vec<ContractVersion> {
+        integration::registry::get_all_contracts(&env)
+    }
+
+    pub fn emit_integration_event(
+        env: Env,
+        event_type: EventType,
+        source_contract: ContractType,
+        data: String,
+        schema_version: u32,
+        caller: Address,
+    ) -> bool {
+        integration::auth::require_admin(&env, &caller);
+        integration::events::emit_event(&env, event_type, source_contract, data, schema_version)
+    }
+
+    pub fn get_events(
+        env: Env,
+        filters: EventFilter,
+        from_timestamp: u64,
+        limit: u32,
+    ) -> Vec<PlatformEvent> {
+        integration::events::get_events(&env, filters, from_timestamp, limit)
+    }
+
+    pub fn subscribe_to_events(env: Env, subscriber: Address, event_types: Vec<EventType>) -> bool {
+        subscriber.require_auth();
+        integration::events::subscribe_to_events(&env, subscriber, event_types)
+    }
+
+    pub fn call_guild_contract(
+        env: Env,
+        caller: Address,
+        call: GuildContractCall,
+    ) -> ContractCallResponse {
+        let address = integration::registry::get_contract_address(&env, ContractType::Guild);
+        if !integration::auth::verify_cross_contract_auth(
+            &env,
+            caller,
+            ContractType::Guild,
+            CrossContractPermission::Read,
+        ) {
+            return Err(IntegrationErrorCode::Unauthorized);
+        }
+
+        if address == env.current_contract_address() {
+            match call {
+                GuildContractCall::GetMember(guild_id, address) => {
+                    get_member(&env, guild_id, address)
+                        .map(ContractCallResult::Member)
+                        .map_err(|_| IntegrationErrorCode::CrossContractCallFailed)
+                }
+                GuildContractCall::GetAllMembers(guild_id) => {
+                    Ok(ContractCallResult::Members(get_all_members(&env, guild_id)))
+                }
+                GuildContractCall::IsMember(guild_id, address) => {
+                    Ok(ContractCallResult::Bool(is_member(&env, guild_id, address)))
+                }
+                GuildContractCall::HasPermission(guild_id, address, required_role) => {
+                    Ok(ContractCallResult::Bool(has_permission(
+                        &env,
+                        guild_id,
+                        address,
+                        required_role,
+                    )))
+                }
+            }
+        } else {
+            interfaces::guild::invoke(&env, &address, call)
+        }
+    }
+
+    pub fn call_bounty_contract(
+        env: Env,
+        caller: Address,
+        call: BountyContractCall,
+    ) -> ContractCallResponse {
+        let address = integration::registry::get_contract_address(&env, ContractType::Bounty);
+        if !integration::auth::verify_cross_contract_auth(
+            &env,
+            caller,
+            ContractType::Bounty,
+            CrossContractPermission::Read,
+        ) {
+            return Err(IntegrationErrorCode::Unauthorized);
+        }
+
+        if address == env.current_contract_address() {
+            match call {
+                BountyContractCall::GetBounty(bounty_id) => {
+                    Ok(ContractCallResult::Bounty(get_bounty_data(&env, bounty_id)))
+                }
+                BountyContractCall::GetGuildBounties(guild_id) => Ok(ContractCallResult::Bounties(
+                    get_guild_bounties_list(&env, guild_id),
+                )),
+                BountyContractCall::ExpireBounty(bounty_id) => {
+                    Ok(ContractCallResult::Bool(expire_bounty(&env, bounty_id)))
+                }
+            }
+        } else {
+            interfaces::bounty::invoke(&env, &address, call)
+        }
+    }
+
+    pub fn call_payment_contract(
+        env: Env,
+        caller: Address,
+        call: PaymentContractCall,
+    ) -> ContractCallResponse {
+        let address = integration::registry::get_contract_address(&env, ContractType::Payment);
+        if !integration::auth::verify_cross_contract_auth(
+            &env,
+            caller,
+            ContractType::Payment,
+            CrossContractPermission::Read,
+        ) {
+            return Err(IntegrationErrorCode::Unauthorized);
+        }
+
+        if address == env.current_contract_address() {
+            match call {
+                PaymentContractCall::GetPoolStatus(pool_id) => pay_get_pool_status(&env, pool_id)
+                    .map(ContractCallResult::DistributionStatus)
+                    .map_err(|_| IntegrationErrorCode::CrossContractCallFailed),
+                PaymentContractCall::GetRecipientAmount(pool_id, recipient) => {
+                    pay_get_recipient_amount(&env, pool_id, recipient)
+                        .map(ContractCallResult::I128)
+                        .map_err(|_| IntegrationErrorCode::CrossContractCallFailed)
+                }
+                PaymentContractCall::ValidateDistribution(pool_id) => {
+                    pay_validate_distribution(&env, pool_id)
+                        .map(ContractCallResult::Bool)
+                        .map_err(|_| IntegrationErrorCode::CrossContractCallFailed)
+                }
+            }
+        } else {
+            interfaces::payment::invoke(&env, &address, call)
+        }
+    }
+
+    pub fn verify_cross_contract_auth(
+        env: Env,
+        caller: Address,
+        target_contract: ContractType,
+        required_permission: CrossContractPermission,
+    ) -> bool {
+        integration::auth::verify_cross_contract_auth(
+            &env,
+            caller,
+            target_contract,
+            required_permission,
+        )
+    }
+
+    pub fn validate_address(_env: Env, address: Address) -> bool {
+        utils::validation::validate_address(&address)
+    }
+
+    pub fn format_error(env: Env, error_code: IntegrationErrorCode, context: String) -> String {
+        utils::errors::format_error(&env, error_code, context)
+    }
+
+    pub fn create_event_id(env: Env) -> u128 {
+        integration::events::create_event_id(&env)
     }
 
     /// Create a new guild
@@ -346,6 +555,37 @@ impl StellarGuildsContract {
     /// true if the member has the required permission, false otherwise
     pub fn has_permission(env: Env, guild_id: u64, address: Address, required_role: Role) -> bool {
         has_permission(&env, guild_id, address, required_role)
+    }
+
+    /// Check whether a guild member has the named system permission.
+    pub fn reque_permissions(
+        env: Env,
+        guild_id: u64,
+        address: Address,
+        permission_key: String,
+    ) -> bool {
+        let member = guild::storage::get_member(&env, guild_id, &address)
+            .unwrap_or_else(|| panic!("Caller is not a member of the guild"));
+        match guild_reque_permissions(&env, &member, permission_key) {
+            Ok(result) => result,
+            Err(err) => panic!("{:?}", err),
+        }
+    }
+
+    /// Permission-only guild system settings update. No storage mutation is performed.
+    pub fn update_guild_info(
+        env: Env,
+        guild_id: u64,
+        title: String,
+        logo: String,
+        description: String,
+        caller: Address,
+    ) -> bool {
+        caller.require_auth();
+        match guild_update_guild_info(&env, guild_id, caller, title, logo, description) {
+            Ok(result) => result,
+            Err(err) => panic!("{:?}", err),
+        }
     }
 
     // ============ Payment Functions ============
@@ -617,6 +857,11 @@ impl StellarGuildsContract {
         dispute_execute_resolution(&env, dispute_id)
     }
 
+    pub fn get_dispute(env: Env, dispute_id: u64) -> dispute::types::Dispute {
+        crate::dispute::storage::get_dispute(&env, dispute_id)
+            .unwrap_or_else(|| panic!("dispute not found"))
+    }
+
     // ============ Treasury Functions ============
 
     /// Initialize a new treasury for a guild
@@ -745,6 +990,11 @@ impl StellarGuildsContract {
     /// The balance amount
     pub fn get_treasury_balance(env: Env, treasury_id: u64, token: Option<Address>) -> i128 {
         core_get_balance(&env, treasury_id, token)
+    }
+
+    pub fn get_treasury(env: Env, treasury_id: u64) -> treasury::types::Treasury {
+        crate::treasury::storage::get_treasury(&env, treasury_id)
+            .unwrap_or_else(|| panic!("treasury not found"))
     }
 
     /// Get transaction history for a treasury
@@ -1085,6 +1335,11 @@ impl StellarGuildsContract {
         let member = guild::storage::get_member(&env, guild_id, &address)
             .unwrap_or_else(|| panic!("not a guild member"));
         rep_governance_weight(&env, &address, guild_id, &member.role)
+    }
+
+    /// Return JSON metadata for a reputation soulbound token.
+    pub fn get_token_metadata(env: Env, id: u64) -> String {
+        rep_get_token_metadata(&env, id)
     }
 
     // ============ Milestone Tracking Functions ============
@@ -1549,6 +1804,28 @@ impl StellarGuildsContract {
     /// `true` if bounty was expired and refunded
     pub fn expire_bounty(env: Env, bounty_id: u64) -> bool {
         expire_bounty(&env, bounty_id)
+    }
+
+    /// Claim bounty payout - claimer pulls funds from escrow to their own address
+    ///
+    /// This function allows an approved claimer to claim their payout after the bounty
+    /// completion has been approved. Uses checks-effects-interactions pattern to prevent
+    /// reentrancy attacks.
+    ///
+    /// # Arguments
+    /// * `bounty_id` - The ID of the bounty
+    /// * `claimer` - Address of the claimer claiming the payout (must be the approved claimer)
+    /// * `recipients` - Payout recipients paired with basis-point allocation
+    ///
+    /// # Returns
+    /// `true` if payout claim was successful
+    pub fn claim_payout(
+        env: Env,
+        bounty_id: u64,
+        claimer: Address,
+        recipients: Vec<PayoutSplit>,
+    ) -> bool {
+        claim_payout(&env, bounty_id, claimer, recipients)
     }
 
     /// Get bounty by ID
@@ -2842,6 +3119,107 @@ mod tests {
         assert_eq!(
             client.has_permission(&guild_id, &contributor, &Role::Contributor),
             true
+        );
+    }
+
+    #[test]
+    fn test_reque_permissions_allows_update_info_for_admin() {
+        let (env, owner, admin, _, _) = setup();
+        let contract_id = register_and_init_contract(&env);
+        let client = StellarGuildsContractClient::new(&env, &contract_id);
+
+        env.mock_all_auths();
+
+        let name = String::from_str(&env, "Guild");
+        let description = String::from_str(&env, "Description");
+        let guild_id = client.create_guild(&name, &description, &owner);
+
+        client.add_member(&guild_id, &admin, &Role::Admin, &owner);
+
+        assert!(client.reque_permissions(
+            &guild_id,
+            &admin,
+            &String::from_str(&env, "UPDATE_INFO"),
+        ));
+    }
+
+    #[test]
+    #[should_panic(expected = "Unauthorized")]
+    fn test_update_guild_info_denies_member_without_permission() {
+        let (env, owner, admin, member, _) = setup();
+        let contract_id = register_and_init_contract(&env);
+        let client = StellarGuildsContractClient::new(&env, &contract_id);
+
+        env.mock_all_auths();
+
+        let name = String::from_str(&env, "Guild");
+        let description = String::from_str(&env, "Description");
+        let guild_id = client.create_guild(&name, &description, &owner);
+
+        client.add_member(&guild_id, &admin, &Role::Admin, &owner);
+        client.add_member(&guild_id, &member, &Role::Member, &owner);
+
+        client.update_guild_info(
+            &guild_id,
+            &String::from_str(&env, "New Title"),
+            &String::from_str(&env, "ipfs://guild-logo"),
+            &String::from_str(&env, "New Description"),
+            &member,
+        );
+    }
+
+    #[test]
+    fn test_update_guild_info_allows_admin() {
+        let (env, owner, admin, _, _) = setup();
+        let contract_id = register_and_init_contract(&env);
+        let client = StellarGuildsContractClient::new(&env, &contract_id);
+
+        env.mock_all_auths();
+
+        let name = String::from_str(&env, "Guild");
+        let description = String::from_str(&env, "Description");
+        let guild_id = client.create_guild(&name, &description, &owner);
+
+        client.add_member(&guild_id, &admin, &Role::Admin, &owner);
+
+        assert!(client.update_guild_info(
+            &guild_id,
+            &String::from_str(&env, "New Title"),
+            &String::from_str(&env, "ipfs://guild-logo"),
+            &String::from_str(&env, "New Description"),
+            &admin,
+        ));
+    }
+
+    #[test]
+    fn test_get_token_metadata_returns_json() {
+        let (env, _, _, _, _) = setup();
+        let contract_id = register_and_init_contract(&env);
+        let client = StellarGuildsContractClient::new(&env, &contract_id);
+
+        let metadata = client.get_token_metadata(&1u64);
+        assert_eq!(
+            metadata,
+            String::from_str(
+                &env,
+                "{\"name\":\"Stellar Hero\",\"rank\":\"Captain\",\"image\":\"ipfs://stellar-hero-captain\"}"
+            )
+        );
+    }
+
+    #[test]
+    fn test_get_token_metadata_varies_by_id() {
+        let (env, _, _, _, _) = setup();
+        let contract_id = register_and_init_contract(&env);
+        let client = StellarGuildsContractClient::new(&env, &contract_id);
+
+        let metadata = client.get_token_metadata(&3u64);
+        assert_eq!(
+            metadata,
+            String::from_str(
+                &env,
+                "{\"name\":\"Stellar Hero\",\"rank\":\"Master\",\"image\":\"ipfs://stellar-hero-master\"}"
+            )
         );
     }
 

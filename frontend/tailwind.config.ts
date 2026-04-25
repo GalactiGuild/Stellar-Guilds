@@ -2,6 +2,7 @@ import type { Config } from "tailwindcss";
 import typography from "@tailwindcss/typography";
 
 const config: Config = {
+  darkMode: 'class',
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -57,6 +58,44 @@ const config: Config = {
       transitionProperty: {
         height: "height",
         spacing: "margin, padding",
+      },
+      keyframes: {
+        shimmer: {
+          "100%": {
+            transform: "translateX(100%)",
+          },
+        },
+        'pulse-glow': {
+          '0%, 100%': {
+            opacity: '0.3',
+            transform: 'scale(1)',
+          },
+          '50%': {
+            opacity: '0.6',
+            transform: 'scale(1.05)',
+          },
+        },
+        'rotate-shimmer': {
+          '0%': {
+            transform: 'rotate(0deg)',
+          },
+          '100%': {
+            transform: 'rotate(360deg)',
+          },
+        },
+        'shimmer-overlay': {
+          '0%': {
+            transform: 'translateX(-100%)',
+          },
+          '100%': {
+            transform: 'translateX(100%)',
+          },
+        },
+      },
+      animation: {
+        'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+        'rotate-shimmer': 'rotate-shimmer 3s linear infinite',
+        'shimmer-overlay': 'shimmer-overlay 2s ease-in-out infinite',
       },
     },
   },

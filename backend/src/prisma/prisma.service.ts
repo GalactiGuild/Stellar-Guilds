@@ -5,17 +5,18 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { createSoftDeleteExtension } from './prisma.extension';
 
 @Injectable()
 export class PrismaService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
-  private prisma: PrismaClient;
+  private prisma: any;
 
   constructor() {
     try {
-      // Create PrismaClient with minimal options
-      const options: any = {};
-      this.prisma = new PrismaClient(options);
+      // Create PrismaClient with soft delete extension
+      const basePrisma = new PrismaClient();
+      this.prisma = createSoftDeleteExtension(basePrisma);
     } catch (error) {
       this.logger.error(`Failed to create PrismaClient: ${error}`);
       throw error;
@@ -81,6 +82,26 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     return this.prisma.permission;
   }
 
+  get notification() {
+    return this.prisma.notification;
+  }
+
+  get treasuryTransaction() {
+    return this.prisma.treasuryTransaction;
+  }
+
+  get apiKey() {
+    return this.prisma.apiKey;
+  }
+
+  get reputationEntry() {
+    return this.prisma.reputationEntry;
+  }
+
+  get guildPayout() {
+    return this.prisma.guildPayout;
+  }
+
   // Expose Prisma utilities
   get $transaction() {
     return this.prisma.$transaction.bind(this.prisma);
@@ -100,5 +121,9 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
 
   get $disconnect() {
     return this.prisma.$disconnect.bind(this.prisma);
+  }
+
+  get $executeRawUnsafe() {
+    return this.prisma.$executeRawUnsafe.bind(this.prisma);
   }
 }

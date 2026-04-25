@@ -1,15 +1,17 @@
 import { Module } from '@nestjs/common';
-import { GuildService } from './guild.service';
 import { GuildController } from './guild.controller';
+import { GuildService } from './guild.service';
+import { GuildBulkInviteService } from './guild-bulk-invite.service';
+import { ApplicationService } from './application.service';
 import { PrismaModule } from '../prisma/prisma.module';
-import { GuildRoleGuard } from './guards/guild-role.guard';
-import { Reflector } from '@nestjs/core';
 import { MailerModule } from '../mailer/mailer.module';
+import { StorageModule } from '../storage/storage.module';
 
 @Module({
-  imports: [PrismaModule, MailerModule],
-  providers: [GuildService, GuildRoleGuard, Reflector],
+  imports: [PrismaModule, MailerModule, StorageModule],
   controllers: [GuildController],
-  exports: [GuildService],
+  providers: [GuildService, GuildBulkInviteService, ApplicationService],
+  exports: [GuildService, ApplicationService],
 })
 export class GuildModule {}
+

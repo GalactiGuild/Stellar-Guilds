@@ -16,11 +16,11 @@ export const SubmissionForm = ({ onCancel, onSubmit }: SubmissionFormProps) => {
         </button>
       </div>
       <input 
-        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs outline-none focus:border-violet-500/50" 
+        className="w-full bg-white/5 border border-slate-800/10 rounded-xl p-3 text-xs outline-none focus:border-violet-500/50" 
         placeholder="Link to GitHub PR / Repository"
       />
       <textarea 
-        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs outline-none focus:border-violet-500/50" 
+        className="w-full bg-white/5 border border-slate-800/10 rounded-xl p-3 text-xs outline-none focus:border-violet-500/50" 
         placeholder="Submission notes (optional)..."
         rows={3}
       />

@@ -10,12 +10,12 @@ export const Feed: React.FC<FeedProps> = ({ items }) => {
     <div className="space-y-4">
       {items.map((item) => (
         <div key={item.id} className="rounded-lg bg-white p-4 shadow">
-          <div className="text-sm text-gray-500">{item.timestamp}</div>
+          <div className="text-sm text-slate-500">{item.timestamp}</div>
           <div className="mt-1 text-gray-800">{item.content}</div>
         </div>
       ))}
       {items.length === 0 && (
-        <p className="text-center text-sm text-gray-500">No feed items yet.</p>
+        <p className="text-center text-sm text-slate-500">No feed items yet.</p>
       )}
     </div>
   );

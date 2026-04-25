@@ -17,7 +17,7 @@ export const Notifications: React.FC<NotificationsProps> = ({
           key={note.id}
           className={
             "flex justify-between rounded-lg p-3 shadow " +
-            (note.read ? "bg-gray-100" : "bg-white")
+            (note.read ? "bg-slate-800/50" : "bg-white")
           }
         >
           <div className="text-sm text-gray-800">{note.message}</div>
@@ -32,7 +32,7 @@ export const Notifications: React.FC<NotificationsProps> = ({
         </div>
       ))}
       {notifications.length === 0 && (
-        <p className="text-center text-sm text-gray-500">No notifications.</p>
+        <p className="text-center text-sm text-slate-500">No notifications.</p>
       )}
     </div>
   );

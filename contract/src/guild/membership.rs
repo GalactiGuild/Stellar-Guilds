@@ -9,6 +9,23 @@ use crate::guild::types::{
 };
 use soroban_sdk::{Address, Env, String, Vec};
 
+const PERMISSION_UPDATE_INFO: u32 = 1 << 0;
+
+fn role_permission_bits(role: Role) -> u32 {
+    match role {
+        Role::Owner | Role::Admin => PERMISSION_UPDATE_INFO,
+        Role::Member | Role::Contributor => 0,
+    }
+}
+
+fn permission_bit(env: &Env, permission_key: &String) -> Result<u32, String> {
+    if permission_key == &String::from_str(env, "UPDATE_INFO") {
+        Ok(PERMISSION_UPDATE_INFO)
+    } else {
+        Err(String::from_str(env, "Invalid permission key"))
+    }
+}
+
 /// Create a new guild
 ///
 /// # Events emitted
@@ -409,4 +426,37 @@ pub fn has_permission(env: &Env, guild_id: u64, address: Address, required_role:
     } else {
         false
     }
+}
+
+pub fn reque_permissions(
+    env: &Env,
+    member: &Member,
+    permission_key: String,
+) -> Result<bool, String> {
+    let required_permission = permission_bit(env, &permission_key)?;
+    let member_permissions = role_permission_bits(member.role);
+
+    if member_permissions & required_permission == required_permission {
+        Ok(true)
+    } else {
+        Err(String::from_str(env, "Unauthorized"))
+    }
+}
+
+pub fn update_guild_info(
+    env: &Env,
+    guild_id: u64,
+    caller: Address,
+    title: String,
+    logo: String,
+    description: String,
+) -> Result<bool, String> {
+    let _guild =
+        storage::get_guild(env, guild_id).ok_or(String::from_str(env, "Guild not found"))?;
+    let member = storage::get_member(env, guild_id, &caller)
+        .ok_or(String::from_str(env, "Caller is not a member of the guild"))?;
+
+    let _ = (title, logo, description);
+    reque_permissions(env, &member, String::from_str(env, "UPDATE_INFO"))?;
+    Ok(true)
 }

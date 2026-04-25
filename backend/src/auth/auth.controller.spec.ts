@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { ApiKeyService } from './services/api-key.service';
 import { RegisterDto, LoginDto, WalletAuthDto } from './dto/auth.dto';
 
 describe('AuthController', () => {
@@ -49,6 +50,14 @@ describe('AuthController', () => {
             refreshToken: jest.fn(),
             logout: jest.fn(),
             getCurrentUser: jest.fn(),
+          },
+        },
+        {
+          provide: ApiKeyService,
+          useValue: {
+            create: jest.fn(),
+            validate: jest.fn(),
+            revoke: jest.fn(),
           },
         },
       ],
@@ -131,15 +140,16 @@ describe('AuthController', () => {
   describe('logout', () => {
     it('should logout user successfully', async () => {
       const request = { user: { userId: '123' } };
+      const authorization = 'Bearer test-token-123';
 
       jest
         .spyOn(authService, 'logout')
         .mockResolvedValue({ message: 'Logged out successfully' });
 
-      const result = await controller.logout(request);
+      const result = await controller.logout(request, authorization);
 
       expect(result.message).toEqual('Logged out successfully');
-      expect(authService.logout).toHaveBeenCalledWith('123');
+      expect(authService.logout).toHaveBeenCalledWith('123', 'test-token-123');
     });
   });
 

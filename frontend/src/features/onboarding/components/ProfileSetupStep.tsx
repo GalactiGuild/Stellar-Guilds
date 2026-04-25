@@ -39,7 +39,7 @@ const ProfileSetupStep = () => {
       className="max-w-2xl mx-auto"
     >
       <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-gradient-to-r from-gold-500 to-gold-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="w-16 h-16 bg-gradient-to-r from-violet-500 to-violet-600 rounded-full flex items-center justify-center mx-auto mb-4">
           <User className="w-8 h-8 text-stellar-navy" />
         </div>
         <h2 className="text-3xl font-bold text-white mb-2">Create Your Profile</h2>
@@ -52,7 +52,7 @@ const ProfileSetupStep = () => {
         <div className="space-y-6">
           <Card className="bg-stellar-lightNavy/30 border border-stellar-lightNavy p-6">
             <div className="flex items-center mb-4">
-              <Camera className="w-5 h-5 text-gold-400 mr-2" />
+              <Camera className="w-5 h-5 text-violet-400 mr-2" />
               <h3 className="font-semibold text-white">Profile Picture</h3>
             </div>
             <div className="flex items-center space-x-4">
@@ -171,7 +171,7 @@ const ProfileSetupStep = () => {
           
           <Button 
             type="submit"
-            className="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-stellar-navy px-6 py-2 rounded-lg"
+            className="bg-gradient-to-r from-violet-500 to-violet-600 hover:from-violet-400 hover:to-violet-500 text-stellar-navy px-6 py-2 rounded-lg"
           >
             Continue
           </Button>

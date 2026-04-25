@@ -3,20 +3,30 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
 import {
-  UpdateUserProfileDto,
+  CreateUserDto,
+  UpdateUserDto,
   ChangePasswordDto,
   SearchUserDto,
   AssignRoleDto,
   UserRole,
 } from './dto/user.dto';
+import { UpdateNotificationPreferencesDto } from './dto/notification-preferences.dto';
 import * as bcrypt from 'bcrypt';
+import { ProfileUtil } from '../common/utils/profile.util';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(UserService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private storageService: StorageService,
+  ) {}
 
   /**
    * Get user by ID with public profile information
@@ -30,11 +40,13 @@ export class UserService {
         firstName: true,
         lastName: true,
         bio: true,
+        location: true,
         avatarUrl: true,
         profileBio: true,
         profileUrl: true,
         discordHandle: true,
         twitterHandle: true,
+        githubHandle: true,
         createdAt: true,
         role: true,
         _count: {
@@ -75,11 +87,13 @@ export class UserService {
         firstName: true,
         lastName: true,
         bio: true,
+        location: true,
         avatarUrl: true,
         profileBio: true,
         profileUrl: true,
         discordHandle: true,
         twitterHandle: true,
+        githubHandle: true,
         walletAddress: true,
         role: true,
         isActive: true,
@@ -104,7 +118,7 @@ export class UserService {
   /**
    * Update user profile
    */
-  async updateUserProfile(userId: string, updateDto: UpdateUserProfileDto) {
+  async updateUserProfile(userId: string, updateDto: UpdateUserDto) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -119,6 +133,9 @@ export class UserService {
         ...(updateDto.firstName && { firstName: updateDto.firstName }),
         ...(updateDto.lastName && { lastName: updateDto.lastName }),
         ...(updateDto.bio !== undefined && { bio: updateDto.bio }),
+        ...(updateDto.location !== undefined && {
+          location: updateDto.location,
+        }),
         ...(updateDto.profileBio !== undefined && {
           profileBio: updateDto.profileBio,
         }),
@@ -131,6 +148,9 @@ export class UserService {
         ...(updateDto.twitterHandle !== undefined && {
           twitterHandle: updateDto.twitterHandle,
         }),
+        ...(updateDto.githubHandle !== undefined && {
+          githubHandle: updateDto.githubHandle,
+        }),
       },
       select: {
         id: true,
@@ -138,18 +158,82 @@ export class UserService {
         firstName: true,
         lastName: true,
         bio: true,
+        location: true,
         avatarUrl: true,
         profileBio: true,
         profileUrl: true,
         discordHandle: true,
         twitterHandle: true,
+        githubHandle: true,
         createdAt: true,
         updatedAt: true,
         role: true,
+        hasCompletionBonus: true,
+        xp: true,
       },
     });
 
+    // Check profile completeness and award XP bonus if applicable
+    await this.checkAndAwardCompletionBonus(userId, updated);
+
     return updated;
+  }
+
+  /**
+   * Check if user has completed their profile and award XP bonus
+   */
+  private async checkAndAwardCompletionBonus(userId: string, user: any) {
+    // Skip if user already received the bonus
+    if (user.hasCompletionBonus) {
+      return;
+    }
+
+    // Calculate profile completeness
+    const completeness = ProfileUtil.calculateCompleteness({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      bio: user.bio,
+      location: user.location,
+      profileBio: user.profileBio,
+      profileUrl: user.profileUrl,
+      discordHandle: user.discordHandle,
+      twitterHandle: user.twitterHandle,
+      githubHandle: user.githubHandle,
+      avatarUrl: user.avatarUrl,
+      backgroundCid: user.backgroundCid,
+    });
+
+    // Award 50 XP if profile is 100% complete
+    if (completeness === 100) {
+      this.logger.log(
+        `User ${userId} achieved 100% profile completeness. Awarding 50 XP bonus.`,
+      );
+
+      await this.prisma.$transaction(async (tx: any) => {
+        // Update user XP and mark bonus as received
+        await tx.user.update({
+          where: { id: userId },
+          data: {
+            xp: { increment: 50 },
+            hasCompletionBonus: true,
+          },
+        });
+
+        // Log the reward in reputation history (notifications table)
+        await tx.notification.create({
+          data: {
+            userId,
+            message:
+              '🎉 Congratulations! You earned 50 XP for completing your profile!',
+            type: 'PROFILE_COMPLETION_BONUS',
+            metadata: {
+              xpAwarded: 50,
+              completeness,
+            },
+          },
+        });
+      });
+    }
   }
 
   /**
@@ -250,7 +334,49 @@ export class UserService {
   /**
    * Update user avatar URL
    */
-  async updateAvatar(userId: string, avatarUrl: string) {
+  async updateAvatar(
+    userId: string,
+    file: { buffer: Buffer; originalname: string },
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const avatarUrl = await this.storageService.uploadFile(
+      file.buffer,
+      file.originalname,
+    );
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl },
+      select: {
+        id: true,
+        avatarUrl: true,
+      },
+    });
+
+    if (user.avatarUrl) {
+      try {
+        await this.storageService.deleteFile(user.avatarUrl);
+      } catch (error: any) {
+        this.logger.warn(
+          `Failed to delete previous avatar for user ${userId}: ${error?.message ?? 'unknown error'}`,
+        );
+      }
+    }
+
+    return updated;
+  }
+
+  /**
+   * Update user background image CID
+   */
+  async updateBackground(userId: string, backgroundCid: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -261,10 +387,10 @@ export class UserService {
 
     const updated = await this.prisma.user.update({
       where: { id: userId },
-      data: { avatarUrl },
+      data: { backgroundCid },
       select: {
         id: true,
-        avatarUrl: true,
+        backgroundCid: true,
       },
     });
 
@@ -306,11 +432,13 @@ export class UserService {
           firstName: true,
           lastName: true,
           bio: true,
+          location: true,
           avatarUrl: true,
           profileBio: true,
           profileUrl: true,
           discordHandle: true,
           twitterHandle: true,
+          githubHandle: true,
           createdAt: true,
           role: true,
         },
@@ -341,6 +469,7 @@ export class UserService {
         firstName: true,
         lastName: true,
         bio: true,
+        location: true,
         avatarUrl: true,
         createdAt: true,
         role: true,
@@ -450,7 +579,7 @@ export class UserService {
     });
   }
 
-  async createUser(data: any): Promise<any> {
+  async createUser(data: CreateUserDto): Promise<any> {
     return this.prisma.user.create({
       data,
     });
@@ -468,5 +597,117 @@ export class UserService {
     return this.prisma.user.delete({
       where,
     });
+  }
+
+  /**
+   * Update user notification preferences
+   */
+  async updateNotificationPreferences(
+    userId: string,
+    preferences: UpdateNotificationPreferencesDto,
+  ) {
+    // Get current user with notification settings
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { notificationSettings: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Parse existing settings or use defaults
+    const currentSettings = (user.notificationSettings as any) || {
+      emailOnBounty: true,
+      emailOnMention: true,
+      weeklyDigest: true,
+    };
+
+    // Merge with new preferences
+    const updatedSettings = {
+      ...currentSettings,
+      ...preferences,
+    };
+
+    // Update user with new notification settings
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: { notificationSettings: updatedSettings },
+      select: {
+        id: true,
+        notificationSettings: true,
+      },
+    });
+
+    this.logger.log(`User ${userId} updated notification preferences`);
+
+    return {
+      message: 'Notification preferences updated successfully',
+      preferences: updatedSettings,
+    };
+  }
+
+  /**
+   * Get user notification preferences
+   */
+  async getNotificationPreferences(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { notificationSettings: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Return settings or defaults
+    const settings = (user.notificationSettings as any) || {
+      emailOnBounty: true,
+      emailOnMention: true,
+      weeklyDigest: true,
+    };
+
+    return { preferences: settings };
+  }
+
+  /**
+   * Check if user wants to receive a specific type of email notification
+   * This method is used by MailerService before sending emails
+   */
+  async shouldSendEmail(
+    userId: string,
+    notificationType: 'emailOnBounty' | 'emailOnMention' | 'weeklyDigest',
+  ): Promise<boolean> {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { notificationSettings: true },
+      });
+
+      if (!user || !user.notificationSettings) {
+        // Default to true if no settings exist
+        return true;
+      }
+
+      const settings = user.notificationSettings as any;
+      return settings[notificationType] !== false;
+    } catch (error) {
+      this.logger.error(
+        `Failed to check notification preferences for user ${userId}: ${error}`,
+      );
+      // Default to true on error to avoid blocking notifications
+      return true;
+    }
+  }
+
+  /**
+   * Set default notification preferences for a new user
+   */
+  getDefaultNotificationSettings(): any {
+    return {
+      emailOnBounty: true,
+      emailOnMention: true,
+      weeklyDigest: true,
+    };
   }
 }

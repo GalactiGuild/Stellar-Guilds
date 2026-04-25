@@ -14,7 +14,7 @@ export const BountyCard = ({ bounty }: { bounty: Bounty }) => {
   return (
     <motion.div
       whileHover={{ y: -4 }}
-      className="group relative bg-[#0D0D0D] border border-white/5 rounded-2xl  p-6 transition-all hover:bg-[#121212] hover:border-violet-500/30"
+      className="group relative bg-[#0D0D0D] border border-slate-800/5 rounded-2xl  p-6 transition-all hover:bg-[#121212] hover:border-violet-500/30"
     >
       <div className="flex justify-between items-start mb-5">
         <div className="flex items-center gap-3">
@@ -48,14 +48,14 @@ export const BountyCard = ({ bounty }: { bounty: Bounty }) => {
         {bounty.tags.map((tag) => (
           <span
             key={tag}
-            className="px-2 py-0.5 rounded-md bg-white/5 text-[10px] text-slate-300 border border-white/5"
+            className="px-2 py-0.5 rounded-md bg-white/5 text-[10px] text-slate-300 border border-slate-800/5"
           >
             {tag}
           </span>
         ))}
       </div>
 
-      <div className="flex items-center justify-between pt-5 border-t border-white/5">
+      <div className="flex items-center justify-between pt-5 border-t border-slate-800/5">
         <div className="flex flex-col">
           <span className="text-[10px] uppercase text-slate-500 font-bold tracking-tighter">
             Reward
@@ -85,7 +85,7 @@ export const StatusBadge = ({ status }: StatusBadgeProps) => {
     Open: "bg-violet-500/10 text-violet-500 border-violet-500/20",
     Claimed: "bg-blue-500/10 text-blue-400 border-blue-500/20",
     "Under Review": "bg-amber-500/10 text-amber-500 border-amber-500/20",
-    Completed: "bg-slate-800 text-slate-400 border-white/5",
+    Completed: "bg-slate-800 text-slate-400 border-slate-800/5",
   };
 
   return (

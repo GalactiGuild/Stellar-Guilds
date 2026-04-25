@@ -41,7 +41,7 @@ const BountiesIntroductionStep = () => {
       className="max-w-3xl mx-auto"
     >
       <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-gradient-to-r from-gold-500 to-gold-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="w-16 h-16 bg-gradient-to-r from-violet-500 to-violet-600 rounded-full flex items-center justify-center mx-auto mb-4">
           <Trophy className="w-8 h-8 text-stellar-navy" />
         </div>
         <h2 className="text-3xl font-bold text-white mb-2">Bounties & Rewards</h2>
@@ -59,7 +59,7 @@ const BountiesIntroductionStep = () => {
             transition={{ delay: 0.1 * index }}
             className="bg-stellar-lightNavy/30 border border-stellar-lightNavy rounded-xl p-5 hover:bg-stellar-lightNavy/50 transition-all"
           >
-            <div className="w-10 h-10 bg-stellar-darkNavy rounded-lg flex items-center justify-center mb-3 text-gold-400">
+            <div className="w-10 h-10 bg-stellar-darkNavy rounded-lg flex items-center justify-center mb-3 text-violet-400">
               {feature.icon}
             </div>
             <h3 className="font-semibold text-white mb-2">{feature.title}</h3>
@@ -72,8 +72,8 @@ const BountiesIntroductionStep = () => {
         <h3 className="text-xl font-semibold text-white mb-3">How Bounties Work</h3>
         <div className="space-y-3">
           <div className="flex items-start">
-            <div className="w-6 h-6 rounded-full bg-gold-500/20 flex items-center justify-center mr-3 flex-shrink-0 mt-0.5">
-              <span className="text-xs font-bold text-gold-400">1</span>
+            <div className="w-6 h-6 rounded-full bg-violet-500/20 flex items-center justify-center mr-3 flex-shrink-0 mt-0.5">
+              <span className="text-xs font-bold text-violet-400">1</span>
             </div>
             <div>
               <h4 className="font-medium text-white">Discover</h4>
@@ -83,8 +83,8 @@ const BountiesIntroductionStep = () => {
             </div>
           </div>
           <div className="flex items-start">
-            <div className="w-6 h-6 rounded-full bg-gold-500/20 flex items-center justify-center mr-3 flex-shrink-0 mt-0.5">
-              <span className="text-xs font-bold text-gold-400">2</span>
+            <div className="w-6 h-6 rounded-full bg-violet-500/20 flex items-center justify-center mr-3 flex-shrink-0 mt-0.5">
+              <span className="text-xs font-bold text-violet-400">2</span>
             </div>
             <div>
               <h4 className="font-medium text-white">Apply/Claim</h4>
@@ -94,8 +94,8 @@ const BountiesIntroductionStep = () => {
             </div>
           </div>
           <div className="flex items-start">
-            <div className="w-6 h-6 rounded-full bg-gold-500/20 flex items-center justify-center mr-3 flex-shrink-0 mt-0.5">
-              <span className="text-xs font-bold text-gold-400">3</span>
+            <div className="w-6 h-6 rounded-full bg-violet-500/20 flex items-center justify-center mr-3 flex-shrink-0 mt-0.5">
+              <span className="text-xs font-bold text-violet-400">3</span>
             </div>
             <div>
               <h4 className="font-medium text-white">Complete</h4>
@@ -105,8 +105,8 @@ const BountiesIntroductionStep = () => {
             </div>
           </div>
           <div className="flex items-start">
-            <div className="w-6 h-6 rounded-full bg-gold-500/20 flex items-center justify-center mr-3 flex-shrink-0 mt-0.5">
-              <span className="text-xs font-bold text-gold-400">4</span>
+            <div className="w-6 h-6 rounded-full bg-violet-500/20 flex items-center justify-center mr-3 flex-shrink-0 mt-0.5">
+              <span className="text-xs font-bold text-violet-400">4</span>
             </div>
             <div>
               <h4 className="font-medium text-white">Get Rewarded</h4>
@@ -144,7 +144,7 @@ const BountiesIntroductionStep = () => {
         
         <Button 
           onClick={nextStep}
-          className="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-stellar-navy px-6 py-2 rounded-lg"
+          className="bg-gradient-to-r from-violet-500 to-violet-600 hover:from-violet-400 hover:to-violet-500 text-stellar-navy px-6 py-2 rounded-lg"
         >
           Continue
         </Button>

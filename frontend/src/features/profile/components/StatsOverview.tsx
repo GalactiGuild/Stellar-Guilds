@@ -15,10 +15,10 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ stats }) => {
             <CheckCircle2 className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500">
+            <p className="text-sm font-medium text-slate-500">
               Bounties Completed
             </p>
-            <p className="text-xl font-bold text-gray-900">
+            <p className="text-xl font-bold text-white">
               {stats.bountiesCompleted}
             </p>
           </div>
@@ -31,8 +31,8 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ stats }) => {
             <Coins className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500">Total Earned</p>
-            <p className="text-xl font-bold text-gray-900">
+            <p className="text-sm font-medium text-slate-500">Total Earned</p>
+            <p className="text-xl font-bold text-white">
               {stats.totalEarned} XLM
             </p>
           </div>
@@ -45,8 +45,8 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ stats }) => {
             <TrendingUp className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500">Success Rate</p>
-            <p className="text-xl font-bold text-gray-900">
+            <p className="text-sm font-medium text-slate-500">Success Rate</p>
+            <p className="text-xl font-bold text-white">
               {stats.successRate}%
             </p>
           </div>

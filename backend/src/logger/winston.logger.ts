@@ -1,11 +1,12 @@
 import * as winston from 'winston';
-import { Logger as NestLogger } from '@nestjs/common';
+import { ConsoleLogger } from '@nestjs/common';
 
-export class WinstonLogger extends NestLogger {
-  private winstonLogger: winston.Logger;
+export class WinstonLogger extends ConsoleLogger {
+  private winstonLogger!: winston.Logger;
 
   constructor(context?: string) {
     super(context || 'Application');
+    super(context || 'App');
     this.winstonLogger = this.createWinstonLogger();
   }
 
@@ -17,6 +18,13 @@ export class WinstonLogger extends NestLogger {
       winston.format.json(),
       winston.format.printf(
         ({ timestamp, level, message, context, ...meta }: any) => {
+        ({
+          timestamp,
+          level,
+          message,
+          context,
+          ...meta
+        }: winston.Logform.TransformableInfo) => {
           return JSON.stringify({
             timestamp,
             level: level.toUpperCase(),

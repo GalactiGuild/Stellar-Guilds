@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Post,
-  Put,
   Patch,
   Delete,
   Body,
@@ -13,22 +12,45 @@ import {
   HttpCode,
   HttpStatus,
   BadRequestException,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiBody,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RoleGuard } from '../auth/guards/role.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import {
-  UpdateUserProfileDto,
+  UpdateUserDto,
   ChangePasswordDto,
   SearchUserDto,
   AssignRoleDto,
   UserRole,
+  UserProfileDto,
+  UpdateBackgroundDto,
 } from './dto/user.dto';
+import {
+  UpdateNotificationPreferencesDto,
+  NotificationPreferencesDto,
+} from './dto/notification-preferences.dto';
+import { validateImageFile } from '../common/utils/file-upload.validator';
+import { ReputationService } from '../reputation/reputation.service';
 
 @Controller('users')
 export class UserController {
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private reputationService: ReputationService,
+  ) {}
 
   /**
    * Get current authenticated user profile
@@ -51,8 +73,20 @@ export class UserController {
 
   /**
    * Get user profile by ID (public)
+   * Returns user profile excluding sensitive fields like password, email, walletAddress
    */
   @Get(':userId')
+  @ApiOperation({ summary: 'Get user profile by ID (public)' })
+  @ApiParam({ name: 'userId', description: 'User ID (UUID)' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'User profile retrieved successfully',
+    type: UserProfileDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'User not found',
+  })
   @HttpCode(HttpStatus.OK)
   async getUserProfile(@Param('userId') userId: string) {
     return this.userService.getUserProfile(userId);
@@ -64,10 +98,7 @@ export class UserController {
   @Patch('me')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async updateProfile(
-    @Request() req: any,
-    @Body() updateDto: UpdateUserProfileDto,
-  ) {
+  async update(@Request() req: any, @Body() updateDto: UpdateUserDto) {
     return this.userService.updateUserProfile(req.user.userId, updateDto);
   }
 
@@ -112,27 +143,115 @@ export class UserController {
 
   /**
    * Upload user avatar
-   * Note: For file upload, use multipart/form-data
-   * In a real scenario, integrate with cloud storage (AWS S3, Cloudinary)
+   * Accepts multipart/form-data with a single "file" field.
+   * File must be JPEG, PNG, or WebP format and less than 5MB.
    */
   @Post('me/avatar')
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('file'))
   @HttpCode(HttpStatus.OK)
-  async uploadAvatar(
-    @Request() req: any,
-    @Body('avatarUrl') avatarUrl: string,
-  ) {
-    if (!avatarUrl) {
-      throw new BadRequestException('avatarUrl is required');
-    }
-    const result = await this.userService.updateAvatar(
-      req.user.userId,
-      avatarUrl,
-    );
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Image file (JPEG, PNG, or WebP, max 5MB)',
+        },
+      },
+    },
+  })
+  @ApiOperation({ summary: 'Upload user avatar' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Avatar uploaded successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid file size or type',
+  })
+  async uploadAvatar(@Request() req: any, @UploadedFile() file: any) {
+    // Validate file before passing to service
+    validateImageFile(file);
+
+    const result = await this.userService.updateAvatar(req.user.userId, file);
     return {
       avatarUrl: result.avatarUrl,
       message: 'Avatar updated successfully',
     };
+  }
+
+  /**
+   * Update user background image CID
+   */
+  @Patch('me/background')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update user background image CID' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Background image updated successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid CID format',
+  })
+  async updateBackground(
+    @Request() req: any,
+    @Body() updateBackgroundDto: UpdateBackgroundDto,
+  ) {
+    const result = await this.userService.updateBackground(
+      req.user.userId,
+      updateBackgroundDto.backgroundCid,
+    );
+    return {
+      backgroundCid: result.backgroundCid,
+      message: 'Background image updated successfully',
+    };
+  }
+
+  /**
+   * Update current user notification preferences
+   */
+  @Patch('me/notifications')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update user notification preferences' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Notification preferences updated successfully',
+    type: NotificationPreferencesDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid notification preferences',
+  })
+  async updateNotificationPreferences(
+    @Request() req: any,
+    @Body() updateDto: UpdateNotificationPreferencesDto,
+  ) {
+    return this.userService.updateNotificationPreferences(
+      req.user.userId,
+      updateDto,
+    );
+  }
+
+  /**
+   * Get current user notification preferences
+   */
+  @Get('me/notifications')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get user notification preferences' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Notification preferences retrieved successfully',
+    type: NotificationPreferencesDto,
+  })
+  async getNotificationPreferences(@Request() req: any) {
+    return this.userService.getNotificationPreferences(req.user.userId);
   }
 
   /**
@@ -201,5 +320,21 @@ export class UserController {
   @HttpCode(HttpStatus.OK)
   async reactivateUser(@Param('userId') userId: string) {
     return this.userService.reactivateUser(userId);
+  }
+
+  /**
+   * Get paginated reputation history for a user (cursor-based)
+   */
+  @Get(':id/reputation')
+  getReputation(
+    @Param('id') id: string,
+    @Query('limit') limit?: string,
+    @Query('cursor') cursor?: string,
+  ) {
+    return this.reputationService.getReputationHistory(
+      id,
+      limit ? parseInt(limit, 10) : 20,
+      cursor,
+    );
   }
 }

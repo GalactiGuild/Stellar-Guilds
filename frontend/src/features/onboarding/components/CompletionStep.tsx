@@ -104,19 +104,19 @@ const CompletionStep = () => {
         <h3 className="text-xl font-semibold text-white mb-3">What&apos;s Next?</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
           <div className="bg-stellar-darkNavy/50 p-4 rounded-lg">
-            <h4 className="font-medium text-gold-400 mb-2">Explore</h4>
+            <h4 className="font-medium text-violet-400 mb-2">Explore</h4>
             <p className="text-stellar-slate text-sm">
               Browse guilds and discover communities that align with your interests
             </p>
           </div>
           <div className="bg-stellar-darkNavy/50 p-4 rounded-lg">
-            <h4 className="font-medium text-gold-400 mb-2">Contribute</h4>
+            <h4 className="font-medium text-violet-400 mb-2">Contribute</h4>
             <p className="text-stellar-slate text-sm">
               Find and complete bounties to earn rewards and build your reputation
             </p>
           </div>
           <div className="bg-stellar-darkNavy/50 p-4 rounded-lg">
-            <h4 className="font-medium text-gold-400 mb-2">Grow</h4>
+            <h4 className="font-medium text-violet-400 mb-2">Grow</h4>
             <p className="text-stellar-slate text-sm">
               Participate in governance and shape the future of the platform
             </p>

@@ -5,6 +5,7 @@ import { getMessages } from 'next-intl/server';
 import { NextIntlClientProvider } from 'next-intl';
 import { locales, defaultLocale, type Locale } from '@/i18n';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ThemeProvider } from "next-themes";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -32,15 +33,21 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className="dark">
+    <html lang={locale} suppressHydrationWarning>
       <body className={inter.className}>
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <ErrorBoundary>
-            <div className="min-h-screen flex flex-col bg-stellar-navy text-stellar-white font-sans">
-              {children}
-            </div>
-          </ErrorBoundary>
-        </NextIntlClientProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+        >
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            <ErrorBoundary>
+              <div className="min-h-screen flex flex-col bg-white dark:bg-stellar-navy text-gray-900 dark:text-stellar-white font-sans transition-colors duration-300">
+                {children}
+              </div>
+            </ErrorBoundary>
+          </NextIntlClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

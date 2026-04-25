@@ -9,7 +9,13 @@ import {
   Query,
   Patch,
   Delete,
+  UploadedFile,
+  UseInterceptors,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { GuildBulkInviteService } from './guild-bulk-invite.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GuildRoleGuard } from './guards/guild-role.guard';
 import { GuildRoles } from './decorators/guild-roles.decorator';
@@ -20,10 +26,24 @@ import { InviteMemberDto } from './dto/invite-member.dto';
 import { ApproveInviteDto } from './dto/approve-invite.dto';
 import { SearchGuildDto } from './dto/search-guild.dto';
 import { GuildDetailsDto } from './dto/guild-details.dto';
+import { UpdateGuildMembershipDto } from './dto/update-guild-membership.dto';
+import { validateImageFile } from '../common/utils/file-upload.validator';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiBody,
+  ApiConsumes,
+} from '@nestjs/swagger';
 
 @Controller('guilds')
 export class GuildController {
-  constructor(private guildService: GuildService) {}
+  constructor(
+    private readonly guildService: GuildService,
+    private readonly bulkInviteService: GuildBulkInviteService,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -43,7 +63,12 @@ export class GuildController {
 
   @Get()
   async search(@Query() query: SearchGuildDto) {
-    return this.guildService.searchGuilds(query.q, query.page, query.size);
+    return this.guildService.searchGuilds(
+      query.q,
+      query.page,
+      query.size,
+      query.sort,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -185,5 +210,145 @@ export class GuildController {
     @Request() req: any,
   ) {
     return this.guildService.assignRole(id, userId, body.role, req.user.userId);
+  }
+
+  /**
+   * Upload guild logo
+   * Accepts multipart/form-data with a single "file" field.
+   * File must be JPEG, PNG, or WebP format and less than 5MB.
+   */
+  @Post(':id/logo')
+  @UseGuards(JwtAuthGuard, GuildRoleGuard)
+  @GuildRoles('ADMIN', 'OWNER')
+  @UseInterceptors(FileInterceptor('file'))
+  @HttpCode(HttpStatus.OK)
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Logo image file (JPEG, PNG, or WebP, max 5MB)',
+        },
+      },
+    },
+  })
+  @ApiOperation({ summary: 'Upload guild logo' })
+  @ApiParam({ name: 'id', description: 'Guild ID (UUID)' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Logo uploaded successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid file size or type',
+  })
+  async uploadLogo(
+    @Param('id') id: string,
+    @UploadedFile() file: any,
+    @Request() req: any,
+  ) {
+    // Validate file before passing to service
+    validateImageFile(file);
+
+    const result = await this.guildService.updateGuildLogo(
+      id,
+      file,
+      req.user.userId,
+    );
+    return {
+      logoUrl: result.logoUrl,
+      message: 'Guild logo updated successfully',
+    };
+  }
+
+  /**
+   * Upload guild banner
+   * Accepts multipart/form-data with a single "file" field.
+   * File must be JPEG, PNG, or WebP format and less than 5MB.
+   */
+  @Post(':id/banner')
+  @UseGuards(JwtAuthGuard, GuildRoleGuard)
+  @GuildRoles('ADMIN', 'OWNER')
+  @UseInterceptors(FileInterceptor('file'))
+  @HttpCode(HttpStatus.OK)
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Banner image file (JPEG, PNG, or WebP, max 5MB)',
+        },
+      },
+    },
+  })
+  @ApiOperation({ summary: 'Upload guild banner' })
+  @ApiParam({ name: 'id', description: 'Guild ID (UUID)' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Banner uploaded successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid file size or type',
+  })
+  async uploadBanner(
+    @Param('id') id: string,
+    @UploadedFile() file: any,
+    @Request() req: any,
+  ) {
+    // Validate file before passing to service
+    validateImageFile(file);
+
+    const result = await this.guildService.updateGuildBanner(
+      id,
+      file,
+      req.user.userId,
+    );
+    return {
+      bannerUrl: result.bannerUrl,
+      message: 'Guild banner updated successfully',
+    };
+  }
+
+/**
+   * Bulk invite guild members from a CSV file of wallet addresses.
+   * CSV should contain one wallet address per row.
+   * Returns a summary of invited and skipped addresses.
+   */
+  @Post(':id/members/bulk-invite')
+  @UseInterceptors(FileInterceptor('file'))
+  async bulkInvite(
+    @Param('id') id: string,
+    @UploadedFile() file: any,
+    @Request() req: any,
+  ) {
+    if (!file) {
+      return { error: 'No file uploaded' };
+    }
+
+    return this.bulkInviteService.processBulkInvite(
+      id,
+      req.user.userId,
+      file.buffer,
+    );
+  }
+
+  /**
+   * Update the current user's guild membership bio
+   */
+  @UseGuards(JwtAuthGuard)
+  @Patch(':guildId/members/me')
+  async updateMyMembership(
+    @Param('guildId') guildId: string,
+    @Body() dto: UpdateGuildMembershipDto,
+    @Request() req: any,
+  ) {
+    return this.guildService.updateMembership(req.user.userId, guildId, dto);
   }
 }

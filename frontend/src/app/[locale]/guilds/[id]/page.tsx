@@ -8,6 +8,7 @@ import { ArrowLeft, Settings, UserPlus, Activity, Users as UsersIcon } from 'luc
 import { useGuildStore } from '@/store/guildStore'
 import { GuildStats } from '@/features/guilds/components/GuildStats'
 import { MemberList } from '@/features/guilds/components/MemberList'
+import { SpotlightCard } from '@/features/guilds/components/SpotlightCard'
 import { Button } from '@/components/ui/Button'
 import type { GuildRole } from '@/features/guilds/types'
 
@@ -20,6 +21,16 @@ export default function GuildDetailPage() {
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [currentUserRole] = useState<GuildRole>('owner') // Mock: current user is owner
 
+  // Mock: Spotlight member data (top monthly contributor)
+  const spotlightMember = currentGuild?.members.length
+    ? {
+        ...currentGuild.members[0],
+        bio: 'Leading blockchain developer specializing in Soroban smart contracts and DeFi protocols. Passionate about building scalable decentralized applications.',
+        techTags: ['Rust', 'Soroban', 'DeFi'],
+        monthlyReputation: 1250
+      }
+    : null
+
   useEffect(() => {
     if (guildId) {
       fetchGuildById(guildId)
@@ -28,10 +39,10 @@ export default function GuildDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading guild...</p>
+          <p className="text-slate-400">Loading guild...</p>
         </div>
       </div>
     )
@@ -39,12 +50,12 @@ export default function GuildDetailPage() {
 
   if (!currentGuild) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          <h2 className="text-2xl font-bold text-white mb-2">
             Guild Not Found
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <p className="text-slate-400 mb-4">
             The guild you&apos;re looking for doesn&apos;t exist
           </p>
           <Link href="/guilds">
@@ -70,7 +81,7 @@ export default function GuildDetailPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-slate-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <Link href="/guilds">
@@ -80,7 +91,7 @@ export default function GuildDetailPage() {
         </Link>
 
         {/* Guild Header */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+        <div className="bg-slate-900/40 rounded-lg shadow-sm border border-slate-800/50 p-6 mb-6">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
             <div className="flex items-start gap-4">
               {/* Logo */}
@@ -100,10 +111,10 @@ export default function GuildDetailPage() {
 
               {/* Info */}
               <div className="flex-1">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                <h1 className="text-3xl font-bold text-white mb-2">
                   {currentGuild.name}
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-slate-400">
                   {currentGuild.description}
                 </p>
                 {currentGuild.category && (
@@ -127,6 +138,13 @@ export default function GuildDetailPage() {
           </div>
         </div>
 
+        {/* Spotlight Card */}
+        {spotlightMember && (
+          <div className="mb-6">
+            <SpotlightCard member={spotlightMember} />
+          </div>
+        )}
+
         {/* Stats */}
         <div className="mb-6">
           <GuildStats
@@ -138,8 +156,8 @@ export default function GuildDetailPage() {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
-          <div className="border-b border-gray-200 dark:border-gray-700">
+        <div className="bg-slate-900/40 rounded-lg shadow-sm border border-slate-800/50 mb-6">
+          <div className="border-b border-slate-800/50">
             <nav className="flex gap-4 px-6">
               {tabs.map((tab) => (
                 <button
@@ -147,7 +165,7 @@ export default function GuildDetailPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
                     ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                    : 'border-transparent text-slate-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                     }`}
                 >
                   {tab.icon}
@@ -161,14 +179,14 @@ export default function GuildDetailPage() {
             {/* Overview Tab */}
             {activeTab === 'overview' && (
               <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                <h2 className="text-xl font-bold text-white mb-4">
                   About This Guild
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                <p className="text-slate-400 mb-6">
                   {currentGuild.description}
                 </p>
 
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                <h3 className="text-lg font-semibold text-white mb-3">
                   Recent Activity
                 </h3>
                 <div className="space-y-3">
@@ -179,10 +197,10 @@ export default function GuildDetailPage() {
                     >
                       <Activity className="w-5 h-5 text-gray-400 mt-0.5" />
                       <div className="flex-1">
-                        <p className="text-sm text-gray-900 dark:text-white">
+                        <p className="text-sm text-white">
                           {activity.description}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
                           {new Date(activity.timestamp).toLocaleString()}
                         </p>
                       </div>
@@ -196,7 +214,7 @@ export default function GuildDetailPage() {
             {activeTab === 'members' && (
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  <h2 className="text-xl font-bold text-white">
                     Members ({currentGuild.members.length})
                   </h2>
                   {(currentUserRole === 'owner' || currentUserRole === 'admin') && (
@@ -217,7 +235,7 @@ export default function GuildDetailPage() {
             {/* Activity Tab */}
             {activeTab === 'activity' && (
               <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                <h2 className="text-xl font-bold text-white mb-4">
                   Activity Timeline
                 </h2>
                 <div className="space-y-3">
@@ -228,15 +246,15 @@ export default function GuildDetailPage() {
                     >
                       <Activity className="w-5 h-5 text-gray-400 mt-0.5" />
                       <div className="flex-1">
-                        <p className="text-sm text-gray-900 dark:text-white font-medium">
+                        <p className="text-sm text-white font-medium">
                           {activity.description}
                         </p>
                         {activity.username && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
                             by {activity.username}
                           </p>
                         )}
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
                           {new Date(activity.timestamp).toLocaleString()}
                         </p>
                       </div>

@@ -4,8 +4,6 @@ import { MOCK_BOUNTIES } from "@/lib/mocks/bounties";
 import { BountyCard } from "@/features/bounties/components/BountyCard";
 import {
   LayoutDashboard,
-  CheckCircle2,
-  Hammer,
   PlusCircle,
   TrendingUp,
   Zap,
@@ -15,10 +13,13 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type TabType = "Active" | "Completed" | "Created";
 
 export default function MyBountiesDashboard() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("Active");
 
   const displayData = useMemo(() => {
@@ -35,7 +36,7 @@ export default function MyBountiesDashboard() {
   }, [activeTab]);
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white p-4 md:p-8 lg:p-12 selection:bg-violet-500/30">
+    <div className="min-h-screen bg-slate-950 text-white p-4 md:p-8 lg:p-12 selection:bg-violet-500/30">
       <div className="max-w-7xl mx-auto space-y-12">
         
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -93,8 +94,8 @@ export default function MyBountiesDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           <div className="lg:col-span-8 space-y-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5 pb-6">
-              <div className="flex gap-2 bg-white/5 p-1 rounded-2xl border border-white/5 w-fit">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-800/5 pb-6">
+              <div className="flex gap-2 bg-white/5 p-1 rounded-2xl border border-slate-800/5 w-fit">
                 {(["Active", "Completed", "Created"] as TabType[]).map((tab) => (
                   <button
                     key={tab}
@@ -127,7 +128,19 @@ export default function MyBountiesDashboard() {
                     <BountyCard key={bounty.id} bounty={bounty} />
                   ))
                 ) : (
-                  <EmptyState tab={activeTab} />
+                  <EmptyState
+                    title={`No ${activeTab.toLowerCase()} bounties`}
+                    description={
+                      activeTab === "Active"
+                        ? "You have no active missions right now."
+                        : activeTab === "Completed"
+                        ? "Completed missions will show up here."
+                        : "Created missions will appear here after publishing."
+                    }
+                    createLabel="Create Bounty"
+                    onCreate={() => router.push('/bounties/create')}
+                    className="col-span-full border-slate-800/10 bg-white/[0.01]"
+                  />
                 )}
               </motion.div>
             </AnimatePresence>
@@ -135,8 +148,8 @@ export default function MyBountiesDashboard() {
 
           <div className="lg:col-span-4 space-y-8">
             
-            <div className="bg-white/[0.02] border border-white/5 rounded-[32px] p-8 space-y-8">
-              <div className="flex items-center gap-3 border-b border-white/5 pb-6">
+            <div className="bg-white/[0.02] border border-slate-800/5 rounded-[32px] p-8 space-y-8">
+              <div className="flex items-center gap-3 border-b border-slate-800/5 pb-6">
                 <History className="text-slate-500" size={18} />
                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">
                   Recent Activity
@@ -164,7 +177,7 @@ export default function MyBountiesDashboard() {
                 />
               </div>
 
-              <button className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-all">
+              <button className="w-full py-4 bg-white/5 border border-slate-800/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-all">
                 View Full Audit Log
               </button>
             </div>
@@ -193,9 +206,9 @@ export default function MyBountiesDashboard() {
 
 
 const StatCard = ({ label, value, trend, icon }: { label: string; value: string; trend: string; icon: React.ReactNode }) => (
-  <div className="bg-[#0A0A0A] border border-white/5 p-8 rounded-[32px] hover:border-violet-500/30 transition-all group">
+  <div className="bg-slate-900 border border-slate-800/5 p-8 rounded-[32px] hover:border-violet-500/30 transition-all group">
     <div className="flex justify-between items-start mb-6">
-      <div className="p-3 bg-white/5 rounded-2xl border border-white/5 group-hover:bg-violet-500/10 transition-colors">
+      <div className="p-3 bg-white/5 rounded-2xl border border-slate-800/5 group-hover:bg-violet-500/10 transition-colors">
         {icon}
       </div>
       <span className="text-[9px] font-black text-violet-500 uppercase tracking-widest px-2 py-1 bg-violet-500/10 rounded-lg">
@@ -220,22 +233,8 @@ const ActivityItem = ({ title, desc, time, status }: { title: string; desc: stri
       <div className="space-y-1">
         <p className="text-xs font-bold text-slate-200">{title}</p>
         <p className="text-[10px] text-slate-500 leading-relaxed">{desc}</p>
-        <p className="text-[9px] font-mono text-slate-600 uppercase pt-1">{time}</p>
+        <p className="text-[9px] font-mono text-slate-400 uppercase pt-1">{time}</p>
       </div>
     </div>
   );
 };
-
-const EmptyState = ({ tab }: { tab: string }) => (
-  <div className="col-span-full border-2 border-dashed border-white/5 rounded-[40px] py-32 flex flex-col items-center justify-center text-center bg-white/[0.01]">
-    <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 text-slate-700">
-      {tab === "Completed" ? <CheckCircle2 size={32} /> : <Hammer size={32} />}
-    </div>
-    <h3 className="text-2xl font-black italic tracking-tighter text-slate-400 mb-2 uppercase">Sector Empty</h3>
-    <p className="text-slate-600 text-sm max-w-xs font-light">
-      {tab === "Active"
-        ? "No active missions detected. Scour the marketplace for new opportunities."
-        : "Historical records for this sector are currently empty."}
-    </p>
-  </div>
-);

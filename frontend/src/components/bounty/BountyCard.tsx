@@ -25,7 +25,7 @@ const statusConfig: Record<BountyStatus, { label: string; colorClass: string }> 
   open: { label: 'Open', colorClass: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' },
   'in-progress': { label: 'In Progress', colorClass: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
   completed: { label: 'Completed', colorClass: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
-  expired: { label: 'Expired', colorClass: 'bg-slate-500/20 text-slate-400 border-slate-500/30' },
+  expired: { label: 'Expired', colorClass: 'bg-slate-950 text-white0/20 text-slate-400 border-slate-500/30' },
 }
 
 function formatCurrency(amount: number, currency: string): string {

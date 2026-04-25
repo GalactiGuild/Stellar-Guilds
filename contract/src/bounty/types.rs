@@ -16,7 +16,7 @@ pub enum BountyStatus {
 
 /// Bounty struct containing all bounty metadata and state
 #[contracttype]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Bounty {
     /// Unique identifier for the bounty
     pub id: u64,
@@ -54,6 +54,13 @@ pub struct EscrowLockedState {
     pub amount: i128,
     pub token: Address,
     pub is_locked: bool,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PayoutSplit {
+    pub recipient: Address,
+    pub bps: u32,
 }
 
 // ============ Events ============

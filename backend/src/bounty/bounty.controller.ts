@@ -16,6 +16,9 @@ import { CreateBountyDto } from './dto/create-bounty.dto';
 import { UpdateBountyDto } from './dto/update-bounty.dto';
 import { ApplyBountyDto } from './dto/apply-bounty.dto';
 import { CreateMilestoneDto } from './dto/create-milestone.dto';
+import { ReviewWorkDto } from './dto/review-work.dto';
+import { SubmitBountyWorkDto } from './dto/submit-work.dto';
+import { FindBountyDto } from './dto/find-bounty.dto';
 
 @Controller('bounties')
 export class BountyController {
@@ -28,12 +31,8 @@ export class BountyController {
   }
 
   @Get('open')
-  async findAll(
-    @Query('page') page = '0',
-    @Query('size') size = '20',
-    @Query('guildId') guildId?: string,
-  ) {
-    return this.service.findAll(Number(page), Number(size), guildId);
+  async findAll(@Query() filters: FindBountyDto) {
+    return this.service.findAll(filters);
   }
 
   @Get(':id')
@@ -129,5 +128,43 @@ export class BountyController {
     @Request() req: any,
   ) {
     return this.service.approveMilestone(id, mid, req.user.userId);
+  }
+
+  /**
+   * Submit work for an active, assigned bounty
+   * POST /bounties/:id/submit-work
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/submit-work')
+  async submitWork(
+    @Param('id') id: string,
+    @Body() dto: SubmitBountyWorkDto,
+    @Request() req: any,
+  ) {
+    return this.service.submitWork(id, dto, req.user.userId);
+  }
+
+  /**
+   * Admin endpoint to review submitted bounty work
+   * POST /bounties/:id/review-work
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/review-work')
+  async reviewWork(
+    @Param('id') id: string,
+    @Body() dto: ReviewWorkDto,
+    @Request() req: any,
+  ) {
+    return this.service.reviewWork(id, dto, req.user.userId);
+  }
+
+  /**
+   * Soft delete a bounty
+   * DELETE /bounties/:id
+   */
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  async remove(@Param('id') id: string, @Request() req: any) {
+    return this.service.remove(id, req.user.userId);
   }
 }

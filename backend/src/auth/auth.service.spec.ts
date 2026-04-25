@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { TokenBlacklistService } from './services/token-blacklist.service';
 import * as ethers from 'ethers';
 import {
   UnauthorizedException,
@@ -71,6 +72,13 @@ describe('AuthService', () => {
               create: jest.fn(),
               update: jest.fn(),
             },
+          },
+        },
+        {
+          provide: TokenBlacklistService,
+          useValue: {
+            add: jest.fn(),
+            isBlacklisted: jest.fn(),
           },
         },
       ],
@@ -302,11 +310,14 @@ describe('AuthService', () => {
 
   describe('logout', () => {
     it('should successfully logout user', async () => {
+      const mockToken = 'test-access-token';
       jest.spyOn(prisma.user, 'update').mockResolvedValue(mockUser as any);
+      jest.spyOn(service['tokenBlacklistService'], 'add').mockResolvedValue(undefined);
 
-      const result = await service.logout('123');
+      const result = await service.logout('123', mockToken);
 
       expect(result.message).toEqual('Logged out successfully');
+      expect(service['tokenBlacklistService'].add).toHaveBeenCalledWith(mockToken);
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: '123' },
         data: { refreshToken: null },

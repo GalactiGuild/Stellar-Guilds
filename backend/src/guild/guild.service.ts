@@ -9,9 +9,11 @@ import {
 import { validateAndNormalizeSettings } from './guild.settings';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailerService } from '../mailer/mailer.service';
+import { StorageService } from '../storage/storage.service';
 import { CreateGuildDto } from './dto/create-guild.dto';
 import { UpdateGuildDto } from './dto/update-guild.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
+import { UpdateGuildMembershipDto } from './dto/update-guild-membership.dto';
 import { randomUUID } from 'crypto';
 
 @Injectable()
@@ -19,6 +21,7 @@ export class GuildService {
   constructor(
     private prisma: PrismaService,
     private mailer: MailerService,
+    private storageService: StorageService,
   ) {}
 
   private slugify(name: string) {
@@ -178,7 +181,12 @@ export class GuildService {
     return this.prisma.guild.delete({ where: { id: guildId } });
   }
 
-  async searchGuilds(q: string | undefined, page = 0, size = 20) {
+  async searchGuilds(
+    q: string | undefined,
+    page = 0,
+    size = 20,
+    sort?: string,
+  ) {
     const textFilter = q
       ? {
           OR: [
@@ -197,6 +205,54 @@ export class GuildService {
       ? { AND: [textFilter, discoverFilter] }
       : discoverFilter;
 
+    // If sorting by TVL, we need to calculate TVL for each guild
+    if (sort === 'tvl') {
+      // Get all discoverable guilds
+      const allGuilds = await this.prisma.guild.findMany({
+        where,
+        include: {
+          bounties: {
+            where: {
+              status: { in: ['OPEN', 'PENDING'] },
+            },
+            select: {
+              rewardAmount: true,
+            },
+          },
+        },
+      });
+
+      // Calculate TVL for each guild
+      const guildsWithTvl = allGuilds.map((guild: any) => {
+        const tvl = guild.bounties.reduce(
+          (sum: number, bounty: any) => sum + Number(bounty.rewardAmount || 0),
+          0,
+        );
+        return {
+          ...guild,
+          tvl,
+          bounties: undefined, // Remove bounties from response
+        };
+      });
+
+      // Sort by TVL descending
+      guildsWithTvl.sort((a: any, b: any) => b.tvl - a.tvl);
+
+      // Apply pagination
+      const paginatedItems = guildsWithTvl.slice(
+        page * size,
+        (page + 1) * size,
+      );
+
+      return {
+        items: paginatedItems,
+        total: guildsWithTvl.length,
+        page,
+        size,
+      };
+    }
+
+    // Default sorting (no TVL)
     const [items, total] = await Promise.all([
       this.prisma.guild.findMany({ where, skip: page * size, take: size }),
       this.prisma.guild.count({ where }),
@@ -458,6 +514,106 @@ export class GuildService {
     return this.prisma.guildMembership.update({
       where: { id: targetMembership.id },
       data: { role: role as any },
+    });
+  }
+
+  /**
+   * Update guild logo (avatarUrl)
+   */
+  async updateGuildLogo(
+    guildId: string,
+    file: { buffer: Buffer; originalname: string },
+    userId: string,
+  ) {
+    await this.ensureManagePermission(guildId, userId);
+
+    const guild = await this.prisma.guild.findUnique({
+      where: { id: guildId },
+    });
+
+    if (!guild) {
+      throw new NotFoundException('Guild not found');
+    }
+
+    const logoUrl = await this.storageService.uploadFile(
+      file.buffer,
+      file.originalname,
+    );
+
+    // Delete previous logo if exists
+    if (guild.avatarUrl) {
+      try {
+        await this.storageService.deleteFile(guild.avatarUrl);
+      } catch (error: any) {
+        // Log but don't fail on delete error
+      }
+    }
+
+    const updated = await this.prisma.guild.update({
+      where: { id: guildId },
+      data: { avatarUrl: logoUrl },
+      select: {
+        id: true,
+        avatarUrl: true,
+      },
+    });
+
+    return updated;
+  }
+
+  /**
+   * Update guild banner
+   */
+  async updateGuildBanner(
+    guildId: string,
+    file: { buffer: Buffer; originalname: string },
+    userId: string,
+  ) {
+    await this.ensureManagePermission(guildId, userId);
+
+    const guild = await this.prisma.guild.findUnique({
+      where: { id: guildId },
+    });
+
+    if (!guild) {
+      throw new NotFoundException('Guild not found');
+    }
+
+    const bannerUrl = await this.storageService.uploadFile(
+      file.buffer,
+      file.originalname,
+    );
+
+    // Delete previous banner if exists
+    if (guild.bannerUrl) {
+      try {
+        await this.storageService.deleteFile(guild.bannerUrl);
+      } catch (error: any) {
+        // Log but don't fail on delete error
+      }
+    }
+
+    const updated = await this.prisma.guild.update({
+      where: { id: guildId },
+      data: { bannerUrl: bannerUrl },
+      select: {
+        id: true,
+        bannerUrl: true,
+      },
+    });
+
+    return updated;
+  }
+
+  async updateMembership(userId: string, guildId: string, dto: UpdateGuildMembershipDto) {
+    const membership = await this.prisma.guildMembership.findUnique({
+      where: { userId_guildId: { userId, guildId } },
+    });
+    if (!membership) throw new NotFoundException('Membership not found');
+
+    return this.prisma.guildMembership.update({
+      where: { id: membership.id },
+      data: dto,
     });
   }
 }

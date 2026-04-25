@@ -7,6 +7,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { TokenBlacklistService } from './services/token-blacklist.service';
 import * as bcrypt from 'bcrypt';
 import { ethers } from 'ethers';
 import {
@@ -25,6 +26,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private prisma: PrismaService,
+    private tokenBlacklistService: TokenBlacklistService,
   ) {
     this.jwtSecret =
       this.configService.get<string>('JWT_SECRET') || 'your-secret-key';
@@ -61,7 +63,7 @@ export class AuthService {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    // Create user with default notification settings
     const user = await this.prisma.user.create({
       data: {
         email,
@@ -70,6 +72,11 @@ export class AuthService {
         firstName,
         lastName,
         ...(walletAddress && { walletAddress }),
+        notificationSettings: {
+          emailOnBounty: true,
+          emailOnMention: true,
+          weeklyDigest: true,
+        },
       },
     });
 
@@ -185,6 +192,11 @@ export class AuthService {
           firstName: 'Wallet',
           lastName: 'User',
           walletAddress,
+          notificationSettings: {
+            emailOnBounty: true,
+            emailOnMention: true,
+            weeklyDigest: true,
+          },
         },
       });
     }
@@ -273,9 +285,13 @@ export class AuthService {
   }
 
   /**
-   * Logout user by invalidating refresh token
+   * Logout user by invalidating refresh token and blacklisting access token
    */
-  async logout(userId: string) {
+  async logout(userId: string, accessToken: string) {
+    // Blacklist the current access token
+    await this.tokenBlacklistService.add(accessToken);
+
+    // Clear the refresh token from database
     await this.prisma.user.update({
       where: { id: userId },
       data: { refreshToken: null },
