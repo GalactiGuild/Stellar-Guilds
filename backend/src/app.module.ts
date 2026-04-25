@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
+import * as Joi from 'joi';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
@@ -17,6 +18,14 @@ import { LoggerModule } from './logger/logger.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      validationSchema: Joi.object({
+        JWT_ACCESS_EXPIRATION: Joi.alternatives()
+          .try(Joi.string(), Joi.number())
+          .default('15m'),
+        JWT_REFRESH_EXPIRATION: Joi.alternatives()
+          .try(Joi.string(), Joi.number())
+          .default('7d'),
+      }),
     }),
     ThrottlerModule.forRoot([
       {

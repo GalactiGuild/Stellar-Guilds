@@ -20,6 +20,8 @@ import {
 export class AuthService {
   private readonly jwtSecret: string;
   private readonly refreshTokenSecret: string;
+  private readonly jwtAccessExpiration: string | number;
+  private readonly jwtRefreshExpiration: string | number;
 
   constructor(
     private jwtService: JwtService,
@@ -31,6 +33,10 @@ export class AuthService {
     this.refreshTokenSecret =
       this.configService.get<string>('REFRESH_TOKEN_SECRET') ||
       'your-refresh-secret-key';
+    this.jwtAccessExpiration =
+      this.configService.get<string | number>('JWT_ACCESS_EXPIRATION') || '15m';
+    this.jwtRefreshExpiration =
+      this.configService.get<string | number>('JWT_REFRESH_EXPIRATION') || '7d';
   }
 
   /**
@@ -302,12 +308,12 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload, {
       secret: this.jwtSecret,
-      expiresIn: 900, // 15 minutes in seconds
+      expiresIn: this.jwtAccessExpiration,
     });
 
     const refreshToken = this.jwtService.sign(payload, {
       secret: this.refreshTokenSecret,
-      expiresIn: 604800, // 7 days in seconds
+      expiresIn: this.jwtRefreshExpiration,
     });
 
     return { accessToken, refreshToken };

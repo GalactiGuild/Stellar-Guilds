@@ -9,6 +9,8 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RoleGuard } from './guards/role.guard';
 import { PrismaModule } from '../prisma/prisma.module';
 
+const DEFAULT_JWT_ACCESS_EXPIRATION = '15m';
+
 @Module({
   imports: [
     ConfigModule,
@@ -19,7 +21,9 @@ import { PrismaModule } from '../prisma/prisma.module';
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET') || 'your-secret-key',
         signOptions: {
-          expiresIn: 900, // 15 minutes in seconds (default)
+          expiresIn:
+            configService.get<string | number>('JWT_ACCESS_EXPIRATION') ||
+            DEFAULT_JWT_ACCESS_EXPIRATION,
         },
       }),
       inject: [ConfigService],
