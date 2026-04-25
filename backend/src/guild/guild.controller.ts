@@ -32,12 +32,12 @@ export class GuildController {
   }
 
   @Get(':id')
-  async get(@Param('id') id: string): Promise<GuildDetailsDto> {
+  async get(@Param('id') id: string) {
     return this.guildService.getGuild(id);
   }
 
   @Get('by-slug/:slug')
-  async getBySlug(@Param('slug') slug: string): Promise<GuildDetailsDto> {
+  async getBySlug(@Param('slug') slug: string) {
     return this.guildService.getBySlug(slug);
   }
 

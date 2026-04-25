@@ -88,6 +88,7 @@ export class GuildService {
             bounties: {
               where: { status: 'OPEN' },
             },
+            favoritedBy: true,
           },
         },
       },
@@ -109,6 +110,7 @@ export class GuildService {
             bounties: {
               where: { status: 'OPEN' },
             },
+            favoritedBy: true,
           },
         },
       },
@@ -157,7 +159,10 @@ export class GuildService {
         where: { id: guildId },
       });
       const validated = validateAndNormalizeSettings((dto as any).settings);
-      data.settings = { ...existing.settings, ...validated };
+      data.settings = {
+        ...((existing?.settings as Record<string, any>) || {}),
+        ...validated,
+      };
     }
 
     return this.prisma.guild.update({ where: { id: guildId }, data });
@@ -177,8 +182,8 @@ export class GuildService {
     const textFilter = q
       ? {
           OR: [
-            { name: { contains: q, mode: 'insensitive' } },
-            { description: { contains: q, mode: 'insensitive' } },
+            { name: { contains: q, mode: 'insensitive' as const } },
+            { description: { contains: q, mode: 'insensitive' as const } },
           ],
         }
       : {};

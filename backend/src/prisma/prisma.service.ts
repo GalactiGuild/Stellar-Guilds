@@ -53,6 +53,10 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     return this.prisma.guildMembership;
   }
 
+  get userFavoriteGuild() {
+    return this.prisma.userFavoriteGuild;
+  }
+
   get bounty() {
     return this.prisma.bounty;
   }

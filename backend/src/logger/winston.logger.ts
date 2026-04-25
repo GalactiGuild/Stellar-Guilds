@@ -5,7 +5,7 @@ export class WinstonLogger extends NestLogger {
   private winstonLogger: winston.Logger;
 
   constructor(context?: string) {
-    super(context);
+    super(context || 'Application');
     this.winstonLogger = this.createWinstonLogger();
   }
 
@@ -16,7 +16,7 @@ export class WinstonLogger extends NestLogger {
       winston.format.splat(),
       winston.format.json(),
       winston.format.printf(
-        ({ timestamp, level, message, context, ...meta }) => {
+        ({ timestamp, level, message, context, ...meta }: any) => {
           return JSON.stringify({
             timestamp,
             level: level.toUpperCase(),

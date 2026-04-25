@@ -37,6 +37,11 @@ export class UserService {
         twitterHandle: true,
         createdAt: true,
         role: true,
+        _count: {
+          select: {
+            favoriteGuilds: true,
+          },
+        },
       },
     });
 
@@ -81,6 +86,11 @@ export class UserService {
         lastLoginAt: true,
         createdAt: true,
         updatedAt: true,
+        _count: {
+          select: {
+            favoriteGuilds: true,
+          },
+        },
       },
     });
 
@@ -185,6 +195,56 @@ export class UserService {
     });
 
     return { message: 'Password changed successfully' };
+  }
+
+  /**
+   * Add a guild to user's favorites
+   */
+  async addFavoriteGuild(userId: string, guildId: string) {
+    const guild = await this.prisma.guild.findUnique({
+      where: { id: guildId },
+    });
+
+    if (!guild) {
+      throw new NotFoundException('Guild not found');
+    }
+
+    try {
+      const favorite = await this.prisma.userFavoriteGuild.create({
+        data: {
+          userId,
+          guildId,
+        },
+      });
+      return favorite;
+    } catch (err: any) {
+      if (err.code === 'P2002') {
+        throw new BadRequestException('Guild is already in your favorites');
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Remove a guild from user's favorites
+   */
+  async removeFavoriteGuild(userId: string, guildId: string) {
+    try {
+      await this.prisma.userFavoriteGuild.delete({
+        where: {
+          userId_guildId: {
+            userId,
+            guildId,
+          },
+        },
+      });
+      return { message: 'Removed from favorites' };
+    } catch (err: any) {
+      if (err.code === 'P2025') {
+        throw new NotFoundException('Favorite not found');
+      }
+      throw err;
+    }
   }
 
   /**

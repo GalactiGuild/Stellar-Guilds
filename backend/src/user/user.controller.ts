@@ -85,6 +85,32 @@ export class UserController {
   }
 
   /**
+   * Add a guild to user's favorites
+   */
+  @Post('me/favorites/:guildId')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.CREATED)
+  async addFavoriteGuild(
+    @Request() req: any,
+    @Param('guildId') guildId: string,
+  ) {
+    return this.userService.addFavoriteGuild(req.user.userId, guildId);
+  }
+
+  /**
+   * Remove a guild from user's favorites
+   */
+  @Delete('me/favorites/:guildId')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async removeFavoriteGuild(
+    @Request() req: any,
+    @Param('guildId') guildId: string,
+  ) {
+    return this.userService.removeFavoriteGuild(req.user.userId, guildId);
+  }
+
+  /**
    * Upload user avatar
    * Note: For file upload, use multipart/form-data
    * In a real scenario, integrate with cloud storage (AWS S3, Cloudinary)
