@@ -1,17 +1,26 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ProxylController } from './proxyl.controller';
+import { ImageProxyController } from './proxyl.controller';
 import { ProxylService } from './proxyl.service';
+import { ImageProxyService } from './image-proxyl-service';
 
-describe('ProxylController', () => {
-  let controller: ProxylController;
+describe('ImageProxyController', () => {
+  let controller: ImageProxyController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [ProxylController],
-      providers: [ProxylService],
+      controllers: [ImageProxyController],
+      providers: [
+        ProxylService,
+        {
+          provide: ImageProxyService,
+          useValue: {
+            validateLogoUrl: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
-    controller = module.get<ProxylController>(ProxylController);
+    controller = module.get<ImageProxyController>(ImageProxyController);
   });
 
   it('should be defined', () => {

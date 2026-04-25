@@ -8,25 +8,30 @@ describe('ErrorReportingService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ErrorReportingService, ErrorCacheService],
+      providers: [
+        ErrorReportingService,
+        {
+          provide: ErrorCacheService,
+          useValue: {
+            recordError: jest.fn().mockImplementation(
+              (message, path) => ({
+                count: 1,
+                firstOccurrence: new Date(),
+                lastOccurrence: new Date(),
+                message,
+                path,
+              }),
+            ),
+            hasExceededThreshold: jest.fn().mockReturnValue(false),
+            getErrorStats: jest.fn().mockReturnValue([]),
+            clearCache: jest.fn().mockImplementation(() => {}),
+          },
+        },
+      ],
     }).compile();
 
     service = module.get<ErrorReportingService>(ErrorReportingService);
     errorCache = module.get<ErrorCacheService>(ErrorCacheService);
-
-    // Mock the methods we need
-    (errorCache.recordError as jest.Mock).mockImplementation(
-      (message, path) => ({
-        count: 1,
-        firstOccurrence: new Date(),
-        lastOccurrence: new Date(),
-        message,
-        path,
-      }),
-    );
-    (errorCache.hasExceededThreshold as jest.Mock).mockReturnValue(false);
-    (errorCache.getErrorStats as jest.Mock).mockReturnValue([]);
-    (errorCache.clearCache as jest.Mock).mockImplementation(() => {});
 
     // Mock console.log for testing
     jest.spyOn(console, 'log').mockImplementation(() => {});

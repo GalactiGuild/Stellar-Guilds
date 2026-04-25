@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
+import { ReputationService } from '../reputation/reputation.service';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -23,6 +24,13 @@ describe('UserController', () => {
             getUsersByRole: jest.fn(),
             assignRole: jest.fn(),
             reactivateUser: jest.fn(),
+          },
+        },
+        {
+          provide: ReputationService,
+          useValue: {
+            getReputationHistory: jest.fn(),
+            addReputationPoints: jest.fn(),
           },
         },
       ],

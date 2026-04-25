@@ -187,6 +187,8 @@ describe('UserService', () => {
           discordHandle: true,
           twitterHandle: true,
           githubHandle: true,
+          hasCompletionBonus: true,
+          xp: true,
           createdAt: true,
           updatedAt: true,
           role: true,

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
+import { ReputationService } from '../reputation/reputation.service';
 import { UpdateNotificationPreferencesDto } from './dto/notification-preferences.dto';
 
 describe('UserController - Notification Preferences', () => {
@@ -19,6 +20,13 @@ describe('UserController - Notification Preferences', () => {
         {
           provide: UserService,
           useValue: mockUserService,
+        },
+        {
+          provide: ReputationService,
+          useValue: {
+            getReputationHistory: jest.fn(),
+            addReputationPoints: jest.fn(),
+          },
         },
       ],
     }).compile();
