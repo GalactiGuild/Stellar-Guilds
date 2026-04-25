@@ -22,7 +22,7 @@ export class GuildService {
     private prisma: PrismaService,
     private mailer: MailerService,
     private storageService: StorageService,
-  ) {}
+  ) { }
 
   private slugify(name: string) {
     return name
@@ -189,11 +189,11 @@ export class GuildService {
   ) {
     const textFilter = q
       ? {
-          OR: [
-            { name: { contains: q, mode: 'insensitive' as const } },
-            { description: { contains: q, mode: 'insensitive' as const } },
-          ],
-        }
+        OR: [
+          { name: { contains: q, mode: 'insensitive' as const } },
+          { description: { contains: q, mode: 'insensitive' as const } },
+        ],
+      }
       : {};
 
     // Enforce discoverable guilds only for public search
@@ -338,7 +338,7 @@ export class GuildService {
           guild?.name || 'a guild',
           undefined,
         );
-    } catch (_) {}
+    } catch (_) { }
 
     return updated;
   }
@@ -373,7 +373,7 @@ export class GuildService {
           guild?.name || 'a guild',
           undefined,
         );
-    } catch (_) {}
+    } catch (_) { }
 
     return updated;
   }
@@ -641,5 +641,51 @@ export class GuildService {
       where: { id: membership.id },
       data: dto,
     });
+  }
+
+  /**
+   * Generates a financial summary for a guild covering the last 30 days.
+   * Aggregates payouts by asset and category.
+   */
+  async getFinancialReport(guildId: string) {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Aggregate by asset
+    const byAsset = await this.prisma.guildPayout.groupBy({
+      by: ['asset'],
+      where: {
+        guildId,
+        createdAt: { gte: thirtyDaysAgo },
+      },
+      _sum: {
+        amount: true,
+      },
+    });
+
+    // Aggregate by category
+    const byCategory = await this.prisma.guildPayout.groupBy({
+      by: ['bountyCategory'],
+      where: {
+        guildId,
+        createdAt: { gte: thirtyDaysAgo },
+      },
+      _sum: {
+        amount: true,
+      },
+    });
+
+    return {
+      period: 'last_30_days',
+      since: thirtyDaysAgo,
+      byAsset: byAsset.map((item: any) => ({
+        asset: item.asset,
+        total: item._sum.amount,
+      })),
+      byCategory: byCategory.map((item: any) => ({
+        category: item.bountyCategory || 'Uncategorized',
+        total: item._sum.amount,
+      })),
+    };
   }
 }

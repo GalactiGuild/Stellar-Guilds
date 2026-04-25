@@ -16,23 +16,14 @@ export class WinstonLogger extends ConsoleLogger {
       winston.format.errors({ stack: true }),
       winston.format.splat(),
       winston.format.json(),
-      winston.format.printf(
-        ({ timestamp, level, message, context, ...meta }: any) => {
-        ({
+      winston.format.printf(({ timestamp, level, message, context, ...meta }: any) =>
+        JSON.stringify({
           timestamp,
-          level,
+          level: String(level).toUpperCase(),
+          context: context || 'Application',
           message,
-          context,
-          ...meta
-        }: winston.Logform.TransformableInfo) => {
-          return JSON.stringify({
-            timestamp,
-            level: level.toUpperCase(),
-            context: context || 'Application',
-            message,
-            ...(Object.keys(meta).length > 0 && { meta }),
-          });
-        },
+          ...(Object.keys(meta).length > 0 && { meta }),
+        }),
       ),
     );
 

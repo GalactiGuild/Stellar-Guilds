@@ -3,13 +3,19 @@ import {
   BadRequestException,
   UnauthorizedException,
   ConflictException,
+  NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { TokenBlacklistService } from './services/token-blacklist.service';
+import { RedisService } from '../common/services/redis.service';
 import * as bcrypt from 'bcrypt';
 import { ethers } from 'ethers';
+import { randomUUID } from 'crypto';
+import { AppUnauthorizedException } from '../common/exceptions/custom-http.exceptions';
+import { StellarErrorCode } from '../common/errors/stellar-error-code.enum';
 import {
   RegisterDto,
   LoginDto,
@@ -23,12 +29,14 @@ export class AuthService {
   private readonly refreshTokenSecret: string;
   private readonly jwtAccessExpiration: string | number;
   private readonly jwtRefreshExpiration: string | number;
+  private readonly logger = new Logger(AuthService.name);
 
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService,
     private prisma: PrismaService,
     private tokenBlacklistService: TokenBlacklistService,
+    private redisService: RedisService,
   ) {
     this.jwtSecret =
       this.configService.get<string>('JWT_SECRET') || 'your-secret-key';
@@ -124,13 +132,17 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new AppUnauthorizedException('Invalid email or password', {
+        errorCode: StellarErrorCode.UNAUTHORIZED,
+      });
     }
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new AppUnauthorizedException('Invalid email or password', {
+        errorCode: StellarErrorCode.UNAUTHORIZED,
+      });
     }
 
     // Update last login
@@ -179,7 +191,9 @@ export class AuthService {
     // Verify signature
     const signerAddress = await this.verifySignature(message, signature);
     if (signerAddress.toLowerCase() !== walletAddress.toLowerCase()) {
-      throw new UnauthorizedException('Invalid signature');
+      throw new AppUnauthorizedException('Invalid signature', {
+        errorCode: StellarErrorCode.UNAUTHORIZED,
+      });
     }
 
     // Find or create user
@@ -246,6 +260,8 @@ export class AuthService {
     const { refreshToken } = refreshTokenDto;
 
     try {
+      await this.trackRefreshAttempt(refreshToken);
+
       // Verify refresh token
       const payload = this.jwtService.verify(refreshToken, {
         secret: this.refreshTokenSecret,
@@ -257,7 +273,9 @@ export class AuthService {
       });
 
       if (!user || user.refreshToken !== refreshToken) {
-        throw new UnauthorizedException('Invalid refresh token');
+        throw new AppUnauthorizedException('Invalid refresh token', {
+          errorCode: StellarErrorCode.UNAUTHORIZED,
+        });
       }
 
       // Generate new tokens
@@ -286,7 +304,22 @@ export class AuthService {
         },
       };
     } catch (error) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new AppUnauthorizedException('Invalid refresh token', {
+        errorCode: StellarErrorCode.UNAUTHORIZED,
+      });
+    }
+  }
+
+  private async trackRefreshAttempt(refreshToken: string) {
+    const decoded = this.jwtService.decode(refreshToken) as { sub?: string } | null;
+    const trackerId = decoded?.sub ?? 'anonymous';
+    const key = `auth:refresh:attempts:${trackerId}`;
+    const current = await this.redisService.get(key);
+    const nextCount = (current ? Number(current) : 0) + 1;
+    await this.redisService.set(key, String(nextCount), 60 * 60 * 24);
+
+    if (nextCount >= 20) {
+      this.logger.warn(`Suspicious Refresh Activity for user ${trackerId}`);
     }
   }
 
@@ -374,9 +407,66 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new AppUnauthorizedException('User not found', {
+        errorCode: StellarErrorCode.UNAUTHORIZED,
+      });
     }
 
     return user;
+  }
+
+  /**
+   * Generate a mock 2FA secret for setup
+   */
+  async generate2faSecret(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const secret = randomUUID().replace(/-/g, '').substring(0, 16).toUpperCase();
+
+    // In a real implementation we might store this as 'pending' but here we just return it
+    return {
+      secret,
+      otpAuthUrl: `otpauth://totp/StellarGuilds:${user.email}?secret=${secret}&issuer=StellarGuilds`,
+    };
+  }
+
+  /**
+   * Enable 2FA for a user after verifying a code
+   */
+  async enable2fa(userId: string, code: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    // Mock verification: accept '123456' as valid for setup
+    if (code !== '123456') {
+      throw new BadRequestException('Invalid 2FA code');
+    }
+
+    // Generate a permanent secret (mocked)
+    const secret = randomUUID().replace(/-/g, '').substring(0, 32);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        twoFactorSecret: secret, // In production, this should be encrypted
+        isTwoFactorEnabled: true,
+      },
+    });
+
+    return { message: '2FA enabled successfully' };
+  }
+
+  /**
+   * Verify 2FA code (mocked)
+   */
+  async verify2fa(userId: string, code: string): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.isTwoFactorEnabled || !user.twoFactorSecret) {
+      return false;
+    }
+
+    // Mock verification: accept '123456'
+    return code === '123456';
   }
 }

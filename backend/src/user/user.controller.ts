@@ -50,7 +50,7 @@ export class UserController {
   constructor(
     private userService: UserService,
     private reputationService: ReputationService,
-  ) {}
+  ) { }
 
   /**
    * Get current authenticated user profile
@@ -255,13 +255,13 @@ export class UserController {
   }
 
   /**
-   * Deactivate current user account
+   * GDPR-compliant profile deletion
    */
   @Delete('me')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async deactivateAccount(@Request() req: any) {
-    return this.userService.deactivateUser(req.user.userId);
+  async deleteMe(@Request() req: any) {
+    return this.userService.deleteMe(req.user.userId);
   }
 
   /**

@@ -13,6 +13,7 @@ import { RedisService } from './common/services/redis.service';
 import { ContentTypeEnforcementMiddleware } from './common/middleware/content-type-enforcement.middleware';
 import * as express from 'express';
 import * as path from 'path';
+import compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -25,6 +26,18 @@ async function bootstrap() {
   // Apply Content-Type enforcement middleware globally
   const contentTypeMiddleware = new ContentTypeEnforcementMiddleware();
   app.use(contentTypeMiddleware.use.bind(contentTypeMiddleware));
+  app.use(
+    compression({
+      threshold: 1024,
+      filter: (req, res) => {
+        const contentType = String(res.getHeader('Content-Type') || '');
+        if (contentType.includes('text/csv')) {
+          return false;
+        }
+        return compression.filter(req, res);
+      },
+    }),
+  );
 
   const logger = new WinstonLogger('Main');
   const httpAdapterHost = app.get(HttpAdapterHost);

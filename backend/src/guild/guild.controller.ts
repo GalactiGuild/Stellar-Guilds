@@ -43,7 +43,7 @@ export class GuildController {
   constructor(
     private readonly guildService: GuildService,
     private readonly bulkInviteService: GuildBulkInviteService,
-  ) {}
+  ) { }
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -316,11 +316,11 @@ export class GuildController {
     };
   }
 
-/**
-   * Bulk invite guild members from a CSV file of wallet addresses.
-   * CSV should contain one wallet address per row.
-   * Returns a summary of invited and skipped addresses.
-   */
+  /**
+     * Bulk invite guild members from a CSV file of wallet addresses.
+     * CSV should contain one wallet address per row.
+     * Returns a summary of invited and skipped addresses.
+     */
   @Post(':id/members/bulk-invite')
   @UseInterceptors(FileInterceptor('file'))
   async bulkInvite(
@@ -391,5 +391,19 @@ export class GuildController {
     @Request() req: any,
   ) {
     return this.guildService.updateMembership(req.user.userId, guildId, dto);
+  }
+
+  /**
+   * Get financial summary report for a guild
+   * Returns payouts grouped by asset and category for the last 30 days
+   */
+  @UseGuards(JwtAuthGuard, GuildRoleGuard)
+  @GuildRoles('ADMIN', 'OWNER')
+  @Get(':id/reports/financials')
+  @ApiOperation({ summary: 'Get guild financial report' })
+  @ApiParam({ name: 'id', description: 'Guild ID' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Financial report generated' })
+  async getFinancialReport(@Param('id') id: string) {
+    return this.guildService.getFinancialReport(id);
   }
 }

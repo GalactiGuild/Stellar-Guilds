@@ -5,9 +5,10 @@ import { BountyController } from './bounty.controller';
 import { BountyReminderService } from './bounty-reminder.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { MailerModule } from '../mailer/mailer.module';
+import { TreasuryModule } from '../treasury/treasury.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), PrismaModule, MailerModule],
+  imports: [ScheduleModule.forRoot(), PrismaModule, MailerModule, TreasuryModule],
   providers: [BountyService, BountyReminderService],
   controllers: [BountyController],
   exports: [BountyService],

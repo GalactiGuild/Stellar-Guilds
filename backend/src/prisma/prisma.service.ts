@@ -102,6 +102,10 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     return this.prisma.guildPayout;
   }
 
+  get payoutBatch() {
+    return this.prisma.payoutBatch;
+  }
+
   // Expose Prisma utilities
   get $transaction() {
     return this.prisma.$transaction.bind(this.prisma);

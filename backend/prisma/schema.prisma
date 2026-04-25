@@ -27,6 +27,13 @@ enum GuildRole {
   OWNER
 }
 
+enum BatchStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+}
+
 model Role {
   id          String       @id @default(cuid())
   createdAt   DateTime     @default(now())
@@ -82,6 +89,10 @@ model User {
   hasCompletionBonus Boolean @default(false)
   xp                 Int     @default(0)
   totalViews         Int     @default(0)
+
+  // Two-factor authentication
+  twoFactorSecret    String?
+  isTwoFactorEnabled Boolean @default(false)
 
   // Notification preferences
   notificationSettings Json? @default("{\"emailOnBounty\":true,\"emailOnMention\":true,\"weeklyDigest\":true}")
@@ -406,17 +417,34 @@ model ReputationEntry {
 }
 
 model GuildPayout {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  guildId     String
-  recipientId String
-  amount      Decimal
-  asset       String
-  txHash      String?
-  status      String   @default("PENDING")
-  processedAt DateTime?
+  id             String       @id @default(cuid())
+  createdAt      DateTime     @default(now())
+  guildId        String
+  recipientId    String
+  amount         Decimal
+  asset          String
+  txHash         String?
+  status         String       @default("PENDING")
+  processedAt    DateTime?
+  batchId        String?
+  bountyCategory String?
+  batch          PayoutBatch? @relation(fields: [batchId], references: [id])
 
   @@index([guildId])
   @@index([recipientId])
+  @@index([batchId])
   @@map("guild_payouts")
+}
+
+model PayoutBatch {
+  id            String       @id @default(cuid())
+  guildId       String
+  status        BatchStatus  @default(PENDING)
+  failureReason String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  payouts       GuildPayout[]
+
+  @@index([guildId])
+  @@map("payout_batches")
 }

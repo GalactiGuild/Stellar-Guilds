@@ -12,12 +12,14 @@ import { ApplyBountyDto } from './dto/apply-bounty.dto';
 import { CreateMilestoneDto } from './dto/create-milestone.dto';
 import { ReviewWorkDto } from './dto/review-work.dto';
 import { SubmitBountyWorkDto } from './dto/submit-work.dto';
+import { PayoutVerificationService } from '../treasury/payout-verification.service';
 
 @Injectable()
 export class BountyService {
   constructor(
     private prisma: PrismaService,
     private mailer: MailerService,
+    private payoutVerificationService: PayoutVerificationService,
   ) {}
 
   async create(dto: CreateBountyDto, creatorId: string) {
@@ -288,6 +290,18 @@ export class BountyService {
       throw new ForbiddenException('Only creator can approve milestone');
     if (milestone.status !== 'COMPLETE')
       throw new BadRequestException('Milestone not completed');
+
+    if (!bounty.guildId) {
+      throw new BadRequestException(
+        'Payout verification failed: bounty has no guild context',
+      );
+    }
+
+    await this.payoutVerificationService.verifyGuildPayout({
+      guildId: bounty.guildId,
+      bountyId: bounty.id,
+      requestedAmount: Number(milestone.amount),
+    });
 
     // create payout record
     const payout = await this.prisma.bountyPayout.create({

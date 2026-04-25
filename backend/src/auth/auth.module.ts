@@ -10,6 +10,7 @@ import { RoleGuard } from './guards/role.guard';
 import { TokenBlacklistService } from './services/token-blacklist.service';
 import { ApiKeyService } from './services/api-key.service';
 import { ApiKeyGuard } from './guards/api-key.guard';
+import { RefreshThrottlerGuard } from './guards/refresh-throttler.guard';
 import { PrismaModule } from '../prisma/prisma.module';
 import { RedisModule } from '../common/services/redis.module';
 
@@ -35,7 +36,25 @@ const DEFAULT_JWT_ACCESS_EXPIRATION = '15m';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard, RoleGuard, TokenBlacklistService, ApiKeyService, ApiKeyGuard],
-  exports: [AuthService, JwtStrategy, JwtAuthGuard, RoleGuard, PassportModule, ApiKeyService, ApiKeyGuard],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    JwtAuthGuard,
+    RoleGuard,
+    TokenBlacklistService,
+    ApiKeyService,
+    ApiKeyGuard,
+    RefreshThrottlerGuard,
+  ],
+  exports: [
+    AuthService,
+    JwtStrategy,
+    JwtAuthGuard,
+    RoleGuard,
+    PassportModule,
+    ApiKeyService,
+    ApiKeyGuard,
+    RefreshThrottlerGuard,
+  ],
 })
 export class AuthModule {}

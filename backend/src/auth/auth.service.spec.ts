@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { TokenBlacklistService } from './services/token-blacklist.service';
+import { RedisService } from '../common/services/redis.service';
 import * as ethers from 'ethers';
 import {
   UnauthorizedException,
@@ -47,6 +48,7 @@ describe('AuthService', () => {
           useValue: {
             sign: jest.fn(),
             verify: jest.fn(),
+            decode: jest.fn(),
           },
         },
         {
@@ -79,6 +81,13 @@ describe('AuthService', () => {
           useValue: {
             add: jest.fn(),
             isBlacklisted: jest.fn(),
+          },
+        },
+        {
+          provide: RedisService,
+          useValue: {
+            get: jest.fn().mockResolvedValue(null),
+            set: jest.fn().mockResolvedValue(undefined),
           },
         },
       ],

@@ -21,6 +21,7 @@ import { SearchModule } from './search/search.module';
 import { ErrorReportingModule } from './common/modules/error-reporting.module';
 import { RedisModule } from './common/services/redis.module';
 import { MaintenanceGuard } from './common/guards/maintenance.guard';
+import { ErrorCodeTestController } from './common/controllers/error-code-test.controller';
 
 @Module({
   imports: [
@@ -57,7 +58,7 @@ import { MaintenanceGuard } from './common/guards/maintenance.guard';
     VersionModule,
     SearchModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, ErrorCodeTestController],
   providers: [
     AppService,
     {
