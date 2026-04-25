@@ -21,12 +21,14 @@ import { ErrorReportingModule } from './common/modules/error-reporting.module';
 import { RedisModule } from './common/services/redis.module';
 import { MaintenanceGuard } from './common/guards/maintenance.guard';
 import { ErrorCodeTestController } from './common/controllers/error-code-test.controller';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
       {
         ttl: 60000, // 60 seconds in milliseconds
