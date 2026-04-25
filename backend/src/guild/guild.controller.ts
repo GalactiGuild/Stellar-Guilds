@@ -340,6 +340,47 @@ export class GuildController {
   }
 
   /**
+   * Update guild banner CID
+   * Accepts JSON body with bannerCid string
+   */
+  @UseGuards(JwtAuthGuard, GuildRoleGuard)
+  @GuildRoles('ADMIN', 'OWNER')
+  @Patch(':id/banner')
+  @ApiOperation({ summary: 'Update guild banner CID' })
+  @ApiParam({ name: 'id', description: 'Guild ID (UUID)' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        bannerCid: {
+          type: 'string',
+          description: 'Banner CID string for IPFS storage',
+        },
+      },
+      required: ['bannerCid'],
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Banner CID updated successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid banner CID',
+  })
+  async updateBannerCid(
+    @Param('id') id: string,
+    @Body() body: { bannerCid: string },
+    @Request() req: any,
+  ) {
+    return this.guildService.updateGuildBannerCid(
+      id,
+      body.bannerCid,
+      req.user.userId,
+    );
+  }
+
+  /**
    * Update the current user's guild membership bio
    */
   @UseGuards(JwtAuthGuard)

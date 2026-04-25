@@ -600,6 +600,32 @@ export class GuildService {
     return updated;
   }
 
+  /**
+   * Update guild banner CID
+   */
+  async updateGuildBannerCid(guildId: string, bannerCid: string, userId: string) {
+    await this.ensureManagePermission(guildId, userId);
+
+    const guild = await this.prisma.guild.findUnique({
+      where: { id: guildId },
+    });
+
+    if (!guild) {
+      throw new NotFoundException('Guild not found');
+    }
+
+    if (!bannerCid || typeof bannerCid !== 'string') {
+      throw new BadRequestException('Invalid banner CID');
+    }
+
+    const updated = await this.prisma.guild.update({
+      where: { id: guildId },
+      data: { bannerCid },
+    });
+
+    return updated;
+  }
+
   async updateMembership(userId: string, guildId: string, dto: UpdateGuildMembershipDto) {
     const membership = await this.prisma.guildMembership.findUnique({
       where: { userId_guildId: { userId, guildId } },
