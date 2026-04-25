@@ -10,6 +10,7 @@ import { ErrorReportingService } from './common/services/error-reporting.service
 import { StartupLogger, ServiceStatus } from './common/utils/startup-logger';
 import { PrismaService } from './prisma/prisma.service';
 import { RedisService } from './common/services/redis.service';
+import { ContentTypeEnforcementMiddleware } from './common/middleware/content-type-enforcement.middleware';
 import * as express from 'express';
 import * as path from 'path';
 
@@ -20,6 +21,10 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
   app.enableVersioning({ type: VersioningType.URI });
+
+  // Apply Content-Type enforcement middleware globally
+  const contentTypeMiddleware = new ContentTypeEnforcementMiddleware();
+  app.use(contentTypeMiddleware.use.bind(contentTypeMiddleware));
 
   const logger = new WinstonLogger('Main');
   const httpAdapterHost = app.get(HttpAdapterHost);
