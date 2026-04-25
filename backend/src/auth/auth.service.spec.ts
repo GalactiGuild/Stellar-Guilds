@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { TokenBlacklistService } from './services/token-blacklist.service';
+import { RedisService } from '../common/services/redis.service';
 import * as ethers from 'ethers';
 import {
   UnauthorizedException,
@@ -47,6 +48,7 @@ describe('AuthService', () => {
           useValue: {
             sign: jest.fn(),
             verify: jest.fn(),
+            decode: jest.fn(),
           },
         },
         {
@@ -56,8 +58,8 @@ describe('AuthService', () => {
               const config: Record<string, string> = {
                 JWT_SECRET: 'test-secret',
                 REFRESH_TOKEN_SECRET: 'test-refresh-secret',
-                JWT_EXPIRY: '15m',
-                REFRESH_TOKEN_EXPIRY: '7d',
+                JWT_ACCESS_EXPIRATION: '15m',
+                JWT_REFRESH_EXPIRATION: '7d',
               };
               return config[key];
             }),
@@ -79,6 +81,13 @@ describe('AuthService', () => {
           useValue: {
             add: jest.fn(),
             isBlacklisted: jest.fn(),
+          },
+        },
+        {
+          provide: RedisService,
+          useValue: {
+            get: jest.fn().mockResolvedValue(null),
+            set: jest.fn().mockResolvedValue(undefined),
           },
         },
       ],
@@ -173,6 +182,42 @@ describe('AuthService', () => {
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
         where: { email: loginDto.email },
       });
+    });
+
+    it('should use safe fallback expirations when env vars are absent', async () => {
+      const loginDto = {
+        email: 'test@example.com',
+        password: 'password123',
+      };
+
+      jest.spyOn(configService, 'get').mockImplementation((key: string) => {
+        if (key === 'JWT_SECRET') return 'test-secret';
+        if (key === 'REFRESH_TOKEN_SECRET') return 'test-refresh-secret';
+        return undefined;
+      });
+      jest.spyOn(prisma.user, 'findUnique').mockResolvedValue(mockUser as any);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      jest.spyOn(prisma.user, 'update').mockResolvedValue(mockUser as any);
+      jest.spyOn(jwtService, 'sign').mockReturnValue('token');
+
+      await service.login(loginDto);
+
+      expect(jwtService.sign).toHaveBeenNthCalledWith(
+        1,
+        expect.any(Object),
+        expect.objectContaining({
+          secret: 'test-secret',
+          expiresIn: '15m',
+        }),
+      );
+      expect(jwtService.sign).toHaveBeenNthCalledWith(
+        2,
+        expect.any(Object),
+        expect.objectContaining({
+          secret: 'test-refresh-secret',
+          expiresIn: '7d',
+        }),
+      );
     });
 
     it('should throw UnauthorizedException for non-existent user', async () => {

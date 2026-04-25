@@ -46,6 +46,7 @@ export class GuildController {
     private readonly bulkInviteService: GuildBulkInviteService,
     private readonly applicationService: ApplicationService,
   ) {}
+  ) { }
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -54,12 +55,12 @@ export class GuildController {
   }
 
   @Get(':id')
-  async get(@Param('id') id: string): Promise<GuildDetailsDto> {
+  async get(@Param('id') id: string) {
     return this.guildService.getGuild(id);
   }
 
   @Get('by-slug/:slug')
-  async getBySlug(@Param('slug') slug: string): Promise<GuildDetailsDto> {
+  async getBySlug(@Param('slug') slug: string) {
     return this.guildService.getBySlug(slug);
   }
 
@@ -318,11 +319,11 @@ export class GuildController {
     };
   }
 
-/**
-   * Bulk invite guild members from a CSV file of wallet addresses.
-   * CSV should contain one wallet address per row.
-   * Returns a summary of invited and skipped addresses.
-   */
+  /**
+     * Bulk invite guild members from a CSV file of wallet addresses.
+     * CSV should contain one wallet address per row.
+     * Returns a summary of invited and skipped addresses.
+     */
   @Post(':id/members/bulk-invite')
   @UseInterceptors(FileInterceptor('file'))
   async bulkInvite(
@@ -338,6 +339,47 @@ export class GuildController {
       id,
       req.user.userId,
       file.buffer,
+    );
+  }
+
+  /**
+   * Update guild banner CID
+   * Accepts JSON body with bannerCid string
+   */
+  @UseGuards(JwtAuthGuard, GuildRoleGuard)
+  @GuildRoles('ADMIN', 'OWNER')
+  @Patch(':id/banner')
+  @ApiOperation({ summary: 'Update guild banner CID' })
+  @ApiParam({ name: 'id', description: 'Guild ID (UUID)' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        bannerCid: {
+          type: 'string',
+          description: 'Banner CID string for IPFS storage',
+        },
+      },
+      required: ['bannerCid'],
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Banner CID updated successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid banner CID',
+  })
+  async updateBannerCid(
+    @Param('id') id: string,
+    @Body() body: { bannerCid: string },
+    @Request() req: any,
+  ) {
+    return this.guildService.updateGuildBannerCid(
+      id,
+      body.bannerCid,
+      req.user.userId,
     );
   }
 
@@ -377,5 +419,16 @@ export class GuildController {
     @Request() req: any,
   ) {
     return this.applicationService.moveToPending(applicationId, req.user.userId);
+   * Get financial summary report for a guild
+   * Returns payouts grouped by asset and category for the last 30 days
+   */
+  @UseGuards(JwtAuthGuard, GuildRoleGuard)
+  @GuildRoles('ADMIN', 'OWNER')
+  @Get(':id/reports/financials')
+  @ApiOperation({ summary: 'Get guild financial report' })
+  @ApiParam({ name: 'id', description: 'Guild ID' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Financial report generated' })
+  async getFinancialReport(@Param('id') id: string) {
+    return this.guildService.getFinancialReport(id);
   }
 }

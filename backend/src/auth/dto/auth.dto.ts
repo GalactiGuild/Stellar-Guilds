@@ -117,13 +117,13 @@ export class RefreshTokenDto {
 export class UserResponseDto {
   @ApiProperty({ description: 'Unique user identifier', example: 'ck1234567890' })
   id!: string;
-  
+
   @ApiProperty({ description: 'User email address', example: 'user@example.com' })
   email!: string;
-  
+
   @ApiProperty({ description: 'User username', example: 'stellar_developer' })
   username!: string;
-  
+
   @ApiPropertyOptional({
     description: 'Ethereum wallet address',
     example: '0x742d35Cc6634C0532925a3b844Bc9e7595f1e2f0',
@@ -151,4 +151,14 @@ export class AuthResponseDto {
     type: UserResponseDto,
   })
   user!: UserResponseDto;
+}
+
+export class Enable2faDto {
+  @ApiProperty({
+    description: '6-digit TOTP code from authenticator app',
+    example: '123456',
+  })
+  @IsString()
+  @Matches(/^\d{6}$/, { message: '2FA code must be exactly 6 digits' })
+  code!: string;
 }

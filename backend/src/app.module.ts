@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
+import * as Joi from 'joi';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
@@ -20,12 +21,23 @@ import { SearchModule } from './search/search.module';
 import { ErrorReportingModule } from './common/modules/error-reporting.module';
 import { RedisModule } from './common/services/redis.module';
 import { MaintenanceGuard } from './common/guards/maintenance.guard';
+import { ErrorCodeTestController } from './common/controllers/error-code-test.controller';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      validationSchema: Joi.object({
+        JWT_ACCESS_EXPIRATION: Joi.alternatives()
+          .try(Joi.string(), Joi.number())
+          .default('15m'),
+        JWT_REFRESH_EXPIRATION: Joi.alternatives()
+          .try(Joi.string(), Joi.number())
+          .default('7d'),
+      }),
     }),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
       {
         ttl: 60000, // 60 seconds in milliseconds
@@ -48,7 +60,7 @@ import { MaintenanceGuard } from './common/guards/maintenance.guard';
     VersionModule,
     SearchModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, ErrorCodeTestController],
   providers: [
     AppService,
     {

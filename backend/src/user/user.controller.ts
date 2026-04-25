@@ -50,7 +50,7 @@ export class UserController {
   constructor(
     private userService: UserService,
     private reputationService: ReputationService,
-  ) {}
+  ) { }
 
   /**
    * Get current authenticated user profile
@@ -65,6 +65,7 @@ export class UserController {
   /**
    * Search and filter users (must come before :userId to avoid route conflicts)
    */
+  @Get()
   @Get('search')
   @HttpCode(HttpStatus.OK)
   async searchUsers(@Query() searchDto: SearchUserDto) {
@@ -113,6 +114,32 @@ export class UserController {
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
     return this.userService.changePassword(req.user.userId, changePasswordDto);
+  }
+
+  /**
+   * Add a guild to user's favorites
+   */
+  @Post('me/favorites/:guildId')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.CREATED)
+  async addFavoriteGuild(
+    @Request() req: any,
+    @Param('guildId') guildId: string,
+  ) {
+    return this.userService.addFavoriteGuild(req.user.userId, guildId);
+  }
+
+  /**
+   * Remove a guild from user's favorites
+   */
+  @Delete('me/favorites/:guildId')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async removeFavoriteGuild(
+    @Request() req: any,
+    @Param('guildId') guildId: string,
+  ) {
+    return this.userService.removeFavoriteGuild(req.user.userId, guildId);
   }
 
   /**
@@ -229,13 +256,13 @@ export class UserController {
   }
 
   /**
-   * Deactivate current user account
+   * GDPR-compliant profile deletion
    */
   @Delete('me')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async deactivateAccount(@Request() req: any) {
-    return this.userService.deactivateUser(req.user.userId);
+  async deleteMe(@Request() req: any) {
+    return this.userService.deleteMe(req.user.userId);
   }
 
   /**

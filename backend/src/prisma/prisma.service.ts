@@ -54,6 +54,10 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     return this.prisma.guildMembership;
   }
 
+  get userFavoriteGuild() {
+    return this.prisma.userFavoriteGuild;
+  }
+
   get bounty() {
     return this.prisma.bounty;
   }
@@ -96,6 +100,10 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
 
   get guildPayout() {
     return this.prisma.guildPayout;
+  }
+
+  get payoutBatch() {
+    return this.prisma.payoutBatch;
   }
 
   // Expose Prisma utilities

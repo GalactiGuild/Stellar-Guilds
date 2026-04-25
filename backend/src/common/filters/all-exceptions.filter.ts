@@ -4,10 +4,10 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
-  Inject,
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { ErrorReportingService } from '../services/error-reporting.service';
+import { StellarErrorCode } from '../errors/stellar-error-code.enum';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -22,11 +22,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     let httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
+    let errorCode: StellarErrorCode = StellarErrorCode.INTERNAL_SERVER_ERROR;
 
     if (exception instanceof HttpException) {
       httpStatus = exception.getStatus();
       const response = exception.getResponse();
       message = (response as any).message || exception.message;
+      errorCode =
+        (exception as any).errorCode ??
+        (response as any)?.errorCode ??
+        this.getDefaultErrorCodeByStatus(httpStatus);
     } else if (
       exception &&
       typeof exception === 'object' &&
@@ -38,18 +43,22 @@ export class AllExceptionsFilter implements ExceptionFilter {
         case 'P2002':
           httpStatus = HttpStatus.CONFLICT;
           message = `Unique constraint failed on the fields: ${(exception.meta?.target as string[])?.join(', ')}`;
+          errorCode = StellarErrorCode.PRISMA_UNIQUE_CONSTRAINT;
           break;
         case 'P2003':
           httpStatus = HttpStatus.BAD_REQUEST;
           message = 'Foreign key constraint failed';
+          errorCode = StellarErrorCode.PRISMA_FOREIGN_KEY_CONSTRAINT;
           break;
         case 'P2025':
           httpStatus = HttpStatus.NOT_FOUND;
           message = 'Record not found';
+          errorCode = StellarErrorCode.PRISMA_RECORD_NOT_FOUND;
           break;
         default:
           httpStatus = HttpStatus.BAD_REQUEST;
           message = `Prisma error: ${exception.message}`;
+          errorCode = StellarErrorCode.BAD_REQUEST;
       }
     } else if (exception instanceof Error) {
       message = exception.message;
@@ -82,10 +91,30 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const responseBody = {
       statusCode: httpStatus,
       message,
+      errorCode,
       timestamp: new Date().toISOString(),
       path,
     };
 
     httpAdapter.reply(response, responseBody, httpStatus);
+  }
+
+  private getDefaultErrorCodeByStatus(httpStatus: number): StellarErrorCode {
+    switch (httpStatus) {
+      case HttpStatus.BAD_REQUEST:
+        return StellarErrorCode.BAD_REQUEST;
+      case HttpStatus.UNAUTHORIZED:
+        return StellarErrorCode.UNAUTHORIZED;
+      case HttpStatus.FORBIDDEN:
+        return StellarErrorCode.FORBIDDEN;
+      case HttpStatus.NOT_FOUND:
+        return StellarErrorCode.NOT_FOUND;
+      case HttpStatus.CONFLICT:
+        return StellarErrorCode.CONFLICT;
+      case HttpStatus.TOO_MANY_REQUESTS:
+        return StellarErrorCode.RATE_LIMIT_EXCEEDED;
+      default:
+        return StellarErrorCode.INTERNAL_SERVER_ERROR;
+    }
   }
 }

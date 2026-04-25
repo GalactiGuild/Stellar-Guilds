@@ -3,7 +3,7 @@ import { ForbiddenException } from '@nestjs/common';
 import { BountyService } from './bounty.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailerService } from '../mailer/mailer.service';
-import { StorageService } from '../storage/storage.service';
+import { PayoutVerificationService } from '../treasury/payout-verification.service';
 
 const mockPrisma = () => {
   const prisma = {
@@ -26,6 +26,10 @@ const mockMailer = () => ({
   sendRevokeEmail: jest.fn(),
 });
 
+const mockPayoutVerificationService = () => ({
+  verifyGuildPayout: jest.fn(),
+});
+
 describe('BountyService', () => {
   let service: BountyService;
   let prisma: ReturnType<typeof mockPrisma>;
@@ -37,6 +41,10 @@ describe('BountyService', () => {
         BountyService,
         { provide: PrismaService, useFactory: mockPrisma },
         { provide: MailerService, useFactory: mockMailer },
+        {
+          provide: PayoutVerificationService,
+          useFactory: mockPayoutVerificationService,
+        },
       ],
     }).compile();
 

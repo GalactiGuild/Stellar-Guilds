@@ -27,6 +27,13 @@ enum GuildRole {
   OWNER
 }
 
+enum BatchStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+}
+
 model Role {
   id          String       @id @default(cuid())
   createdAt   DateTime     @default(now())
@@ -73,6 +80,7 @@ model User {
   // Profile fields
   profileBio    String?
   profileUrl    String?
+  technicalTags String[] @default([])
   discordHandle String?
   twitterHandle String?
   githubHandle  String?
@@ -82,6 +90,10 @@ model User {
   hasCompletionBonus Boolean @default(false)
   xp                 Int     @default(0)
   totalViews         Int     @default(0)
+
+  // Two-factor authentication
+  twoFactorSecret    String?
+  isTwoFactorEnabled Boolean @default(false)
 
   // Notification preferences
   notificationSettings Json? @default("{\"emailOnBounty\":true,\"emailOnMention\":true,\"weeklyDigest\":true}")
@@ -103,6 +115,7 @@ model User {
   privacySettings    PrivacySettings?
   bountyApplications BountyApplication[]
   bountyPayouts      BountyPayout[]
+  favoriteGuilds     UserFavoriteGuild[] @relation("UserFavoriteGuilds")
   apiKeys            ApiKey[]
 
   @@index([role])
@@ -121,15 +134,17 @@ model Guild {
   description String?
   avatarUrl   String?
   bannerUrl   String?
+  bannerCid   String?
   ownerId     String
   settings    Json?
   memberCount Int       @default(1)
   isActive    Boolean   @default(true)
 
   // Relations
-  owner       User              @relation("UserOwnerGuilds", fields: [ownerId], references: [id])
+  owner       User                @relation("UserOwnerGuilds", fields: [ownerId], references: [id])
   memberships GuildMembership[]
-  bounties    Bounty[]          @relation("GuildBounties")
+  bounties    Bounty[]            @relation("GuildBounties")
+  favoritedBy UserFavoriteGuild[] @relation("GuildFavoritedBy")
 
   @@index([ownerId])
   @@index([isActive])
@@ -164,11 +179,26 @@ model GuildMembership {
   @@map("guild_memberships")
 }
 
+model UserFavoriteGuild {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  guildId   String
+
+  user  User  @relation("UserFavoriteGuilds", fields: [userId], references: [id], onDelete: Cascade)
+  guild Guild @relation("GuildFavoritedBy", fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, guildId])
+  @@map("user_favorite_guilds")
+}
+
+
 enum MembershipStatus {
   MODERATION_PENDING
   PENDING
   APPROVED
   REJECTED
+  REVOKED
 }
 
 model Bounty {
@@ -389,17 +419,34 @@ model ReputationEntry {
 }
 
 model GuildPayout {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  guildId     String
-  recipientId String
-  amount      Decimal
-  asset       String
-  txHash      String?
-  status      String   @default("PENDING")
-  processedAt DateTime?
+  id             String       @id @default(cuid())
+  createdAt      DateTime     @default(now())
+  guildId        String
+  recipientId    String
+  amount         Decimal
+  asset          String
+  txHash         String?
+  status         String       @default("PENDING")
+  processedAt    DateTime?
+  batchId        String?
+  bountyCategory String?
+  batch          PayoutBatch? @relation(fields: [batchId], references: [id])
 
   @@index([guildId])
   @@index([recipientId])
+  @@index([batchId])
   @@map("guild_payouts")
+}
+
+model PayoutBatch {
+  id            String       @id @default(cuid())
+  guildId       String
+  status        BatchStatus  @default(PENDING)
+  failureReason String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  payouts       GuildPayout[]
+
+  @@index([guildId])
+  @@map("payout_batches")
 }

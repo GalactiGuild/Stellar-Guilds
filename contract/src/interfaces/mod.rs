@@ -7,6 +7,7 @@ pub mod milestone;
 pub mod payment;
 pub mod reputation;
 pub mod subscription;
+pub mod swapper;
 pub mod treasury;
 
 #[cfg(test)]
@@ -21,4 +22,5 @@ pub use milestone::MilestoneContractCall;
 pub use payment::PaymentContractCall;
 pub use reputation::ReputationContractCall;
 pub use subscription::SubscriptionContractCall;
+pub use swapper::{TokenSwapperClient, TokenSwapperTrait};
 pub use treasury::TreasuryContractCall;
