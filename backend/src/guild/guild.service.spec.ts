@@ -18,6 +18,7 @@ const mockPrisma = () => ({
     create: jest.fn(),
     findUnique: jest.fn(),
     findFirst: jest.fn(),
+    findMany: jest.fn(),
   },
   user: { findUnique: jest.fn() },
 });
@@ -214,6 +215,7 @@ describe('GuildService (settings integration)', () => {
             bounties: {
               where: { status: 'OPEN' },
             },
+            favoritedBy: true,
           },
         },
       },
@@ -249,11 +251,53 @@ describe('GuildService (settings integration)', () => {
             bounties: {
               where: { status: 'OPEN' },
             },
+            favoritedBy: true,
           },
         },
       },
     });
     expect(result._count.memberships).toBe(8);
     expect(result._count.bounties).toBe(2);
+  });
+
+  it('filters guild members by q and returns Bob and Bobby but not Alice', async () => {
+    prisma.guildMembership.findMany.mockResolvedValue([
+      {
+        id: 'm1',
+        userId: 'u1',
+        guildId: 'g1',
+        status: 'APPROVED',
+        joinedAt: new Date('2026-01-01T00:00:00.000Z'),
+        user: { id: 'u1', username: 'Bob' },
+      },
+      {
+        id: 'm2',
+        userId: 'u2',
+        guildId: 'g1',
+        status: 'APPROVED',
+        joinedAt: new Date('2026-01-02T00:00:00.000Z'),
+        user: { id: 'u2', username: 'Bobby' },
+      },
+    ]);
+
+    const result = await service.getGuildMembers('g1', 'Bob');
+
+    expect(prisma.guildMembership.findMany).toHaveBeenCalledWith({
+      where: {
+        guildId: 'g1',
+        status: 'APPROVED',
+        user: {
+          username: {
+            contains: 'Bob',
+            mode: 'insensitive',
+          },
+        },
+      },
+      include: { user: true },
+      orderBy: { joinedAt: 'asc' },
+    });
+
+    expect(result.map((m: any) => m.user.username)).toEqual(['Bob', 'Bobby']);
+    expect(result.map((m: any) => m.user.username)).not.toContain('Alice');
   });
 });
