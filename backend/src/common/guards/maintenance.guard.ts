@@ -16,7 +16,7 @@ export class MaintenanceGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    
+
     // 1. Always allow GET requests
     if (request.method === 'GET') {
       return true;
@@ -29,9 +29,11 @@ export class MaintenanceGuard implements CanActivate {
     }
 
     // 3. Check for bypass mechanisms (Super Admin)
-    
+
     // 3a. Bypass by IP
-    const allowedIps = (this.configService.get<string>('MAINTENANCE_ALLOWED_IPS') || '').split(',');
+    const allowedIps = (
+      this.configService.get<string>('MAINTENANCE_ALLOWED_IPS') || ''
+    ).split(',');
     const clientIp = request.ip || request.connection?.remoteAddress;
     if (allowedIps.includes(clientIp)) {
       return true;
@@ -57,17 +59,21 @@ export class MaintenanceGuard implements CanActivate {
 
   private async checkMaintenanceMode(): Promise<boolean> {
     // Check environment variable first (local override)
-    const envMaintenanceMode = this.configService.get<string>('API_MAINTENANCE_MODE');
+    const envMaintenanceMode = this.configService.get<string>(
+      'API_MAINTENANCE_MODE',
+    );
     if (envMaintenanceMode === 'true') {
       return true;
     }
 
     // Check Redis
     try {
-      const redisMaintenanceMode = await this.redisService.get('API_MAINTENANCE_MODE');
+      const redisMaintenanceMode = await this.redisService.get(
+        'API_MAINTENANCE_MODE',
+      );
       return redisMaintenanceMode === 'true';
     } catch (error) {
-      // If Redis is down, we default to allowing traffic (fail-open) 
+      // If Redis is down, we default to allowing traffic (fail-open)
       // unless the env var was set.
       return false;
     }

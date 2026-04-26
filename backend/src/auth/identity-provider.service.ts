@@ -21,7 +21,8 @@ export class IdentityProviderService {
     this.config = {
       sep10Endpoint: config?.sep10Endpoint ?? '/auth',
       sep24Endpoint: config?.sep24Endpoint ?? '/transactions/deposit',
-      networkPassphrase: config?.networkPassphrase ?? 'Test SDF Network ; September 2015',
+      networkPassphrase:
+        config?.networkPassphrase ?? 'Test SDF Network ; September 2015',
     };
   }
 
@@ -37,7 +38,9 @@ export class IdentityProviderService {
     try {
       const parts = token.split('.');
       if (parts.length !== 3) return null;
-      const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+      const payload = JSON.parse(
+        Buffer.from(parts[1], 'base64').toString('utf8'),
+      );
       return {
         account: payload.sub as string,
         expiresAt: new Date((payload.exp as number) * 1000),

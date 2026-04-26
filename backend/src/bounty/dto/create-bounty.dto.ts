@@ -21,8 +21,10 @@ export class CreateBountyDto {
   title!: string;
 
   @ApiProperty({
-    description: 'Detailed description of the bounty requirements and expectations (max 5000 characters)',
-    example: 'Create a RESTful API endpoint for user registration and login with JWT authentication...',
+    description:
+      'Detailed description of the bounty requirements and expectations (max 5000 characters)',
+    example:
+      'Create a RESTful API endpoint for user registration and login with JWT authentication...',
     maxLength: 5000,
   })
   @IsString()
@@ -61,7 +63,8 @@ export class CreateBountyDto {
   deadline?: string;
 
   @ApiPropertyOptional({
-    description: 'Guild ID to associate this bounty with (for guild-specific bounties)',
+    description:
+      'Guild ID to associate this bounty with (for guild-specific bounties)',
     example: 'guild_ck1234567890',
   })
   @IsOptional()

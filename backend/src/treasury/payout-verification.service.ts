@@ -28,19 +28,25 @@ export class PayoutVerificationService {
     });
 
     if (!bounty) {
-      throw new AppBadRequestException('Cannot verify payout: bounty not found', {
-        errorCode: StellarErrorCode.NOT_FOUND,
-      });
+      throw new AppBadRequestException(
+        'Cannot verify payout: bounty not found',
+        {
+          errorCode: StellarErrorCode.NOT_FOUND,
+        },
+      );
     }
 
     const expectedAmount = Number(bounty.rewardAmount);
     if (requestedAmount !== expectedAmount) {
-      this.auditTrailService.record('PAYOUT_VERIFICATION_FAILED_AMOUNT_MISMATCH', {
-        guildId,
-        bountyId,
-        requestedAmount,
-        expectedAmount,
-      });
+      this.auditTrailService.record(
+        'PAYOUT_VERIFICATION_FAILED_AMOUNT_MISMATCH',
+        {
+          guildId,
+          bountyId,
+          requestedAmount,
+          expectedAmount,
+        },
+      );
 
       throw new AppBadRequestException(
         `Payout verification failed: requested amount ${requestedAmount} does not match configured bounty amount ${expectedAmount}.`,
@@ -51,12 +57,15 @@ export class PayoutVerificationService {
     const guildBalance = await this.fetchGuildBalance(guildId);
 
     if (guildBalance < requestedAmount) {
-      this.auditTrailService.record('PAYOUT_VERIFICATION_FAILED_INSUFFICIENT_FUNDS', {
-        guildId,
-        bountyId,
-        requestedAmount,
-        guildBalance,
-      });
+      this.auditTrailService.record(
+        'PAYOUT_VERIFICATION_FAILED_INSUFFICIENT_FUNDS',
+        {
+          guildId,
+          bountyId,
+          requestedAmount,
+          guildBalance,
+        },
+      );
 
       throw new AppBadRequestException(
         `Payout verification failed: guild balance ${guildBalance} is lower than requested amount ${requestedAmount}.`,

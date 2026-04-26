@@ -31,7 +31,7 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     private apiKeyService: ApiKeyService,
-  ) { }
+  ) {}
 
   /**
    * Mock 2FA secret generation for setup
@@ -99,7 +99,10 @@ export class AuthController {
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async logout(@Request() req: any, @Headers('authorization') authorization: string) {
+  async logout(
+    @Request() req: any,
+    @Headers('authorization') authorization: string,
+  ) {
     // Extract the token from the Authorization header
     const token = authorization?.startsWith('Bearer ')
       ? authorization.substring(7)

@@ -3,8 +3,8 @@ import { PrismaService } from '../prisma/prisma.service';
 
 // ── Mock Redis store ──────────────────────────────────────────────────────────
 // In production, replace with an injected Redis/ioredis client.
-const viewCounts = new Map<string, number>();   // user_views:{id}
-const ipCooldowns = new Map<string, number>();  // ip:{ip}:{id} -> expiry timestamp
+const viewCounts = new Map<string, number>(); // user_views:{id}
+const ipCooldowns = new Map<string, number>(); // ip:{ip}:{id} -> expiry timestamp
 
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -61,7 +61,10 @@ export class ProfileViewCounterService {
       const userId = key.slice('user_views:'.length);
       updates.push(
         this.prisma.user
-          .update({ where: { id: userId }, data: { totalViews: { increment: count } } })
+          .update({
+            where: { id: userId },
+            data: { totalViews: { increment: count } },
+          })
           .then(() => viewCounts.set(key, 0))
           .catch((err: unknown) =>
             this.logger.error(`Failed to sync views for user ${userId}`, err),
@@ -70,6 +73,8 @@ export class ProfileViewCounterService {
     }
 
     await Promise.all(updates);
-    this.logger.log(`Synced view counts for ${updates.length} user(s) to Postgres`);
+    this.logger.log(
+      `Synced view counts for ${updates.length} user(s) to Postgres`,
+    );
   }
 }

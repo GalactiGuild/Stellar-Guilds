@@ -90,9 +90,9 @@ describe('MaintenanceGuard', () => {
         return null;
       });
 
-      await expect(guard.canActivate(mockContext as ExecutionContext)).rejects.toThrow(
-        ServiceUnavailableException,
-      );
+      await expect(
+        guard.canActivate(mockContext as ExecutionContext),
+      ).rejects.toThrow(ServiceUnavailableException);
     });
 
     it('should throw ServiceUnavailableException if maintenance is on via Redis', async () => {
@@ -102,9 +102,9 @@ describe('MaintenanceGuard', () => {
       });
       mockRedisService.get.mockResolvedValue('true');
 
-      await expect(guard.canActivate(mockContext as ExecutionContext)).rejects.toThrow(
-        ServiceUnavailableException,
-      );
+      await expect(
+        guard.canActivate(mockContext as ExecutionContext),
+      ).rejects.toThrow(ServiceUnavailableException);
     });
 
     it('should allow bypass via IP', async () => {

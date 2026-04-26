@@ -8,7 +8,12 @@ import { MailerModule } from '../mailer/mailer.module';
 import { TreasuryModule } from '../treasury/treasury.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), PrismaModule, MailerModule, TreasuryModule],
+  imports: [
+    ScheduleModule.forRoot(),
+    PrismaModule,
+    MailerModule,
+    TreasuryModule,
+  ],
   providers: [BountyService, BountyReminderService],
   controllers: [BountyController],
   exports: [BountyService],

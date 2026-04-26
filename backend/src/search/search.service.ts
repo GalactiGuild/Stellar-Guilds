@@ -7,18 +7,18 @@ export class SearchService {
 
   async unifiedSearch(query: string) {
     const searchQuery = `%${query.toLowerCase()}%`;
-    
+
     // Search across Guilds, Bounties, and Users concurrently
     const [guilds, bounties, users] = await Promise.all([
       this.searchGuilds(searchQuery),
       this.searchBounties(searchQuery),
-      this.searchUsers(searchQuery)
+      this.searchUsers(searchQuery),
     ]);
 
     return {
       guilds,
       bounties,
-      users
+      users,
     };
   }
 
@@ -30,10 +30,10 @@ export class SearchService {
           {
             OR: [
               { name: { contains: query, mode: 'insensitive' } },
-              { description: { contains: query, mode: 'insensitive' } }
-            ]
-          }
-        ]
+              { description: { contains: query, mode: 'insensitive' } },
+            ],
+          },
+        ],
       },
       select: {
         id: true,
@@ -42,13 +42,10 @@ export class SearchService {
         description: true,
         avatarUrl: true,
         memberCount: true,
-        createdAt: true
+        createdAt: true,
       },
       take: 5,
-      orderBy: [
-        { memberCount: 'desc' },
-        { createdAt: 'desc' }
-      ]
+      orderBy: [{ memberCount: 'desc' }, { createdAt: 'desc' }],
     });
   }
 
@@ -60,10 +57,10 @@ export class SearchService {
           {
             OR: [
               { title: { contains: query, mode: 'insensitive' } },
-              { description: { contains: query, mode: 'insensitive' } }
-            ]
-          }
-        ]
+              { description: { contains: query, mode: 'insensitive' } },
+            ],
+          },
+        ],
       },
       select: {
         id: true,
@@ -78,22 +75,20 @@ export class SearchService {
           select: {
             id: true,
             name: true,
-            slug: true
-          }
+            slug: true,
+          },
         },
         creator: {
           select: {
             id: true,
             username: true,
             firstName: true,
-            lastName: true
-          }
-        }
+            lastName: true,
+          },
+        },
       },
       take: 5,
-      orderBy: [
-        { createdAt: 'desc' }
-      ]
+      orderBy: [{ createdAt: 'desc' }],
     });
   }
 
@@ -107,10 +102,10 @@ export class SearchService {
               { username: { contains: query, mode: 'insensitive' } },
               { firstName: { contains: query, mode: 'insensitive' } },
               { lastName: { contains: query, mode: 'insensitive' } },
-              { bio: { contains: query, mode: 'insensitive' } }
-            ]
-          }
-        ]
+              { bio: { contains: query, mode: 'insensitive' } },
+            ],
+          },
+        ],
       },
       select: {
         id: true,
@@ -121,13 +116,10 @@ export class SearchService {
         avatarUrl: true,
         role: true,
         xp: true,
-        createdAt: true
+        createdAt: true,
       },
       take: 5,
-      orderBy: [
-        { xp: 'desc' },
-        { createdAt: 'desc' }
-      ]
+      orderBy: [{ xp: 'desc' }, { createdAt: 'desc' }],
     });
   }
 }

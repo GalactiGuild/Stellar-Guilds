@@ -18,7 +18,8 @@ export class CreateMilestoneDto {
   title!: string;
 
   @ApiPropertyOptional({
-    description: 'Detailed description of milestone requirements (max 2000 characters)',
+    description:
+      'Detailed description of milestone requirements (max 2000 characters)',
     example: 'Implement login page, dashboard, and user profile pages',
     maxLength: 2000,
   })

@@ -19,7 +19,8 @@ export class UpdateBountyDto {
   title?: string;
 
   @ApiPropertyOptional({
-    description: 'Updated detailed description of the bounty (max 5000 characters)',
+    description:
+      'Updated detailed description of the bounty (max 5000 characters)',
     example: 'Updated requirements: Add OAuth2 support...',
     maxLength: 5000,
   })

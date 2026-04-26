@@ -19,5 +19,4 @@ import { StorageModule } from '../storage/storage.module';
   ],
   exports: [GuildService, PayoutBatchService, ApplicationService],
 })
-export class GuildModule { }
-
+export class GuildModule {}

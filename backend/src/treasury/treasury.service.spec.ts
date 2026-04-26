@@ -76,7 +76,7 @@ describe('TreasuryService', () => {
     it('should handle duplicate txHash gracefully (idempotency)', async () => {
       // Reset mocks to ensure clean test
       jest.clearAllMocks();
-      
+
       const existingTransaction = {
         id: 'tx-existing',
         ...mockEvent,
@@ -90,10 +90,14 @@ describe('TreasuryService', () => {
 
       const result = await service.recordTreasuryTransfer(mockEvent);
 
-      expect(mockPrismaService.treasuryTransaction.findUnique).toHaveBeenCalledWith({
+      expect(
+        mockPrismaService.treasuryTransaction.findUnique,
+      ).toHaveBeenCalledWith({
         where: { txHash: mockEvent.txHash },
       });
-      expect(mockPrismaService.treasuryTransaction.create).not.toHaveBeenCalled();
+      expect(
+        mockPrismaService.treasuryTransaction.create,
+      ).not.toHaveBeenCalled();
       expect(result).toEqual(existingTransaction);
     });
   });

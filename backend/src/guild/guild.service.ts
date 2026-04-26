@@ -22,7 +22,7 @@ export class GuildService {
     private prisma: PrismaService,
     private mailer: MailerService,
     private storageService: StorageService,
-  ) { }
+  ) {}
 
   private slugify(name: string) {
     return name
@@ -189,11 +189,11 @@ export class GuildService {
   ) {
     const textFilter = q
       ? {
-        OR: [
-          { name: { contains: q, mode: 'insensitive' as const } },
-          { description: { contains: q, mode: 'insensitive' as const } },
-        ],
-      }
+          OR: [
+            { name: { contains: q, mode: 'insensitive' as const } },
+            { description: { contains: q, mode: 'insensitive' as const } },
+          ],
+        }
       : {};
 
     // Enforce discoverable guilds only for public search
@@ -338,7 +338,7 @@ export class GuildService {
           guild?.name || 'a guild',
           undefined,
         );
-    } catch (_) { }
+    } catch (_) {}
 
     return updated;
   }
@@ -373,7 +373,7 @@ export class GuildService {
           guild?.name || 'a guild',
           undefined,
         );
-    } catch (_) { }
+    } catch (_) {}
 
     return updated;
   }
@@ -608,7 +608,11 @@ export class GuildService {
   /**
    * Update guild banner CID
    */
-  async updateGuildBannerCid(guildId: string, bannerCid: string, userId: string) {
+  async updateGuildBannerCid(
+    guildId: string,
+    bannerCid: string,
+    userId: string,
+  ) {
     await this.ensureManagePermission(guildId, userId);
 
     const guild = await this.prisma.guild.findUnique({
@@ -631,7 +635,11 @@ export class GuildService {
     return updated;
   }
 
-  async updateMembership(userId: string, guildId: string, dto: UpdateGuildMembershipDto) {
+  async updateMembership(
+    userId: string,
+    guildId: string,
+    dto: UpdateGuildMembershipDto,
+  ) {
     const membership = await this.prisma.guildMembership.findUnique({
       where: { userId_guildId: { userId, guildId } },
     });

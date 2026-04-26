@@ -13,10 +13,14 @@ describe('ContentTypeEnforcementMiddleware (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    
+
     // Apply the middleware globally as it would be in main.ts
-    app.use(new ContentTypeEnforcementMiddleware().use.bind(new ContentTypeEnforcementMiddleware()));
-    
+    app.use(
+      new ContentTypeEnforcementMiddleware().use.bind(
+        new ContentTypeEnforcementMiddleware(),
+      ),
+    );
+
     await app.init();
   });
 
@@ -77,7 +81,11 @@ describe('ContentTypeEnforcementMiddleware (e2e)', () => {
       return request(app.getHttpServer())
         .post('/api/v1/auth/register')
         .set('Content-Type', 'application/json')
-        .send({ username: 'test', email: 'test@example.com', password: 'Test123!' })
+        .send({
+          username: 'test',
+          email: 'test@example.com',
+          password: 'Test123!',
+        })
         .expect((res) => {
           // Should not get 415 error (may get validation or other errors, but not 415)
           expect(res.status).not.toBe(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
@@ -88,7 +96,11 @@ describe('ContentTypeEnforcementMiddleware (e2e)', () => {
       return request(app.getHttpServer())
         .post('/api/v1/auth/register')
         .set('Content-Type', 'application/json; charset=utf-8')
-        .send({ username: 'test', email: 'test@example.com', password: 'Test123!' })
+        .send({
+          username: 'test',
+          email: 'test@example.com',
+          password: 'Test123!',
+        })
         .expect((res) => {
           // Should not get 415 error
           expect(res.status).not.toBe(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
@@ -151,7 +163,10 @@ describe('ContentTypeEnforcementMiddleware (e2e)', () => {
     it('should allow multipart/form-data on avatar upload route', () => {
       return request(app.getHttpServer())
         .post('/api/v1/users/me/avatar')
-        .set('Content-Type', 'multipart/form-data; boundary=----WebKitFormBoundary')
+        .set(
+          'Content-Type',
+          'multipart/form-data; boundary=----WebKitFormBoundary',
+        )
         .expect((res) => {
           // Should not get 415 error (will get 401 or other errors, but not 415)
           expect(res.status).not.toBe(HttpStatus.UNSUPPORTED_MEDIA_TYPE);

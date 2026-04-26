@@ -14,14 +14,18 @@ export class RequestProfilingInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const start = Date.now();
-    const req = context.switchToHttp().getRequest<{ method: string; path: string }>();
+    const req = context
+      .switchToHttp()
+      .getRequest<{ method: string; path: string }>();
     const res = context.switchToHttp().getResponse<{ statusCode: number }>();
     const { method, path } = req;
 
     return next.handle().pipe(
       tap(() => {
         const ms = Date.now() - start;
-        this.logger.log(`[API Profile] ${method} ${path} ${res.statusCode} - ${ms}ms`);
+        this.logger.log(
+          `[API Profile] ${method} ${path} ${res.statusCode} - ${ms}ms`,
+        );
       }),
     );
   }

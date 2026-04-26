@@ -19,10 +19,12 @@ export class TokenBlacklistService {
   async add(token: string): Promise<void> {
     try {
       // Decode the token to get expiration time
-      const decoded = this.jwtService.decode(token) as { exp?: number } | null;
+      const decoded = this.jwtService.decode(token);
 
       if (!decoded || !decoded.exp) {
-        this.logger.warn('Cannot blacklist token: unable to decode or missing expiration');
+        this.logger.warn(
+          'Cannot blacklist token: unable to decode or missing expiration',
+        );
         return;
       }
 
@@ -72,7 +74,7 @@ export class TokenBlacklistService {
     let hash = 0;
     for (let i = 0; i < token.length; i++) {
       const char = token.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return `${this.BLACKLIST_PREFIX}${Math.abs(hash).toString(36)}`;

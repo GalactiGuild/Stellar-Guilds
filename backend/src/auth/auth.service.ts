@@ -305,7 +305,7 @@ export class AuthService {
   }
 
   private async trackRefreshAttempt(refreshToken: string) {
-    const decoded = this.jwtService.decode(refreshToken) as { sub?: string } | null;
+    const decoded = this.jwtService.decode(refreshToken);
     const trackerId = decoded?.sub ?? 'anonymous';
     const key = `auth:refresh:attempts:${trackerId}`;
     const current = await this.redisService.get(key);
@@ -416,7 +416,10 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    const secret = randomUUID().replace(/-/g, '').substring(0, 16).toUpperCase();
+    const secret = randomUUID()
+      .replace(/-/g, '')
+      .substring(0, 16)
+      .toUpperCase();
 
     // In a real implementation we might store this as 'pending' but here we just return it
     return {

@@ -321,12 +321,16 @@ describe('AuthService', () => {
     it('should successfully logout user', async () => {
       const mockToken = 'test-access-token';
       jest.spyOn(prisma.user, 'update').mockResolvedValue(mockUser as any);
-      jest.spyOn(service['tokenBlacklistService'], 'add').mockResolvedValue(undefined);
+      jest
+        .spyOn(service['tokenBlacklistService'], 'add')
+        .mockResolvedValue(undefined);
 
       const result = await service.logout('123', mockToken);
 
       expect(result.message).toEqual('Logged out successfully');
-      expect(service['tokenBlacklistService'].add).toHaveBeenCalledWith(mockToken);
+      expect(service['tokenBlacklistService'].add).toHaveBeenCalledWith(
+        mockToken,
+      );
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: '123' },
         data: { refreshToken: null },

@@ -34,9 +34,13 @@ import { RedisModule } from '../common/services/redis.module';
   controllers: [AuthController],
   providers: [
     AuthService,
+
     JwtStrategy,
+
     JwtAuthGuard,
+
     RoleGuard,
+
     TokenBlacklistService,
     ApiKeyService,
     ApiKeyGuard,

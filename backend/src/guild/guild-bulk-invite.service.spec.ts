@@ -15,7 +15,9 @@ describe('GuildBulkInviteService', () => {
   let service: GuildBulkInviteService;
 
   beforeEach(() => {
-    service = new GuildBulkInviteService(mockPrisma as unknown as PrismaService);
+    service = new GuildBulkInviteService(
+      mockPrisma as unknown as PrismaService,
+    );
     jest.clearAllMocks();
   });
 
@@ -28,7 +30,9 @@ describe('GuildBulkInviteService', () => {
       const addresses = service.parseAddresses(csv);
 
       expect(addresses).toHaveLength(2);
-      expect(addresses[0]).toBe('GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPGK6TBJDDF4CVLHIRLQZPVSWAA');
+      expect(addresses[0]).toBe(
+        'GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPGK6TBJDDF4CVLHIRLQZPVSWAA',
+      );
     });
 
     it('skips header row with address label', () => {
@@ -59,7 +63,8 @@ describe('GuildBulkInviteService', () => {
   });
 
   describe('processBulkInvite', () => {
-    const validAddress = 'GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPGK6TBJDDF4CVLHIRLQZPVSWAA';
+    const validAddress =
+      'GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPGK6TBJDDF4CVLHIRLQZPVSWAA';
     const invalidAddress = 'not-a-stellar-address';
 
     it('skips invalid stellar addresses', async () => {
@@ -122,8 +127,9 @@ describe('GuildBulkInviteService', () => {
 
       const result = await service.processBulkInvite('guild-1', 'user-1', csv);
 
-      expect(result.summary).toBe('Invited 1 users, 1 invalid addresses skipped');
+      expect(result.summary).toBe(
+        'Invited 1 users, 1 invalid addresses skipped',
+      );
     });
   });
 });
-

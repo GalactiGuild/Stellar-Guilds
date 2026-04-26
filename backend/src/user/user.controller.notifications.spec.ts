@@ -85,7 +85,9 @@ describe('UserController - Notification Preferences', () => {
         },
       };
 
-      mockUserService.getNotificationPreferences.mockResolvedValue(mockResponse);
+      mockUserService.getNotificationPreferences.mockResolvedValue(
+        mockResponse,
+      );
 
       const result = await controller.getNotificationPreferences(request);
 
