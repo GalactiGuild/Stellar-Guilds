@@ -517,6 +517,33 @@ export class GuildService {
     });
   }
 
+  async getGuildMembers(guildId: string, q?: string) {
+    const query = q?.trim();
+
+    return this.prisma.guildMembership.findMany({
+      where: {
+        guildId,
+        status: 'APPROVED',
+        ...(query
+          ? {
+              user: {
+                username: {
+                  contains: query,
+                  mode: 'insensitive',
+                },
+              },
+            }
+          : {}),
+      },
+      include: {
+        user: true,
+      },
+      orderBy: {
+        joinedAt: 'asc',
+      },
+    });
+  }
+
   /**
    * Update guild logo (avatarUrl)
    */
