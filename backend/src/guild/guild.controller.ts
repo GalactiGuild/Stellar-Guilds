@@ -44,12 +44,8 @@ export class GuildController {
   constructor(
     private readonly guildService: GuildService,
     private readonly bulkInviteService: GuildBulkInviteService,
-
-  ) {}
-
     private readonly applicationService: ApplicationService,
   ) {}
-  ) { }
 
 
   @UseGuards(JwtAuthGuard)
@@ -66,6 +62,11 @@ export class GuildController {
   @Get('by-slug/:slug')
   async getBySlug(@Param('slug') slug: string) {
     return this.guildService.getBySlug(slug);
+  }
+
+  @Get(':id/members')
+  async getMembers(@Param('id') id: string, @Query('q') q?: string) {
+    return this.guildService.getGuildMembers(id, q);
   }
 
   @Get()
@@ -423,6 +424,9 @@ export class GuildController {
     @Request() req: any,
   ) {
     return this.applicationService.moveToPending(applicationId, req.user.userId);
+  }
+
+  /**
    * Get financial summary report for a guild
    * Returns payouts grouped by asset and category for the last 30 days
    */
