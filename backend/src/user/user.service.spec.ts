@@ -10,6 +10,8 @@ describe('UserService', () => {
     user: {
       findUnique: jest.Mock;
       update: jest.Mock;
+      findMany: jest.Mock;
+      count: jest.Mock;
     };
   };
   let storageService: {
@@ -22,6 +24,8 @@ describe('UserService', () => {
       user: {
         findUnique: jest.fn(),
         update: jest.fn(),
+        findMany: jest.fn(),
+        count: jest.fn(),
       },
     };
     storageService = {
@@ -97,6 +101,7 @@ describe('UserService', () => {
         avatarUrl: 'http://example.com/avatar.png',
         profileBio: 'Profile bio',
         profileUrl: 'http://example.com/profile',
+        technicalTags: ['rust'],
         discordHandle: 'johndoe#1234',
         twitterHandle: '@johndoe',
         githubHandle: 'johndoe',
@@ -120,11 +125,17 @@ describe('UserService', () => {
           avatarUrl: true,
           profileBio: true,
           profileUrl: true,
+          technicalTags: true,
           discordHandle: true,
           twitterHandle: true,
           githubHandle: true,
           createdAt: true,
           role: true,
+          _count: {
+            select: {
+              favoriteGuilds: true,
+            },
+          },
         },
       });
       // Ensure sensitive fields are not in the result
@@ -197,6 +208,7 @@ describe('UserService', () => {
       expect(result.bio).toBe('Updated bio');
     });
   });
+
 
   describe('linkDiscord', () => {
     it('successfully links a Discord account to user', async () => {
@@ -354,6 +366,66 @@ describe('UserService', () => {
       await expect(
         service.getDiscordLinkStatus('non-existent-user'),
       ).rejects.toThrow(NotFoundException);
+
+  describe('searchUsers', () => {
+    it('filters users by tags using case-insensitive search', async () => {
+      const mockUsers = [
+        {
+          id: 'user-1',
+          username: 'rustacean',
+          firstName: 'Rust',
+          lastName: 'Dev',
+          bio: 'Loves Rust',
+          location: 'Remote',
+          avatarUrl: null,
+          profileBio: null,
+          profileUrl: null,
+          technicalTags: ['rust', 'solana'],
+          discordHandle: null,
+          twitterHandle: null,
+          githubHandle: null,
+          createdAt: new Date('2024-01-01'),
+          role: 'USER',
+        },
+      ];
+
+      prisma.user.findMany.mockResolvedValue(mockUsers);
+      prisma.user.count.mockResolvedValue(1);
+
+      const result = await service.searchUsers({
+        tags: ['Rust'],
+        skip: 0,
+        take: 20,
+      } as any);
+
+      expect(prisma.user.findMany).toHaveBeenCalledWith({
+        where: {
+          technicalTags: { hasSome: ['rust'] },
+        },
+        select: {
+          id: true,
+          username: true,
+          firstName: true,
+          lastName: true,
+          bio: true,
+          location: true,
+          avatarUrl: true,
+          profileBio: true,
+          profileUrl: true,
+          technicalTags: true,
+          discordHandle: true,
+          twitterHandle: true,
+          githubHandle: true,
+          createdAt: true,
+          role: true,
+        },
+        skip: 0,
+        take: 20,
+        orderBy: { createdAt: 'desc' },
+      });
+      expect(result.data).toEqual(mockUsers);
+      expect(result.total).toBe(1);
+
     });
   });
 });

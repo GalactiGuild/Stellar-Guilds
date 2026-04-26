@@ -11,6 +11,8 @@ import {
   Max,
   Matches,
   IsUrl,
+  IsArray,
+  ArrayUnique,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
@@ -20,6 +22,25 @@ const trimString = ({ value }: { value: unknown }) =>
 
 const trimAndLowercase = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim().toLowerCase() : value;
+
+const parseStringArray = ({ value }: { value: unknown }) => {
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  if (Array.isArray(value)) {
+    return value
+      .flatMap((item) =>
+        typeof item === 'string' ? item.split(',').map((tag) => tag.trim()) : [],
+      )
+      .filter(Boolean);
+  }
+
+  return value;
+};
 
 export enum UserRole {
   USER = 'USER',
@@ -105,6 +126,13 @@ export class UserProfileDto {
   @ApiPropertyOptional({ description: 'Profile URL' })
   profileUrl?: string;
 
+  @ApiPropertyOptional({
+    description: 'Technical skill tags',
+    type: [String],
+    example: ['Rust', 'Next.js'],
+  })
+  technicalTags?: string[];
+
   @ApiPropertyOptional({ description: 'Discord handle' })
   discordHandle?: string;
 
@@ -167,6 +195,13 @@ export class UpdateUserDto {
   )
   @MaxLength(2048)
   profileUrl?: string;
+
+  @IsOptional()
+  @Transform(parseStringArray)
+  @IsArray()
+  @ArrayUnique()
+  @IsString({ each: true })
+  technicalTags?: string[];
 
   @IsOptional()
   @Transform(trimString)
@@ -232,6 +267,13 @@ export class SearchUserDto {
   @IsOptional()
   @IsString()
   query?: string; // Search by username, email, firstName, lastName
+
+  @IsOptional()
+  @Transform(parseStringArray)
+  @IsArray()
+  @ArrayUnique()
+  @IsString({ each: true })
+  tags?: string[];
 
   @IsOptional()
   @IsEnum(UserRole)

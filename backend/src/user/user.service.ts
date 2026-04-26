@@ -45,6 +45,7 @@ export class UserService {
         avatarUrl: true,
         profileBio: true,
         profileUrl: true,
+        technicalTags: true,
         discordHandle: true,
         twitterHandle: true,
         githubHandle: true,
@@ -142,6 +143,11 @@ export class UserService {
         }),
         ...(updateDto.profileUrl !== undefined && {
           profileUrl: updateDto.profileUrl,
+        }),
+        ...(updateDto.technicalTags !== undefined && {
+          technicalTags: updateDto.technicalTags.map((tag) =>
+            tag.trim().toLowerCase(),
+          ),
         }),
         ...(updateDto.discordHandle !== undefined && {
           discordHandle: updateDto.discordHandle,
@@ -402,7 +408,7 @@ export class UserService {
    * Search and filter users (paginated)
    */
   async searchUsers(searchDto: SearchUserDto) {
-    const { query, role, isActive, skip = 0, take = 20 } = searchDto;
+    const { query, role, isActive, tags, skip = 0, take = 20 } = searchDto;
 
     // Build where clause
     const where: any = {};
@@ -424,6 +430,12 @@ export class UserService {
       where.isActive = isActive;
     }
 
+    if (tags && tags.length > 0) {
+      where.technicalTags = {
+        hasSome: tags.map((tag) => tag.toLowerCase()),
+      };
+    }
+
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
         where,
@@ -437,6 +449,7 @@ export class UserService {
           avatarUrl: true,
           profileBio: true,
           profileUrl: true,
+          technicalTags: true,
           discordHandle: true,
           twitterHandle: true,
           githubHandle: true,
