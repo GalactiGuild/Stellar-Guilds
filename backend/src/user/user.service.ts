@@ -51,6 +51,7 @@ export class UserService {
         githubHandle: true,
         createdAt: true,
         role: true,
+        activeGuildsCount: true,
         _count: {
           select: {
             favoriteGuilds: true,
