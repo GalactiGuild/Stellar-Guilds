@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
+import { ReputationService } from './reputation/reputation.service';
+
 describe('AppController', () => {
   let appController: AppController;
 
@@ -17,6 +19,14 @@ describe('AppController', () => {
               .mockReturnValue(
                 'Stellar Guilds Backend - Database Integration Complete!',
               ),
+          },
+        },
+        {
+          provide: ReputationService,
+          useValue: {
+            getLeaderboard: jest
+              .fn()
+              .mockResolvedValue({ source: 'redis', data: [] }),
           },
         },
       ],

@@ -24,6 +24,22 @@ export class GuildService {
     private storageService: StorageService,
   ) {}
 
+  async syncUserActiveGuildsCount(userId: string) {
+    const actualCount = await this.prisma.guildMembership.count({
+      where: { userId, status: 'APPROVED' },
+    });
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { activeGuildsCount: true },
+    });
+    if (user && user.activeGuildsCount !== actualCount) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { activeGuildsCount: actualCount },
+      });
+    }
+  }
+
   private slugify(name: string) {
     return name
       .toLowerCase()
@@ -74,6 +90,8 @@ export class GuildService {
         joinedAt: new Date(),
       },
     });
+
+    await this.syncUserActiveGuildsCount(ownerId);
 
     return guild;
   }
@@ -402,6 +420,8 @@ export class GuildService {
       data: { memberCount: { increment: 1 } as any } as any,
     });
 
+    await this.syncUserActiveGuildsCount(membership.userId);
+
     return updated;
   }
 
@@ -421,6 +441,7 @@ export class GuildService {
       where: { id: guildId },
       data: { memberCount: { increment: 1 } as any } as any,
     });
+    await this.syncUserActiveGuildsCount(userId);
     return updated;
   }
 
@@ -438,6 +459,7 @@ export class GuildService {
         where: { id: guildId },
         data: { memberCount: { increment: 1 } as any } as any,
       });
+      await this.syncUserActiveGuildsCount(userId);
       return updated;
     }
 
@@ -454,6 +476,7 @@ export class GuildService {
       where: { id: guildId },
       data: { memberCount: { increment: 1 } as any } as any,
     });
+    await this.syncUserActiveGuildsCount(userId);
     return created;
   }
 
@@ -469,6 +492,7 @@ export class GuildService {
       where: { id: guildId },
       data: { memberCount: { decrement: 1 } as any } as any,
     });
+    await this.syncUserActiveGuildsCount(userId);
     return { success: true };
   }
 
