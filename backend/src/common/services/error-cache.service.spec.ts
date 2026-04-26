@@ -99,7 +99,11 @@ describe('ErrorCacheService', () => {
       service.recordError('Recent error', '/test');
     }
 
-    const hasExceeded = service.hasExceededThreshold('Recent error', '/test', 3);
+    const hasExceeded = service.hasExceededThreshold(
+      'Recent error',
+      '/test',
+      3,
+    );
     expect(hasExceeded).toBe(true);
   });
 

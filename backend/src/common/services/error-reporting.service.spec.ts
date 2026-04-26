@@ -13,15 +13,13 @@ describe('ErrorReportingService', () => {
         {
           provide: ErrorCacheService,
           useValue: {
-            recordError: jest.fn().mockImplementation(
-              (message, path) => ({
-                count: 1,
-                firstOccurrence: new Date(),
-                lastOccurrence: new Date(),
-                message,
-                path,
-              }),
-            ),
+            recordError: jest.fn().mockImplementation((message, path) => ({
+              count: 1,
+              firstOccurrence: new Date(),
+              lastOccurrence: new Date(),
+              message,
+              path,
+            })),
             hasExceededThreshold: jest.fn().mockReturnValue(false),
             getErrorStats: jest.fn().mockReturnValue([]),
             clearCache: jest.fn().mockImplementation(() => {}),

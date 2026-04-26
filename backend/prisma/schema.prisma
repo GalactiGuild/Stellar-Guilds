@@ -85,6 +85,9 @@ model User {
   twitterHandle String?
   githubHandle  String?
   backgroundCid String?
+  
+  // Discord identity linking
+  discordId     String?   @unique
 
   // Profile completion tracking
   hasCompletionBonus Boolean @default(false)

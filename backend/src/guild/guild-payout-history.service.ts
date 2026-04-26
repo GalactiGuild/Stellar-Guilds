@@ -16,14 +16,21 @@ interface PayoutRecord {
 export class GuildPayoutHistoryService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private convertAsset(amount: number, fromAsset: string, toAsset: string): { amount: number; asset: string } {
+  private convertAsset(
+    amount: number,
+    fromAsset: string,
+    toAsset: string,
+  ): { amount: number; asset: string } {
     const rates: Record<string, number> = { XLM: 1, USDC: 8.5, BTC: 0.000015 };
     const inXlm = amount / (rates[fromAsset] ?? 1);
     const converted = inXlm * (rates[toAsset] ?? 1);
     return { amount: parseFloat(converted.toFixed(6)), asset: toAsset };
   }
 
-  async getGuildPayoutHistory(guildId: string, convertTo?: string): Promise<PayoutRecord[]> {
+  async getGuildPayoutHistory(
+    guildId: string,
+    convertTo?: string,
+  ): Promise<PayoutRecord[]> {
     const payouts = await this.prisma.guildPayout.findMany({
       where: { guildId },
       orderBy: { createdAt: 'desc' },

@@ -25,7 +25,8 @@ export class RegisterDto {
   username!: string;
 
   @ApiProperty({
-    description: 'Secure password for account authentication (min 8 characters)',
+    description:
+      'Secure password for account authentication (min 8 characters)',
     example: 'SecurePass123!',
     minLength: 8,
   })
@@ -115,10 +116,20 @@ export class RefreshTokenDto {
 }
 
 export class UserResponseDto {
-  @ApiProperty({ description: 'Unique user identifier', example: 'ck1234567890' })
+  @ApiProperty({
+    description: 'Unique user identifier',
+    example: 'ck1234567890',
+  })
   id!: string;
 
-  @ApiProperty({ description: 'User email address', example: 'user@example.com' })
+  @ApiProperty({
+    description: 'User email address',
+    example: 'user@example.com',
+  })
+  @ApiProperty({
+    description: 'User email address',
+    example: 'user@example.com',
+  })
   email!: string;
 
   @ApiProperty({ description: 'User username', example: 'stellar_developer' })
@@ -133,14 +144,16 @@ export class UserResponseDto {
 
 export class AuthResponseDto {
   @ApiProperty({
-    description: 'JWT access token for API authentication (expires in 15 minutes)',
+    description:
+      'JWT access token for API authentication (expires in 15 minutes)',
     example:
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
   })
   accessToken!: string;
 
   @ApiProperty({
-    description: 'JWT refresh token for obtaining new access tokens (expires in 7 days)',
+    description:
+      'JWT refresh token for obtaining new access tokens (expires in 7 days)',
     example:
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
   })

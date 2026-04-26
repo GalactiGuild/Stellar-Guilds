@@ -42,6 +42,11 @@ import {
   UpdateNotificationPreferencesDto,
   NotificationPreferencesDto,
 } from './dto/notification-preferences.dto';
+import {
+  LinkDiscordDto,
+  DiscordLinkResponseDto,
+  UnlinkDiscordResponseDto,
+} from './dto/discord-link.dto';
 import { validateImageFile } from '../common/utils/file-upload.validator';
 import { ReputationService } from '../reputation/reputation.service';
 
@@ -50,7 +55,7 @@ export class UserController {
   constructor(
     private userService: UserService,
     private reputationService: ReputationService,
-  ) { }
+  ) {}
 
   /**
    * Get current authenticated user profile
@@ -253,6 +258,64 @@ export class UserController {
   })
   async getNotificationPreferences(@Request() req: any) {
     return this.userService.getNotificationPreferences(req.user.userId);
+  }
+
+  /**
+   * Link Discord account to current user's Stellar wallet
+   */
+  @Post('me/link-discord')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Link Discord account to Stellar wallet' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Discord account successfully linked',
+    type: DiscordLinkResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Discord account already linked to another wallet',
+  })
+  async linkDiscord(
+    @Request() req: any,
+    @Body() linkDiscordDto: LinkDiscordDto,
+  ) {
+    return this.userService.linkDiscord(req.user.userId, linkDiscordDto);
+  }
+
+  /**
+   * Unlink Discord account from current user's Stellar wallet
+   */
+  @Post('me/unlink-discord')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Unlink Discord account from Stellar wallet' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Discord account successfully unlinked',
+    type: UnlinkDiscordResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'No Discord account is currently linked',
+  })
+  async unlinkDiscord(@Request() req: any) {
+    return this.userService.unlinkDiscord(req.user.userId);
+  }
+
+  /**
+   * Get Discord link status for current user
+   */
+  @Get('me/discord-status')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get Discord link status' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Discord link status retrieved successfully',
+  })
+  async getDiscordStatus(@Request() req: any) {
+    return this.userService.getDiscordLinkStatus(req.user.userId);
   }
 
   /**

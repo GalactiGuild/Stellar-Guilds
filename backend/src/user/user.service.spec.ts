@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 
 describe('UserService', () => {
   let service: UserService;
@@ -209,6 +209,164 @@ describe('UserService', () => {
     });
   });
 
+
+  describe('linkDiscord', () => {
+    it('successfully links a Discord account to user', async () => {
+      const mockCode = 'mock_oauth_code_12345';
+
+      // No existing user with this Discord ID
+      prisma.user.findUnique
+        .mockResolvedValueOnce(null) // Check for existing Discord ID
+        .mockResolvedValueOnce({ id: 'user-1', discordId: null }); // Current user
+
+      prisma.user.update.mockResolvedValue({
+        id: 'user-1',
+        discordId: 'discord_12345',
+        username: 'johndoe',
+        walletAddress: '0x1234567890abcdef',
+      });
+
+      const result = await service.linkDiscord('user-1', { code: mockCode });
+
+      expect(result.message).toBe(
+        'Discord account successfully linked to your Stellar wallet',
+      );
+      expect(result.discordId).toBe('discord_12345');
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { discordId: 'discord_12345' },
+        select: {
+          id: true,
+          discordId: true,
+          username: true,
+          walletAddress: true,
+        },
+      });
+    });
+
+    it('throws BadRequestException if Discord ID is already linked to another user', async () => {
+      const mockCode = 'mock_oauth_code_12345';
+
+      // Another user already has this Discord ID
+      prisma.user.findUnique
+        .mockResolvedValueOnce({
+          id: 'user-2',
+          discordId: 'discord_12345',
+        })
+        .mockResolvedValueOnce({ id: 'user-1', discordId: null });
+
+      await expect(
+        service.linkDiscord('user-1', { code: mockCode }),
+      ).rejects.toThrow(
+        'This Discord account is already linked to another Stellar wallet',
+      );
+    });
+
+    it('throws BadRequestException if user already has a different Discord ID linked', async () => {
+      const mockCode = 'mock_oauth_code_67890';
+
+      // No existing user with this new Discord ID
+      prisma.user.findUnique
+        .mockResolvedValueOnce(null) // Check for existing Discord ID
+        .mockResolvedValueOnce({ id: 'user-1', discordId: 'discord_12345' }); // Current user with different Discord ID
+
+      await expect(
+        service.linkDiscord('user-1', { code: mockCode }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws NotFoundException if user does not exist', async () => {
+      const mockCode = 'mock_oauth_code_12345';
+
+      prisma.user.findUnique
+        .mockResolvedValueOnce(null) // Check for existing Discord ID
+        .mockResolvedValueOnce(null); // Current user not found
+
+      await expect(
+        service.linkDiscord('non-existent-user', { code: mockCode }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('unlinkDiscord', () => {
+    it('successfully unlinks a Discord account from user', async () => {
+      prisma.user.findUnique.mockResolvedValueOnce({
+        id: 'user-1',
+        discordId: 'discord_12345',
+      });
+
+      prisma.user.update.mockResolvedValue({
+        id: 'user-1',
+        discordId: null,
+      });
+
+      const result = await service.unlinkDiscord('user-1');
+
+      expect(result.message).toBe(
+        'Discord account successfully unlinked from your Stellar wallet',
+      );
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { discordId: null },
+      });
+    });
+
+    it('throws BadRequestException if no Discord account is linked', async () => {
+      prisma.user.findUnique.mockResolvedValueOnce({
+        id: 'user-1',
+        discordId: null,
+      });
+
+      await expect(service.unlinkDiscord('user-1')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('throws NotFoundException if user does not exist', async () => {
+      prisma.user.findUnique.mockResolvedValueOnce(null);
+
+      await expect(service.unlinkDiscord('non-existent-user')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('getDiscordLinkStatus', () => {
+    it('returns linked status when Discord ID is present', async () => {
+      prisma.user.findUnique.mockResolvedValueOnce({
+        id: 'user-1',
+        discordId: 'discord_12345',
+      });
+
+      const result = await service.getDiscordLinkStatus('user-1');
+
+      expect(result).toEqual({
+        isLinked: true,
+        discordId: 'discord_12345',
+      });
+    });
+
+    it('returns unlinked status when Discord ID is null', async () => {
+      prisma.user.findUnique.mockResolvedValueOnce({
+        id: 'user-1',
+        discordId: null,
+      });
+
+      const result = await service.getDiscordLinkStatus('user-1');
+
+      expect(result).toEqual({
+        isLinked: false,
+        discordId: null,
+      });
+    });
+
+    it('throws NotFoundException if user does not exist', async () => {
+      prisma.user.findUnique.mockResolvedValueOnce(null);
+
+      await expect(
+        service.getDiscordLinkStatus('non-existent-user'),
+      ).rejects.toThrow(NotFoundException);
+
   describe('searchUsers', () => {
     it('filters users by tags using case-insensitive search', async () => {
       const mockUsers = [
@@ -267,6 +425,7 @@ describe('UserService', () => {
       });
       expect(result.data).toEqual(mockUsers);
       expect(result.total).toBe(1);
+
     });
   });
 });

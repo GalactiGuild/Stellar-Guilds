@@ -38,9 +38,13 @@ const DEFAULT_JWT_ACCESS_EXPIRATION = '15m';
   controllers: [AuthController],
   providers: [
     AuthService,
+
     JwtStrategy,
+
     JwtAuthGuard,
+
     RoleGuard,
+
     TokenBlacklistService,
     ApiKeyService,
     ApiKeyGuard,

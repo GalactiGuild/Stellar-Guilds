@@ -32,7 +32,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const token = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
 
     // Check if token is blacklisted
-    if (token && await this.tokenBlacklistService.isBlacklisted(token)) {
+    if (token && (await this.tokenBlacklistService.isBlacklisted(token))) {
       throw new UnauthorizedException('Token has been revoked');
     }
 

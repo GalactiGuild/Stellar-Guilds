@@ -15,10 +15,14 @@ export class DlqService {
 
   private getQueue(type: string): Queue {
     switch (type) {
-      case 'dummy': return this.dummyQueue;
-      case 'email': return this.emailQueue;
-      case 'on-chain-events': return this.onChainEventsQueue;
-      default: throw new NotFoundException(`Unknown queue type: ${type}`);
+      case 'dummy':
+        return this.dummyQueue;
+      case 'email':
+        return this.emailQueue;
+      case 'on-chain-events':
+        return this.onChainEventsQueue;
+      default:
+        throw new NotFoundException(`Unknown queue type: ${type}`);
     }
   }
 
@@ -30,8 +34,9 @@ export class DlqService {
   async replayJob(type: string, jobId: string) {
     const queue = this.getQueue(type);
     const job = await queue.getJob(jobId);
-    if (!job) throw new NotFoundException(`Job ${jobId} not found in ${type} queue`);
-    
+    if (!job)
+      throw new NotFoundException(`Job ${jobId} not found in ${type} queue`);
+
     await job.retry();
     this.logger.log(`Replayed job ${jobId} from ${type} queue`);
     return { message: 'Job replayed successfully' };
@@ -40,11 +45,14 @@ export class DlqService {
   async resolveJob(type: string, jobId: string, notes: string) {
     const queue = this.getQueue(type);
     const job = await queue.getJob(jobId);
-    if (!job) throw new NotFoundException(`Job ${jobId} not found in ${type} queue`);
-    
+    if (!job)
+      throw new NotFoundException(`Job ${jobId} not found in ${type} queue`);
+
     // In BullMQ, we can remove the job to "resolve" it from failed status
     await job.remove();
-    this.logger.log(`Resolved (removed) job ${jobId} from ${type} queue. Notes: ${notes}`);
+    this.logger.log(
+      `Resolved (removed) job ${jobId} from ${type} queue. Notes: ${notes}`,
+    );
     return { message: 'Job resolved and removed from DLQ' };
   }
 }

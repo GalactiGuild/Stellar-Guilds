@@ -20,10 +20,23 @@ export class ApplicationService {
         status: { in: [MembershipStatus.PENDING, MembershipStatus.MODERATION_PENDING] }
       },
     });
+
+    if (existing)
+      throw new ConflictException('Pending application already exists');
+
+    return this.prisma.guildMembership.create({
+      data: {
+        userId,
+        guildId,
+        status: MembershipStatus.PENDING,
+        role: GuildRole.MEMBER,
+      },
+
     if (existing) throw new ConflictException('Application already exists');
 
     return this.prisma.guildMembership.create({
       data: { userId, guildId, status: MembershipStatus.MODERATION_PENDING, role: GuildRole.MEMBER },
+
     });
   }
 
@@ -34,7 +47,8 @@ export class ApplicationService {
   ) {
     // Mocked admin check
     const admin = await this.prisma.user.findUnique({ where: { id: adminId } });
-    if (!admin || admin.role !== 'ADMIN') throw new ForbiddenException('Admins only');
+    if (!admin || admin.role !== 'ADMIN')
+      throw new ForbiddenException('Admins only');
 
     const application = await this.prisma.guildMembership.findUnique({
       where: { id: applicationId },
@@ -49,7 +63,9 @@ export class ApplicationService {
       where: { id: applicationId },
       data: {
         status,
-        ...(status === MembershipStatus.APPROVED ? { joinedAt: new Date() } : {}),
+        ...(status === MembershipStatus.APPROVED
+          ? { joinedAt: new Date() }
+          : {}),
       },
     });
   }

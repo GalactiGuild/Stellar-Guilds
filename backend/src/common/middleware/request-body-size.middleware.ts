@@ -1,4 +1,8 @@
-import { Injectable, NestMiddleware, PayloadTooLargeException } from '@nestjs/common';
+import {
+  Injectable,
+  NestMiddleware,
+  PayloadTooLargeException,
+} from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 
 const DEFAULT_MAX_BYTES = 1024 * 1024; // 1 MB

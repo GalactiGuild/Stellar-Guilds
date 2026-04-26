@@ -48,8 +48,13 @@ export class PayoutReportService {
 
     // Calculate summary stats
     const totalPayouts = payouts.length;
-    const totalAmount = payouts.reduce((sum: number, payout: any) => sum + Number(payout.amount), 0);
-    const completedPayouts = payouts.filter((p: any) => p.status === 'SENT').length;
+    const totalAmount = payouts.reduce(
+      (sum: number, payout: any) => sum + Number(payout.amount),
+      0,
+    );
+    const completedPayouts = payouts.filter(
+      (p: any) => p.status === 'SENT',
+    ).length;
 
     // Generate HTML
     const html = `
@@ -101,7 +106,9 @@ export class PayoutReportService {
             </tr>
         </thead>
         <tbody>
-            ${payouts.map((payout: any) => `
+            ${payouts
+              .map(
+                (payout: any) => `
                 <tr>
                     <td>${payout.createdAt.toLocaleDateString()}</td>
                     <td>${payout.toUser.firstName} ${payout.toUser.lastName} (${payout.toUser.username})</td>
@@ -110,7 +117,9 @@ export class PayoutReportService {
                     <td>${payout.token}</td>
                     <td class="status-${payout.status.toLowerCase()}">${payout.status}</td>
                 </tr>
-            `).join('')}
+            `,
+              )
+              .join('')}
         </tbody>
     </table>
 </body>

@@ -65,12 +65,12 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document);
 
   const port = process.env.PORT ?? 3000;
-  
+
   // Check service health before starting
   const serviceStatuses = await checkServiceHealth(app);
-  
+
   await app.listen(port);
-  
+
   // Log beautiful startup summary
   StartupLogger.logStartup({
     appName: 'Stellar-Guilds API',
@@ -81,7 +81,7 @@ async function bootstrap() {
     swaggerPath: '/docs',
     services: serviceStatuses,
   });
-  
+
   logger.log(`Stellar-Guilds API listening on port ${port}`, 'Bootstrap');
 }
 
@@ -90,7 +90,7 @@ async function bootstrap() {
  */
 async function checkServiceHealth(app: any): Promise<ServiceStatus[]> {
   const statuses: ServiceStatus[] = [];
-  
+
   // Check Database (Prisma)
   try {
     const prismaService: PrismaService = app.get(PrismaService);
@@ -107,7 +107,7 @@ async function checkServiceHealth(app: any): Promise<ServiceStatus[]> {
       details: error?.message || 'Connection failed',
     });
   }
-  
+
   // Check Redis
   try {
     const redisService: RedisService = app.get(RedisService);
@@ -124,7 +124,7 @@ async function checkServiceHealth(app: any): Promise<ServiceStatus[]> {
       details: 'Token blacklisting disabled',
     });
   }
-  
+
   // Check Queue System (BullMQ)
   try {
     // If queue module is enabled, check it
@@ -144,21 +144,21 @@ async function checkServiceHealth(app: any): Promise<ServiceStatus[]> {
       details: 'Background jobs disabled',
     });
   }
-  
+
   // Throttler is always active (configured in app.module)
   statuses.push({
     name: 'Throttler',
     status: 'active',
     details: 'Rate limiting: 100 req/min',
   });
-  
+
   // JWT Authentication
   statuses.push({
     name: 'JWT Authentication',
     status: 'active',
     details: 'Token blacklisting enabled',
   });
-  
+
   return statuses;
 }
 bootstrap().catch((error) => {

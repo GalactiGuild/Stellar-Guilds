@@ -47,7 +47,7 @@ export class MailerService {
         return true;
       }
 
-      const settings = user.notificationSettings as any;
+      const settings = user.notificationSettings;
       return settings[notificationType] !== false;
     } catch (error) {
       this.logger.error(

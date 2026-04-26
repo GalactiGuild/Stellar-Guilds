@@ -36,7 +36,7 @@ export class GuildBulkInviteService {
       skip_empty_lines: true,
       trim: true,
       relax_column_count: true,
-    }) as string[][];
+    });
 
     const addresses: string[] = [];
 
@@ -94,7 +94,10 @@ export class GuildBulkInviteService {
         });
 
         if (!user) {
-          skipped.push({ address, reason: 'No user found with this wallet address' });
+          skipped.push({
+            address,
+            reason: 'No user found with this wallet address',
+          });
           continue;
         }
 

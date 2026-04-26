@@ -51,7 +51,8 @@ export class FindBountyDto {
   minReward?: number;
 
   @ApiPropertyOptional({
-    description: 'Filter by guild ID to show only bounties from a specific guild',
+    description:
+      'Filter by guild ID to show only bounties from a specific guild',
     example: 'guild_ck1234567890',
   })
   @IsOptional()

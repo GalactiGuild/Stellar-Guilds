@@ -16,12 +16,19 @@ export class ReputationUpdatedEvent {
 // Tracks which milestones have already been notified per user
 const notifiedMilestones = new Map<string, Set<number>>();
 
-async function hasNotified(userId: string, milestone: number): Promise<boolean> {
+async function hasNotified(
+  userId: string,
+  milestone: number,
+): Promise<boolean> {
   return notifiedMilestones.get(userId)?.has(milestone) ?? false;
 }
 
-async function recordNotification(userId: string, milestone: number): Promise<void> {
-  if (!notifiedMilestones.has(userId)) notifiedMilestones.set(userId, new Set());
+async function recordNotification(
+  userId: string,
+  milestone: number,
+): Promise<void> {
+  if (!notifiedMilestones.has(userId))
+    notifiedMilestones.set(userId, new Set());
   notifiedMilestones.get(userId)!.add(milestone);
 }
 
@@ -37,7 +44,9 @@ export class ReputationMilestoneService {
     for (const milestone of MILESTONES) {
       if (newTotal >= milestone && !(await hasNotified(userId, milestone))) {
         await recordNotification(userId, milestone);
-        this.logger.log(`Trigger Milestone Notification — user=${userId} milestone=${milestone} xp`);
+        this.logger.log(
+          `Trigger Milestone Notification — user=${userId} milestone=${milestone} xp`,
+        );
         // swap log line above for real email/WebSocket call in production
       }
     }

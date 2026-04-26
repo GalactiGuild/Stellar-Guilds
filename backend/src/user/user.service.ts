@@ -16,6 +16,7 @@ import {
   UserRole,
 } from './dto/user.dto';
 import { UpdateNotificationPreferencesDto } from './dto/notification-preferences.dto';
+import { LinkDiscordDto } from './dto/discord-link.dto';
 import * as bcrypt from 'bcrypt';
 import { ProfileUtil } from '../common/utils/profile.util';
 
@@ -26,7 +27,7 @@ export class UserService {
   constructor(
     private prisma: PrismaService,
     private storageService: StorageService,
-  ) { }
+  ) {}
 
   /**
    * Get user by ID with public profile information
@@ -675,7 +676,7 @@ export class UserService {
     }
 
     // Parse existing settings or use defaults
-    const currentSettings = (user.notificationSettings as any) || {
+    const currentSettings = user.notificationSettings || {
       emailOnBounty: true,
       emailOnMention: true,
       weeklyDigest: true,
@@ -719,7 +720,7 @@ export class UserService {
     }
 
     // Return settings or defaults
-    const settings = (user.notificationSettings as any) || {
+    const settings = user.notificationSettings || {
       emailOnBounty: true,
       emailOnMention: true,
       weeklyDigest: true,
@@ -747,7 +748,7 @@ export class UserService {
         return true;
       }
 
-      const settings = user.notificationSettings as any;
+      const settings = user.notificationSettings;
       return settings[notificationType] !== false;
     } catch (error) {
       this.logger.error(
@@ -766,6 +767,118 @@ export class UserService {
       emailOnBounty: true,
       emailOnMention: true,
       weeklyDigest: true,
+    };
+  }
+
+  /**
+   * Link Discord account to user's Stellar wallet
+   * Mock implementation - accepts a mock OAuth code and simulates Discord OAuth flow
+   */
+  async linkDiscord(userId: string, linkDiscordDto: LinkDiscordDto) {
+    // In a real implementation, we would:
+    // 1. Exchange the OAuth code for an access token via Discord API
+    // 2. Use the access token to fetch user's Discord ID
+    // 3. Validate the Discord ID format
+
+    // For this mock implementation, we'll simulate extracting a Discord ID from the code
+    // In production, this would be: "DISCORD_API_USER_ID" from OAuth response
+    const mockDiscordId = `discord_${linkDiscordDto.code.split('_').pop() || 'mock_id'}`;
+
+    // Check if this Discord ID is already linked to another user
+    const existingUserWithDiscord = await this.prisma.user.findUnique({
+      where: { discordId: mockDiscordId },
+    });
+
+    if (existingUserWithDiscord && existingUserWithDiscord.id !== userId) {
+      throw new BadRequestException(
+        'This Discord account is already linked to another Stellar wallet',
+      );
+    }
+
+    // Check if user already has a Discord ID linked
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { discordId: true },
+    });
+
+    if (!currentUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (currentUser.discordId && currentUser.discordId !== mockDiscordId) {
+      throw new BadRequestException(
+        'User already has a Discord account linked. Please unlink first.',
+      );
+    }
+
+    // Link the Discord ID to the user
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: { discordId: mockDiscordId },
+      select: {
+        id: true,
+        discordId: true,
+        username: true,
+        walletAddress: true,
+      },
+    });
+
+    this.logger.log(`User ${userId} linked Discord account: ${mockDiscordId}`);
+
+    return {
+      message: 'Discord account successfully linked to your Stellar wallet',
+      discordId: updatedUser.discordId,
+    };
+  }
+
+  /**
+   * Unlink Discord account from user's Stellar wallet
+   */
+  async unlinkDiscord(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { discordId: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (!user.discordId) {
+      throw new BadRequestException('No Discord account is currently linked');
+    }
+
+    // Unlink the Discord ID
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { discordId: null },
+    });
+
+    this.logger.log(
+      `User ${userId} unlinked Discord account: ${user.discordId}`,
+    );
+
+    return {
+      message: 'Discord account successfully unlinked from your Stellar wallet',
+    };
+  }
+
+  /**
+   * Get Discord link status for current user
+   */
+  async getDiscordLinkStatus(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { discordId: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return {
+      isLinked: !!user.discordId,
+      discordId: user.discordId || null,
     };
   }
 }

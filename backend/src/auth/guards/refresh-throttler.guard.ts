@@ -29,9 +29,7 @@ export class RefreshThrottlerGuard extends ThrottlerGuard {
     }
 
     try {
-      const decoded = this.jwtService.decode(refreshToken) as
-        | { sub?: string }
-        | null;
+      const decoded = this.jwtService.decode(refreshToken);
       if (decoded?.sub) {
         return `refresh-user:${decoded.sub}`;
       }
