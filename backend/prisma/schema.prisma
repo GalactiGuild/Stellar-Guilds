@@ -410,6 +410,27 @@ model ApiKey {
   @@map("api_keys")
 }
 
+enum ReputationEventReason {
+  BOUNTY_COMPLETED
+  BOUNTY_CREATED
+  PEER_REVIEW
+  PROFILE_COMPLETED
+  PENALTY
+  OTHER
+}
+
+model ReputationEvent {
+  id             String                @id @default(cuid())
+  userId         String
+  amount         Int
+  reason         ReputationEventReason
+  linkedBountyId String?
+  timestamp      DateTime              @default(now())
+
+  @@index([userId])
+  @@map("reputation_events")
+}
+
 model ReputationEntry {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())

@@ -67,6 +67,22 @@ export class ReputationService implements OnModuleInit {
     await this.redis.zadd(this.LEADERBOARD_KEY, score, userId);
   }
 
+  async addReputationEvent(data: {
+    userId: string;
+    amount: number;
+    reason: import('@prisma/client').ReputationEventReason;
+    linkedBountyId?: string;
+  }) {
+    return this.prisma.reputationEvent.create({ data });
+  }
+
+  async getReputationEvents(userId: string) {
+    return this.prisma.reputationEvent.findMany({
+      where: { userId },
+      orderBy: { timestamp: 'desc' },
+    });
+  }
+
   async create(createReputationDto: CreateReputationDto) {
     const entry = await this.prisma.reputationEntry.create({
       data: {
