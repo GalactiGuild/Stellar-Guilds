@@ -124,10 +124,13 @@ pub fn deposit(
         created_at: now,
         expires_at: now,
         reason: String::from_str(env, "deposit"),
+        earliest_execution_time: 0,
+        cancelled: false,
     };
     store_transaction(env, &tx);
-
     // Record analytics snapshot after deposit
+
+    
     record_snapshot(env, &treasury);
 
     let event = DepositEvent {
@@ -166,6 +169,14 @@ pub fn propose_withdrawal(
     let mut approvals = Vec::new(env);
     approvals.push_back(proposer.clone());
 
+   // @notice Set timelock for high-value withdrawals
+    // @dev 86400 seconds = 24 hours. Zero means no timelock.
+    let earliest_execution_time = if amount >= treasury.high_value_threshold {
+        now + 86400
+    } else {
+        0
+    };
+
     let tx = Transaction {
         id: tx_id,
         treasury_id,
@@ -179,6 +190,8 @@ pub fn propose_withdrawal(
         created_at: now,
         expires_at: now + TX_EXPIRY_SECONDS,
         reason,
+        earliest_execution_time,
+        cancelled: false,
     };
     store_transaction(env, &tx);
 
@@ -324,6 +337,16 @@ pub fn execute_transaction(env: &Env, tx_id: u64, executor: Address) -> bool {
         panic!("transaction must be approved");
     }
 
+    // @notice Enforce timelock for high-value withdrawals
+    // @dev earliest_execution_time of 0 means no timelock applies
+    if tx.earliest_execution_time > 0 && now < tx.earliest_execution_time {
+        panic!("timelock not expired");
+    }
+
+    if tx.cancelled {
+        panic!("transaction has been cancelled");
+    }
+
     match tx.tx_type {
         TransactionType::Withdrawal
         | TransactionType::BountyFunding
@@ -343,7 +366,9 @@ pub fn execute_transaction(env: &Env, tx_id: u64, executor: Address) -> bool {
             // while maintaining the expected error message for test compatibility
             enforce_budget(env, tx.treasury_id, &category, tx.amount).unwrap_or_else(|e| match e {
                 TreasuryError::BudgetExceeded => panic!("budget exceeded"),
-                TreasuryError::AllowanceExceeded => panic!("allowance exceeded"),
+               TreasuryError::AllowanceExceeded => panic!("allowance exceeded"),
+                TreasuryError::TimelockNotExpired => panic!("timelock not expired"),
+                TreasuryError::TimelockExpired => panic!("timelock expired"),
             });
 
             let op_type = match tx.tx_type {
@@ -368,6 +393,8 @@ pub fn execute_transaction(env: &Env, tx_id: u64, executor: Address) -> bool {
             .unwrap_or_else(|e| match e {
                 TreasuryError::BudgetExceeded => panic!("budget exceeded"),
                 TreasuryError::AllowanceExceeded => panic!("allowance exceeded"),
+                TreasuryError::TimelockNotExpired => panic!("timelock not expired"),
+                TreasuryError::TimelockExpired => panic!("timelock expired"),
             });
 
             match tx.token {
@@ -418,6 +445,47 @@ pub fn execute_transaction(env: &Env, tx_id: u64, executor: Address) -> bool {
 
     true
 }
+/// @notice Cancel a pending or approved withdrawal during the timelock window.
+/// @dev Only callable within 24 hours of proposal. Any signer can cancel.
+pub fn cancel_withdrawal(env: &Env, tx_id: u64, canceller: Address) -> bool {
+    canceller.require_auth();
+
+    let mut tx = crate::treasury::storage::get_transaction(env, tx_id).expect("tx not found");
+    let treasury = get_treasury(env, tx.treasury_id).expect("treasury not found");
+
+    ensure_is_signer(&treasury, &canceller);
+
+    let now = env.ledger().timestamp();
+
+    // @dev Can only cancel if still within 24 hours of creation
+    if now > tx.created_at + 86400 {
+        panic!("timelock window has expired");
+    }
+
+    if matches!(
+        tx.status,
+        TransactionStatus::Executed | TransactionStatus::Rejected | TransactionStatus::Expired
+    ) {
+        panic!("transaction cannot be cancelled");
+    }
+
+    if tx.cancelled {
+        panic!("transaction already cancelled");
+    }
+
+    tx.cancelled = true;
+    tx.status = TransactionStatus::Rejected;
+    crate::treasury::storage::store_transaction(env, &tx);
+
+    let event = crate::treasury::types::WithdrawalCancelledEvent {
+        treasury_id: tx.treasury_id,
+        tx_id,
+        cancelled_by: canceller,
+    };
+    emit_event(env, MOD_TREASURY, "cancelled", event);
+
+    true
+}
 
 pub fn execute_milestone_payment(
     env: &Env,
@@ -440,6 +508,8 @@ pub fn execute_milestone_payment(
     enforce_budget(env, treasury_id, &category, amount).unwrap_or_else(|e| match e {
         TreasuryError::BudgetExceeded => panic!("budget exceeded"),
         TreasuryError::AllowanceExceeded => panic!("allowance exceeded"),
+        TreasuryError::TimelockNotExpired => panic!("timelock not expired"),
+        TreasuryError::TimelockExpired => panic!("timelock expired"),
     });
 
     // Allowance enforcement (if any) keyed by current contract address;
@@ -447,9 +517,11 @@ pub fn execute_milestone_payment(
     let executor = env.current_contract_address();
     let op_type = crate::allowance::AllowanceOperation::MilestonePayment;
     enforce_allowance(env, treasury_id, &executor, &token, amount, &op_type).unwrap_or_else(|e| {
-        match e {
+       match e {
             TreasuryError::BudgetExceeded => panic!("budget exceeded"),
             TreasuryError::AllowanceExceeded => panic!("allowance exceeded"),
+            TreasuryError::TimelockNotExpired => panic!("timelock not expired"),
+            TreasuryError::TimelockExpired => panic!("timelock expired"),
         }
     });
 
@@ -495,6 +567,8 @@ pub fn execute_milestone_payment(
         created_at: now,
         expires_at: now,
         reason: String::from_str(env, "milestone_payment"),
+        earliest_execution_time: 0,
+        cancelled: false,
     };
     store_transaction(env, &tx);
 

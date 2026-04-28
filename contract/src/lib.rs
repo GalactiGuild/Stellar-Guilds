@@ -28,8 +28,9 @@ use treasury::{
     emergency_pause as core_emergency_pause, execute_transaction as core_execute_transaction,
     get_balance as core_get_balance, get_transaction_history as core_get_transaction_history,
     grant_allowance as core_grant_allowance, initialize_treasury as core_initialize_treasury,
-    propose_withdrawal as core_propose_withdrawal, set_budget as core_set_budget, Transaction,
-};
+    cancel_withdrawal as core_cancel_withdrawal, propose_withdrawal as core_propose_withdrawal,
+    set_budget as core_set_budget, Transaction,
+    };
 
 mod analytics;
 use analytics::{
@@ -956,6 +957,17 @@ impl StellarGuildsContract {
     /// `true` if execution was successful
     pub fn execute_transaction(env: Env, tx_id: u64, executor: Address) -> bool {
         core_execute_transaction(&env, tx_id, executor)
+    }
+    /// Cancel a pending withdrawal during the 24-hour timelock window.
+    ///
+    /// # Arguments
+    /// * `tx_id` - The ID of the transaction to cancel
+    /// * `canceller` - Address cancelling the transaction (must be a signer)
+    ///
+    /// # Returns
+    /// `true` if cancellation was successful
+    pub fn cancel_withdrawal(env: Env, tx_id: u64, canceller: Address) -> bool {
+        core_cancel_withdrawal(&env, tx_id, canceller)
     }
 
     /// Set a budget for a treasury category

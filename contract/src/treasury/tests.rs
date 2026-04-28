@@ -308,4 +308,136 @@ mod tests {
         assert_eq!(allowance.period_start, 1000);
         assert_eq!(allowance.remaining_amount, 500);
     }
+    #[test]
+    #[should_panic(expected = "timelock not expired")]
+    fn test_withdrawal_fails_before_timelock() {
+        let env = setup_env();
+        set_ledger_timestamp(&env, 1000);
+        let contract_id = register_and_init_contract(&env);
+        let client = StellarGuildsContractClient::new(&env, &contract_id);
+        env.mock_all_auths();
+
+        let guild_id = setup_guild(&client, &env, &Address::generate(&env));
+        let (treasury_id, owner, signer1, _) = create_treasury(&env, &client, guild_id);
+
+        // Deposit enough to cover high value threshold
+        client.deposit_treasury(&treasury_id, &owner, &10000i128, &None);
+
+        let recipient = Address::generate(&env);
+        let reason = String::from_str(&env, "high value withdrawal");
+
+        // Propose a high-value withdrawal (above threshold)
+        let tx_id = client.propose_withdrawal(
+            &treasury_id,
+            &signer1,
+            &recipient,
+            &5000i128,
+            &None,
+            &reason,
+        );
+
+        // Approve it
+        client.approve_treasury_tx(&tx_id, &owner);
+
+        // Try to execute immediately — should panic because timelock not expired
+        client.execute_treasury_tx(&tx_id, &signer1);
+    }
+
+    #[test]
+    fn test_withdrawal_succeeds_after_timelock() {
+        let env = setup_env();
+        set_ledger_timestamp(&env, 1000);
+        let contract_id = register_and_init_contract(&env);
+        let client = StellarGuildsContractClient::new(&env, &contract_id);
+        env.mock_all_auths();
+
+        let guild_id = setup_guild(&client, &env, &Address::generate(&env));
+        let (treasury_id, owner, signer1, _) = create_treasury(&env, &client, guild_id);
+
+        client.deposit_treasury(&treasury_id, &owner, &10000i128, &None);
+
+        let recipient = Address::generate(&env);
+        let reason = String::from_str(&env, "high value withdrawal");
+
+        let tx_id = client.propose_withdrawal(
+            &treasury_id,
+            &signer1,
+            &recipient,
+            &5000i128,
+            &None,
+            &reason,
+        );
+
+        client.approve_treasury_tx(&tx_id, &owner);
+
+        // Advance time past 24 hours (86400 seconds)
+        set_ledger_timestamp(&env, 1000 + 86401);
+
+        // Now execution should succeed
+        let result = client.execute_treasury_tx(&tx_id, &signer1);
+        assert!(result);
+    }
+
+    #[test]
+    #[should_panic(expected = "timelock window has expired")]
+    fn test_cancel_withdrawal_fails_after_timelock_window() {
+        let env = setup_env();
+        set_ledger_timestamp(&env, 1000);
+        let contract_id = register_and_init_contract(&env);
+        let client = StellarGuildsContractClient::new(&env, &contract_id);
+        env.mock_all_auths();
+
+        let guild_id = setup_guild(&client, &env, &Address::generate(&env));
+        let (treasury_id, owner, signer1, _) = create_treasury(&env, &client, guild_id);
+
+        client.deposit_treasury(&treasury_id, &owner, &10000i128, &None);
+
+        let recipient = Address::generate(&env);
+        let reason = String::from_str(&env, "high value withdrawal");
+
+        let tx_id = client.propose_withdrawal(
+            &treasury_id,
+            &signer1,
+            &recipient,
+            &5000i128,
+            &None,
+            &reason,
+        );
+
+        // Advance time past 24 hours
+        set_ledger_timestamp(&env, 1000 + 86401);
+
+        // Try to cancel after timelock window — should panic
+        client.cancel_withdrawal(&tx_id, &owner);
+    }
+
+    #[test]
+    fn test_cancel_withdrawal_within_timelock_window() {
+        let env = setup_env();
+        set_ledger_timestamp(&env, 1000);
+        let contract_id = register_and_init_contract(&env);
+        let client = StellarGuildsContractClient::new(&env, &contract_id);
+        env.mock_all_auths();
+
+        let guild_id = setup_guild(&client, &env, &Address::generate(&env));
+        let (treasury_id, owner, signer1, _) = create_treasury(&env, &client, guild_id);
+
+        client.deposit_treasury(&treasury_id, &owner, &10000i128, &None);
+
+        let recipient = Address::generate(&env);
+        let reason = String::from_str(&env, "high value withdrawal");
+
+        let tx_id = client.propose_withdrawal(
+            &treasury_id,
+            &signer1,
+            &recipient,
+            &5000i128,
+            &None,
+            &reason,
+        );
+
+        // Cancel within the 24-hour window
+        let result = client.cancel_withdrawal(&tx_id, &owner);
+        assert!(result);
+    }
 }
