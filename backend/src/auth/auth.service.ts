@@ -356,14 +356,13 @@ export class AuthService {
     };
 
     const accessToken = this.jwtService.sign(payload, {
-      secret: this.jwtSecret,
       expiresIn: this.jwtAccessExpiration,
-    });
+    } as any);
 
     const refreshToken = this.jwtService.sign(payload, {
       secret: this.refreshTokenSecret,
       expiresIn: this.jwtRefreshExpiration,
-    });
+    } as any);
 
     return { accessToken, refreshToken };
   }

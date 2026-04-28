@@ -24,12 +24,11 @@ const DEFAULT_JWT_ACCESS_EXPIRATION = '15m';
     RedisModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET') || 'your-secret-key',
         signOptions: {
-          expiresIn:
-            configService.get<string | number>('JWT_ACCESS_EXPIRATION') ||
-            DEFAULT_JWT_ACCESS_EXPIRATION,
+          expiresIn: (configService.get<string>('JWT_ACCESS_EXPIRATION') ||
+            DEFAULT_JWT_ACCESS_EXPIRATION) as any,
         },
       }),
       inject: [ConfigService],

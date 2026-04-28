@@ -70,16 +70,16 @@ export class ReputationService implements OnModuleInit {
   async addReputationEvent(data: {
     userId: string;
     amount: number;
-    reason: import('@prisma/client').ReputationEventReason;
+    reason: string;
     linkedBountyId?: string;
   }) {
-    return this.prisma.reputationEvent.create({ data });
+    return this.prisma.reputationEntry.create({ data });
   }
 
   async getReputationEvents(userId: string) {
-    return this.prisma.reputationEvent.findMany({
+    return this.prisma.reputationEntry.findMany({
       where: { userId },
-      orderBy: { timestamp: 'desc' },
+      orderBy: { createdAt: 'desc' },
     });
   }
 

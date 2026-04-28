@@ -13,14 +13,7 @@ import { StorageModule } from '../storage/storage.module';
 @Module({
   imports: [ScheduleModule.forRoot(), PrismaModule, MailerModule, StorageModule],
   controllers: [GuildController],
-  providers: [GuildService, GuildBulkInviteService, ApplicationService, GuildInvitationCleanupService],
-  exports: [GuildService, ApplicationService],
-  providers: [
-    GuildService,
-    GuildBulkInviteService,
-    PayoutBatchService,
-    ApplicationService,
-  ],
+  providers: [GuildService, GuildBulkInviteService, PayoutBatchService, ApplicationService, GuildInvitationCleanupService],
   exports: [GuildService, PayoutBatchService, ApplicationService],
 })
 export class GuildModule {}

@@ -66,13 +66,11 @@ export class GuildInvitationCleanupService {
       );
 
       // Log details of cleaned invitations for audit purposes
-      if (this.logger.context.includes('debug')) {
-        expiredInvitations.forEach((inv: any) => {
-          this.logger.debug(
-            `Deleted expired invitation for user ${inv.user?.username || inv.userId} to guild ${inv.guild?.name || inv.guildId} (expired: ${inv.invitationExpiresAt})`,
-          );
-        });
-      }
+      expiredInvitations.forEach((inv: any) => {
+        this.logger.debug(
+          `Deleted expired invitation for user ${inv.user?.username || inv.userId} to guild ${inv.guild?.name || inv.guildId} (expired: ${inv.invitationExpiresAt})`
+        );
+      });
 
     } catch (error) {
       this.logger.error(

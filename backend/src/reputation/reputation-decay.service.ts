@@ -141,11 +141,11 @@ export class ReputationDecayService {
     });
 
     const usersWithReputation = inactiveUsers.filter(
-      user => user.reputationEntries.length > 0
+      (user: any) => user.reputationEntries.length > 0
     );
 
     const totalReputation = usersWithReputation.reduce(
-      (sum, user) => sum + user.reputationEntries.reduce((total, entry) => total + entry.points, 0),
+      (sum: number, user: any) => sum + user.reputationEntries.reduce((total: number, entry: any) => total + entry.points, 0),
       0
     );
 

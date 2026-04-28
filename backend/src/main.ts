@@ -34,7 +34,7 @@ async function bootstrap() {
   app.use(
     compression({
       threshold: 1024,
-      filter: (req, res) => {
+      filter: (req: any, res: any) => {
         const contentType = String(res.getHeader('Content-Type') || '');
         if (contentType.includes('text/csv')) {
           return false;

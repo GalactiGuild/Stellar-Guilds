@@ -17,7 +17,7 @@ export class ApplicationService {
       where: { 
         userId, 
         guildId, 
-        status: { in: [MembershipStatus.PENDING, MembershipStatus.MODERATION_PENDING] }
+        status: { in: [MembershipStatus.PENDING] }
       },
     });
 
@@ -31,12 +31,6 @@ export class ApplicationService {
         status: MembershipStatus.PENDING,
         role: GuildRole.MEMBER,
       },
-
-    if (existing) throw new ConflictException('Application already exists');
-
-    return this.prisma.guildMembership.create({
-      data: { userId, guildId, status: MembershipStatus.MODERATION_PENDING, role: GuildRole.MEMBER },
-
     });
   }
 
@@ -80,7 +74,7 @@ export class ApplicationService {
     return this.prisma.guildMembership.findMany({
       where: { 
         guildId, 
-        status: MembershipStatus.MODERATION_PENDING 
+        status: MembershipStatus.PENDING 
       },
       include: {
         user: {
@@ -113,8 +107,8 @@ export class ApplicationService {
       where: { id: applicationId },
     });
     if (!application) throw new NotFoundException('Application not found');
-    if (application.status !== MembershipStatus.MODERATION_PENDING)
-      throw new BadRequestException('Only MODERATION_PENDING applications can be moved to PENDING');
+    if (application.status !== MembershipStatus.PENDING)
+      throw new BadRequestException('Only PENDING applications can be moved to APPROVED');
 
     return this.prisma.guildMembership.update({
       where: { id: applicationId },

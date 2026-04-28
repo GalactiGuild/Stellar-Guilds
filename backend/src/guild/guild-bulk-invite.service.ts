@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { parse } from 'csv-parse/sync';
+import { parse } from 'csv-parse';
 import { PrismaService } from '../prisma/prisma.service';
 import { randomUUID } from 'crypto';
 
@@ -36,7 +36,7 @@ export class GuildBulkInviteService {
       skip_empty_lines: true,
       trim: true,
       relax_column_count: true,
-    });
+    }) as unknown as any[];
 
     const addresses: string[] = [];
 
