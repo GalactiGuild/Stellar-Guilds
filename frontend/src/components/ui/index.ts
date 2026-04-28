@@ -14,3 +14,5 @@ export {
   DropdownMenuItem,
 } from "./DropdownMenu";
 export { Pagination } from "./Pagination";
+export { StatCard } from "./StatCard";
+export type { StatCardProps } from "./StatCard";
