@@ -37,7 +37,8 @@ use crate::events::topics::{
 };
 use crate::guild::membership::has_permission;
 use crate::guild::types::Role;
-use soroban_sdk::{Address, Env, String, Vec};
+use crate::errors::ErrorCode;
+use soroban_sdk::{panic_with_error, Address, Env, String, Vec};
 
 pub use types::{Bounty, BountyStatus, PayoutSplit};
 
@@ -60,7 +61,7 @@ pub fn create_bounty(
     creator.require_auth();
 
     if !has_permission(env, guild_id, creator.clone(), Role::Admin) {
-        panic!("Unauthorized: Creator must be a guild admin or owner");
+        panic_with_error!(env, ErrorCode::Unauthorized);
     }
     if reward_amount < 0 {
         panic!("Invalid reward amount: must be non-negative");
@@ -203,7 +204,7 @@ pub fn fund_bounty(env: &Env, bounty_id: u64, funder: Address, amount: i128) -> 
         panic!("Amount must be positive");
     }
 
-    let mut bounty = get_bounty(env, bounty_id).expect("Bounty not found");
+    let mut bounty = get_bounty(env, bounty_id).unwrap_or_else(|| panic_with_error!(env, ErrorCode::BountyNotFound));
 
     let now = env.ledger().timestamp();
     if now > bounty.expires_at {
@@ -257,7 +258,7 @@ pub fn fund_bounty(env: &Env, bounty_id: u64, funder: Address, amount: i128) -> 
 pub fn claim_bounty(env: &Env, bounty_id: u64, claimer: Address) -> bool {
     claimer.require_auth();
 
-    let mut bounty = get_bounty(env, bounty_id).expect("Bounty not found");
+    let mut bounty = get_bounty(env, bounty_id).unwrap_or_else(|| panic_with_error!(env, ErrorCode::BountyNotFound));
 
     let now = env.ledger().timestamp();
     if now > bounty.expires_at {
@@ -301,7 +302,7 @@ pub fn claim_bounty(env: &Env, bounty_id: u64, claimer: Address) -> bool {
 /// # Events emitted
 /// - `(bounty, submitted)` â†’ `WorkSubmittedEvent`
 pub fn submit_work(env: &Env, bounty_id: u64, submission_url: String) -> bool {
-    let mut bounty = get_bounty(env, bounty_id).expect("Bounty not found");
+    let mut bounty = get_bounty(env, bounty_id).unwrap_or_else(|| panic_with_error!(env, ErrorCode::BountyNotFound));
 
     let claimer = bounty.claimer.clone().expect("No claimer for this bounty");
     claimer.require_auth();
@@ -338,10 +339,10 @@ pub fn submit_work(env: &Env, bounty_id: u64, submission_url: String) -> bool {
 pub fn approve_bounty(env: &Env, bounty_id: u64, approver: Address, claimer: Address) -> bool {
     approver.require_auth();
 
-    let mut bounty = get_bounty(env, bounty_id).expect("Bounty not found");
+    let mut bounty = get_bounty(env, bounty_id).unwrap_or_else(|| panic_with_error!(env, ErrorCode::BountyNotFound));
 
     if !has_permission(env, bounty.guild_id, approver.clone(), Role::Admin) {
-        panic!("Unauthorized: Approver must be a guild admin or owner");
+        panic_with_error!(env, ErrorCode::Unauthorized);
     }
     if bounty.status != BountyStatus::Funded {
         panic!("Bounty is not funded");
@@ -369,10 +370,10 @@ pub fn approve_bounty(env: &Env, bounty_id: u64, approver: Address, claimer: Add
 pub fn approve_completion(env: &Env, bounty_id: u64, approver: Address) -> bool {
     approver.require_auth();
 
-    let mut bounty = get_bounty(env, bounty_id).expect("Bounty not found");
+    let mut bounty = get_bounty(env, bounty_id).unwrap_or_else(|| panic_with_error!(env, ErrorCode::BountyNotFound));
 
     if !has_permission(env, bounty.guild_id, approver.clone(), Role::Admin) {
-        panic!("Unauthorized: Approver must be a guild admin or owner");
+        panic_with_error!(env, ErrorCode::Unauthorized);
     }
     if bounty.status != BountyStatus::UnderReview {
         panic!("Bounty is not under review");
@@ -404,7 +405,7 @@ pub fn release_escrow(env: &Env, bounty_id: u64) -> bool {
         panic!("Bounty is in active dispute");
     }
 
-    let mut bounty = get_bounty(env, bounty_id).expect("Bounty not found");
+    let mut bounty = get_bounty(env, bounty_id).unwrap_or_else(|| panic_with_error!(env, ErrorCode::BountyNotFound));
 
     if bounty.status != BountyStatus::Completed {
         panic!("Bounty is not completed");
@@ -445,7 +446,7 @@ pub fn cancel_bounty(env: &Env, bounty_id: u64, canceller: Address) -> bool {
         panic!("Bounty is in active dispute");
     }
 
-    let mut bounty = get_bounty(env, bounty_id).expect("Bounty not found");
+    let mut bounty = get_bounty(env, bounty_id).unwrap_or_else(|| panic_with_error!(env, ErrorCode::BountyNotFound));
 
     match bounty.status {
         BountyStatus::Completed | BountyStatus::Cancelled => {
@@ -458,7 +459,7 @@ pub fn cancel_bounty(env: &Env, bounty_id: u64, canceller: Address) -> bool {
     let is_admin = has_permission(env, bounty.guild_id, canceller.clone(), Role::Admin);
 
     if !is_creator && !is_admin {
-        panic!("Unauthorized: Only creator or guild admin can cancel");
+        panic_with_error!(env, ErrorCode::Unauthorized);
     }
 
     let refund_amount = bounty.funded_amount;
@@ -496,7 +497,7 @@ pub fn expire_bounty(env: &Env, bounty_id: u64) -> bool {
         panic!("Bounty is in active dispute");
     }
 
-    let mut bounty = get_bounty(env, bounty_id).expect("Bounty not found");
+    let mut bounty = get_bounty(env, bounty_id).unwrap_or_else(|| panic_with_error!(env, ErrorCode::BountyNotFound));
 
     if bounty.status == BountyStatus::Expired
         || bounty.status == BountyStatus::Completed
@@ -547,7 +548,7 @@ pub fn claim_payout(
         panic!("Bounty is in active dispute");
     }
 
-    let mut bounty = get_bounty(env, bounty_id).expect("Bounty not found");
+    let mut bounty = get_bounty(env, bounty_id).unwrap_or_else(|| panic_with_error!(env, ErrorCode::BountyNotFound));
 
     if bounty.status != BountyStatus::Completed {
         panic!("Bounty is not completed");
@@ -555,7 +556,7 @@ pub fn claim_payout(
 
     let stored_claimer = bounty.claimer.clone().expect("No claimer for this bounty");
     if stored_claimer != claimer {
-        panic!("Unauthorized: Only the approved claimer can claim payout");
+        panic_with_error!(env, ErrorCode::Unauthorized);
     }
 
     validate_payout_splits(&recipients);
@@ -576,7 +577,7 @@ pub fn claim_payout(
 // â"€â"€â"€ Query helpers â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 pub fn get_bounty_data(env: &Env, bounty_id: u64) -> Bounty {
-    get_bounty(env, bounty_id).expect("Bounty not found")
+    get_bounty(env, bounty_id).unwrap_or_else(|| panic_with_error!(env, ErrorCode::BountyNotFound))
 }
 
 pub fn get_guild_bounties_list(env: &Env, guild_id: u64) -> Vec<Bounty> {
