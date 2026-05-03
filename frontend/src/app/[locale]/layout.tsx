@@ -6,6 +6,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { locales, defaultLocale, type Locale } from '@/i18n';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ThemeProvider } from "next-themes";
+import { Toaster } from 'sonner';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -45,6 +46,20 @@ export default async function RootLayout({
               <div className="min-h-screen flex flex-col bg-white dark:bg-stellar-navy text-gray-900 dark:text-stellar-white font-sans transition-colors duration-300">
                 {children}
               </div>
+              <Toaster
+                theme="dark"
+                position="bottom-right"
+                duration={4000}
+                richColors
+                closeButton
+                toastOptions={{
+                  classNames: {
+                    toast: 'border border-violet-500/20 bg-slate-950 text-white shadow-2xl',
+                    title: 'font-black tracking-tight',
+                    description: 'text-slate-300',
+                  },
+                }}
+              />
             </ErrorBoundary>
           </NextIntlClientProvider>
         </ThemeProvider>
