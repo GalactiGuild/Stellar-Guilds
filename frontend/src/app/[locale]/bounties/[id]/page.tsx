@@ -3,10 +3,10 @@ import React, { useState, use } from "react";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import { CodeBlock } from "@/components/markdown/CodeBlock";
-import { MOCK_BOUNTIES } from "@/lib/mocks/bounties";
 import { StatusBadge } from "@/features/bounties/components/BountyCard";
 import { SubmissionForm } from "@/features/bounties/components/SubmissionForm";
 import { BountyApplicationForm } from "@/features/bounties/components/BountyApplicationForm";
+import { useBountyStore } from "@/store/bountyStore";
 import { toast, Toaster } from "sonner";
 import {
   Clock,
@@ -30,34 +30,31 @@ interface PageProps {
 export default function BountyDetailPage({ params }: PageProps) {
   const resolvedParams = use(params);
   const id = resolvedParams.id;
-  const bounty = MOCK_BOUNTIES.find((b) => b.id === id) || MOCK_BOUNTIES[0];
+  const bounties = useBountyStore((state) => state.bounties);
+  const pendingStatus = useBountyStore((state) => state.pendingStatusById[id]);
+  const updateBountyStatus = useBountyStore((state) => state.updateBountyStatus);
+  const bounty = bounties.find((b) => b.id === id) || bounties[0];
 
   const [showApplicationForm, setShowApplicationForm] = useState(false);
 
-  const [viewState, setViewState] = useState<
-    "idle" | "claimed" | "submitting" | "completed"
-  >("idle");
+  const [viewState, setViewState] = useState<"idle" | "submitting">("idle");
+  const isPending = Boolean(pendingStatus);
 
   const handleClaim = () => {
-    const promise = () => new Promise((resolve) => setTimeout(resolve, 1500));
-
-    toast.promise(promise, {
-      loading: "Initializing neural link to mission...",
-      success: () => {
-        setViewState("claimed");
-        return "Mission Initialized. Good luck, contributor.";
-      },
-      error: "Connection failed.",
+    toast.promise(updateBountyStatus(id, "Claimed"), {
+      loading: "Mock Stellar confirmation pending...",
+      success: "Mission initialized. Status confirmed.",
+      error: "Mock Stellar confirmation failed. Status rolled back.",
     });
   };
 
   const handleFinalSubmit = () => {
-    toast.success("SUBMISSION RECEIVED", {
-      description:
-        "Your work has been encrypted and sent to the guild for review.",
-      icon: <CheckCircle2 className="text-violet-500" size={18} />,
+    setViewState("idle");
+    toast.promise(updateBountyStatus(id, "Under Review"), {
+      loading: "Mock Stellar confirmation pending...",
+      success: "Submission received. Status confirmed.",
+      error: "Mock Stellar confirmation failed. Status rolled back.",
     });
-    setViewState("completed");
   };
 
   return (
@@ -85,10 +82,13 @@ export default function BountyDetailPage({ params }: PageProps) {
             <section className="space-y-6">
               <div className="flex flex-wrap items-center gap-3">
                 <StatusBadge
-                  status={
-                    viewState === "completed" ? "Under Review" : bounty.status
-                  }
+                  status={bounty.status}
                 />
+                {isPending && (
+                  <span className="text-[10px] font-mono text-amber-400 uppercase tracking-widest bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">
+                    Optimistic · confirming
+                  </span>
+                )}
                 <div className="h-1 w-1 bg-slate-700 rounded-full" />
                 <span className="text-[10px] font-mono text-violet-500 uppercase tracking-widest bg-violet-500/10 px-2 py-1 rounded">
                   {bounty.difficulty}
@@ -188,13 +188,14 @@ export default function BountyDetailPage({ params }: PageProps) {
                 </div>
 
                 <div className="space-y-3">
-                  {viewState === "idle" && (
+                  {viewState === "idle" && bounty.status === "Open" && (
                     <>
                       <button
                         onClick={handleClaim}
+                        disabled={isPending}
                         className="w-full bg-white text-black py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-violet-500 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.1)]"
                       >
-                        Initialize Mission
+                        {isPending ? "Confirming..." : "Initialize Mission"}
                       </button>
                       <button
                         onClick={() => setShowApplicationForm(true)}
@@ -206,26 +207,27 @@ export default function BountyDetailPage({ params }: PageProps) {
                     </>
                   )}
 
-                  {viewState === "claimed" && (
+                  {viewState === "idle" && bounty.status === "Claimed" && (
                     <button
                       onClick={() => setViewState("submitting")}
+                      disabled={isPending}
                       className="w-full bg-violet-500 text-black py-5 rounded-2xl font-black uppercase tracking-widest transition-all hover:bg-violet-400"
                     >
-                      Upload Submission
+                      {isPending ? "Confirming..." : "Upload Submission"}
                     </button>
                   )}
 
                   {viewState === "submitting" && (
                     <SubmissionForm
-                      onCancel={() => setViewState("claimed")}
+                      onCancel={() => setViewState("idle")}
                       onSubmit={handleFinalSubmit} 
                     />
                   )}
 
-                  {viewState === "completed" && (
+                  {viewState === "idle" && bounty.status === "Under Review" && (
                     <div className="w-full bg-white/5 border border-slate-800/10 text-violet-500 py-5 rounded-2xl font-black uppercase tracking-widest text-center flex items-center justify-center gap-2">
                       <CheckCircle2 size={18} />
-                      Submitted
+                      {isPending ? "Confirming" : "Submitted"}
                     </div>
                   )}
                 </div>
@@ -296,5 +298,4 @@ const SidebarInfo = ({
     {text}
   </div>
 );
-
 
