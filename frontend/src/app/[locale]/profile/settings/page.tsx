@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import { mockUser } from "@/features/profile/mockData";
-import { Save, User, Link as LinkIcon, Image as ImageIcon, ArrowLeft, Shield } from "lucide-react";
+import { Save, User, Link as LinkIcon, Image as ImageIcon, ArrowLeft, Shield, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { ConfirmDialog } from "@/components/ui";
 
 export default function SettingsPage() {
   const [formData, setFormData] = useState({
@@ -18,6 +19,7 @@ export default function SettingsPage() {
   });
 
   const [isSaving, setIsSaving] = useState(false);
+  const [deleteScaffoldCount, setDeleteScaffoldCount] = useState(0);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -242,6 +244,39 @@ export default function SettingsPage() {
                   </span>
                 </label>
               </div>
+            </div>
+
+            {/* Safe destructive-action scaffold */}
+            <div className="border-t border-gray-100 pt-6">
+              <h3 className="mb-2 text-lg font-medium text-white">Danger Zone</h3>
+              <p className="mb-4 text-sm text-gray-500">
+                Visual scaffold only: this does not call a backend or delete real data.
+              </p>
+              <ConfirmDialog
+                title="Delete test scaffold?"
+                description="This confirms that destructive actions use the shared accessible dialog. It only increments a local counter and does not delete anything."
+                confirmText="Delete Scaffold"
+                cancelText="Keep Scaffold"
+                isDestructive
+                onConfirm={() => {
+                  console.log("Confirmed test delete scaffold");
+                  setDeleteScaffoldCount((count) => count + 1);
+                }}
+                trigger={
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Test Delete Scaffold
+                  </button>
+                }
+              />
+              {deleteScaffoldCount > 0 && (
+                <p className="mt-3 text-sm text-gray-500">
+                  Test confirmation count: {deleteScaffoldCount}
+                </p>
+              )}
             </div>
 
             {/* Submit Button */}
