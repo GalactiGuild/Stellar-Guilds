@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useMemo } from "react";
-import { MOCK_BOUNTIES } from "@/lib/mocks/bounties";
 import { BountyCard } from "@/features/bounties/components/BountyCard";
+import { useBountyStore } from "@/store/bountyStore";
 import {
   LayoutDashboard,
   PlusCircle,
@@ -21,19 +21,20 @@ type TabType = "Active" | "Completed" | "Created";
 export default function MyBountiesDashboard() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("Active");
+  const bounties = useBountyStore((state) => state.bounties);
 
   const displayData = useMemo(() => {
     switch (activeTab) {
       case "Active":
-        return MOCK_BOUNTIES.filter((b) => b.status === "Claimed" || b.status === "Under Review");
+        return bounties.filter((b) => b.status === "Claimed" || b.status === "Under Review");
       case "Completed":
-        return MOCK_BOUNTIES.filter((b) => b.status === "Completed");
+        return bounties.filter((b) => b.status === "Completed");
       case "Created":
-        return MOCK_BOUNTIES.slice(0, 1);
+        return bounties.slice(0, 1);
       default:
         return [];
     }
-  }, [activeTab]);
+  }, [activeTab, bounties]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white p-4 md:p-8 lg:p-12 selection:bg-violet-500/30">
