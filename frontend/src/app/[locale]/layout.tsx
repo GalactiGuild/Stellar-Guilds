@@ -6,6 +6,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { locales, defaultLocale, type Locale } from '@/i18n';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ThemeProvider } from "next-themes";
+import { NetworkDropdown } from '@/components/ui/NetworkDropdown';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -43,6 +44,9 @@ export default async function RootLayout({
           <NextIntlClientProvider locale={locale} messages={messages}>
             <ErrorBoundary>
               <div className="min-h-screen flex flex-col bg-white dark:bg-stellar-navy text-gray-900 dark:text-stellar-white font-sans transition-colors duration-300">
+                <div className="fixed right-4 top-4 z-50">
+                  <NetworkDropdown />
+                </div>
                 {children}
               </div>
             </ErrorBoundary>
