@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { TokenBalanceCard } from "@/components/ui/TokenBalanceCard";
 
 type SortOption = "Newest" | "Highest Reward" | "Expiring Soon";
 
@@ -100,6 +101,11 @@ export default function MarketplacePage() {
 
       <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-12 gap-16">
         <aside className="lg:col-span-3 space-y-10">
+          <TokenBalanceCard
+            balances={{ XLM: "1500.50", USDC: "250.00" }}
+            className="lg:sticky lg:top-6"
+          />
+
           <div className="space-y-4">
             <h4 className="text-[10px] font-black uppercase tracking-[0.3em] pb-2 text-slate-500">
               Contributor Hub
