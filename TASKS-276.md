@@ -13,7 +13,7 @@ Branch: `feat/role-badge-component`
 - [x] Reuse UI badge from existing guild feature badge.
 - [x] Export component/types from UI barrel.
 - [x] Verify frontend build.
-- [ ] Commit, push, and open PR.
+- [x] Commit, push, and open PR: https://github.com/GalactiGuild/Stellar-Guilds/pull/559
 
 ## Verification
 - `npm run build` → PASS. Existing unrelated lint warnings remain.
