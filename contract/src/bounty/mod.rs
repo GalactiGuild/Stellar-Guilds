@@ -42,6 +42,7 @@ use soroban_sdk::{Address, Env, String, Vec};
 pub use types::{Bounty, BountyStatus, PayoutSplit};
 
 const TOTAL_BPS: i128 = 10_000;
+pub const REVIEW_WINDOW_LEDGERS: u32 = 120_960;
 
 /// Create a new bounty
 ///
@@ -97,6 +98,7 @@ pub fn create_bounty(
         status,
         claimer: None,
         submission_url: None,
+        review_started_at: None,
         created_at,
         expires_at: expiry,
     };
@@ -315,6 +317,7 @@ pub fn submit_work(env: &Env, bounty_id: u64, submission_url: String) -> bool {
 
     bounty.status = BountyStatus::UnderReview;
     bounty.submission_url = Some(submission_url.clone());
+    bounty.review_started_at = Some(env.ledger().sequence());
     store_bounty(env, &bounty);
 
     emit_event(
@@ -377,6 +380,9 @@ pub fn approve_completion(env: &Env, bounty_id: u64, approver: Address) -> bool 
     if bounty.status != BountyStatus::UnderReview {
         panic!("Bounty is not under review");
     }
+    if is_review_window_over_for_bounty(env, &bounty) {
+        panic!("Review window is closed");
+    }
 
     bounty.status = BountyStatus::Completed;
     store_bounty(env, &bounty);
@@ -393,6 +399,21 @@ pub fn approve_completion(env: &Env, bounty_id: u64, approver: Address) -> bool 
     );
 
     true
+}
+
+fn is_review_window_over_for_bounty(env: &Env, bounty: &Bounty) -> bool {
+    let review_started_at = match bounty.review_started_at {
+        Some(sequence) => sequence,
+        None => return false,
+    };
+
+    env.ledger().sequence().saturating_sub(review_started_at) > REVIEW_WINDOW_LEDGERS
+}
+
+/// Returns true if a submitted bounty's admin review window has closed.
+pub fn is_review_window_over(env: &Env, bounty_id: u64) -> bool {
+    let bounty = get_bounty(env, bounty_id).expect("Bounty not found");
+    is_review_window_over_for_bounty(env, &bounty)
 }
 
 /// Release escrow funds to the bounty claimer

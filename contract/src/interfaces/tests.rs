@@ -71,6 +71,7 @@ mod tests {
                 status: BountyStatus::Funded,
                 claimer: None,
                 submission_url: None,
+                review_started_at: None,
                 created_at: 1,
                 expires_at: 2,
             }
