@@ -16,3 +16,5 @@ export {
 export { Pagination } from "./Pagination";
 export { StatCard } from "./StatCard";
 export type { StatCardProps } from "./StatCard";
+export { DataTable } from "./DataTable";
+export type { DataTableProps } from "./DataTable";
