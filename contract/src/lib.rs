@@ -18,8 +18,8 @@ use guild::types::{Member, Role};
 mod bounty;
 use bounty::{
     approve_bounty, approve_completion, cancel_bounty, claim_bounty, claim_payout, create_bounty,
-    expire_bounty, fund_bounty, get_bounty_data, get_guild_bounties_list, release_escrow,
-    submit_work, Bounty, PayoutSplit,
+    expire_bounty, fund_bounty, get_bounty_data, get_guild_bounties_list, is_review_window_over,
+    release_escrow, submit_work, Bounty, PayoutSplit,
 };
 
 mod treasury;
@@ -1804,6 +1804,11 @@ impl StellarGuildsContract {
     /// `true` if approval was successful
     pub fn approve_completion(env: Env, bounty_id: u64, approver: Address) -> bool {
         approve_completion(&env, bounty_id, approver)
+    }
+
+    /// Returns true if a submitted bounty's admin review window has closed.
+    pub fn is_review_window_over(env: Env, bounty_id: u64) -> bool {
+        is_review_window_over(&env, bounty_id)
     }
 
     /// Release escrow funds to the bounty claimer
