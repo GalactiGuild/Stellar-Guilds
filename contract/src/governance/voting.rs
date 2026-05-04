@@ -97,6 +97,7 @@ pub fn vote(env: &Env, proposal_id: u64, voter: Address, decision: VoteDecision)
     };
 
     store_vote(env, &vote);
+    guild_storage::touch_member_activity(env, proposal.guild_id, &voter);
 
     let event = VoteCastEvent {
         proposal_id,

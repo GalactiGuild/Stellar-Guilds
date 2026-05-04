@@ -26,6 +26,7 @@ mod tests {
                 address,
                 role: Role::Admin,
                 joined_at: guild_id,
+                last_active_at: guild_id,
             }
         }
 

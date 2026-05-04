@@ -10,6 +10,7 @@ use crate::guild::types::{
 use soroban_sdk::{Address, Env, String, Vec};
 
 const PERMISSION_UPDATE_INFO: u32 = 1 << 0;
+const INACTIVE_AFTER_LEDGERS: u32 = 1_000_000;
 
 fn role_permission_bits(role: Role) -> u32 {
     match role {
@@ -63,6 +64,7 @@ pub fn create_guild(
 
     let guild_id = storage::get_next_guild_id(env);
     let timestamp = env.ledger().timestamp();
+    let ledger_sequence = u64::from(env.ledger().sequence());
 
     let guild = Guild {
         id: guild_id,
@@ -78,6 +80,7 @@ pub fn create_guild(
         address: owner.clone(),
         role: Role::Owner,
         joined_at: timestamp,
+        last_active_at: ledger_sequence,
     };
     storage::store_member(env, guild_id, &owner_member);
 
@@ -151,10 +154,12 @@ pub fn add_member(
     }
 
     let timestamp = env.ledger().timestamp();
+    let ledger_sequence = u64::from(env.ledger().sequence());
     let member = Member {
         address: address.clone(),
         role: role.clone(),
         joined_at: timestamp,
+        last_active_at: ledger_sequence,
     };
     storage::store_member(env, guild_id, &member);
 
@@ -330,6 +335,7 @@ pub fn update_role(
         address: address.clone(),
         role: new_role.clone(),
         joined_at: member.joined_at,
+        last_active_at: u64::from(env.ledger().sequence()),
     };
     storage::store_member(env, guild_id, &updated_member);
 
@@ -381,10 +387,12 @@ pub fn join_guild(env: &Env, guild_id: u64, caller: Address) -> Result<bool, Str
     }
 
     let timestamp = env.ledger().timestamp();
+    let ledger_sequence = u64::from(env.ledger().sequence());
     let member = Member {
         address: caller.clone(),
         role: Role::Member,
         joined_at: timestamp,
+        last_active_at: ledger_sequence,
     };
     storage::store_member(env, guild_id, &member);
 
@@ -418,6 +426,14 @@ pub fn get_all_members(env: &Env, guild_id: u64) -> Vec<Member> {
 
 pub fn is_member(env: &Env, guild_id: u64, address: Address) -> bool {
     storage::has_member(env, guild_id, &address)
+}
+
+pub fn touch_member_activity(env: &Env, guild_id: u64, address: Address) -> bool {
+    storage::touch_member_activity(env, guild_id, &address)
+}
+
+pub fn is_inactive(env: &Env, guild_id: u64, address: Address) -> bool {
+    storage::is_member_inactive(env, guild_id, &address, INACTIVE_AFTER_LEDGERS)
 }
 
 pub fn has_permission(env: &Env, guild_id: u64, address: Address, required_role: Role) -> bool {

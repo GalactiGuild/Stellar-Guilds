@@ -70,6 +70,8 @@ pub struct Member {
     pub role: Role,
     /// Timestamp when the member joined (in seconds)
     pub joined_at: u64,
+    /// Last ledger sequence where this member performed a tracked action
+    pub last_active_at: u64,
 }
 
 /// Event emitted when a guild is created

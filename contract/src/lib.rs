@@ -8,8 +8,10 @@ mod integration;
 mod interfaces;
 mod utils;
 use guild::membership::{
-    add_member, create_guild, get_all_members, get_member, has_permission, is_member, join_guild,
-    remove_member, reque_permissions as guild_reque_permissions,
+    add_member, create_guild, get_all_members, get_member, has_permission,
+    is_inactive as guild_is_inactive, is_member, join_guild, remove_member,
+    reque_permissions as guild_reque_permissions,
+    touch_member_activity as guild_touch_member_activity,
     update_guild_info as guild_update_guild_info, update_role,
 };
 use guild::storage;
@@ -558,6 +560,17 @@ impl StellarGuildsContract {
     /// true if the address is a member, false otherwise
     pub fn is_member(env: Env, guild_id: u64, address: Address) -> bool {
         is_member(&env, guild_id, address)
+    }
+
+    /// Returns true when a guild member has no tracked activity for >1,000,000 ledgers.
+    pub fn is_inactive(env: Env, guild_id: u64, address: Address) -> bool {
+        guild_is_inactive(&env, guild_id, address)
+    }
+
+    /// Refresh a member's last activity ledger sequence.
+    pub fn touch_member_activity(env: Env, guild_id: u64, address: Address) -> bool {
+        address.require_auth();
+        guild_touch_member_activity(&env, guild_id, address)
     }
 
     /// Join an existing guild as a member

@@ -1,4 +1,4 @@
-﻿use crate::guild::types::{Guild, Member, Role};
+use crate::guild::types::{Guild, Member, Role};
 use soroban_sdk::{symbol_short, Address, Env, Map, Symbol, Vec};
 
 // Storage keys as symbols for efficient lookup
@@ -85,6 +85,33 @@ pub fn get_member(env: &Env, guild_id: u64, address: &Address) -> Option<Member>
 
     let guild_members = members_map.get(guild_id)?;
     guild_members.get(address.clone())
+}
+
+/// Refresh a member's last tracked activity ledger sequence.
+pub fn touch_member_activity(env: &Env, guild_id: u64, address: &Address) -> bool {
+    if let Some(mut member) = get_member(env, guild_id, address) {
+        member.last_active_at = u64::from(env.ledger().sequence());
+        store_member(env, guild_id, &member);
+        true
+    } else {
+        false
+    }
+}
+
+/// Returns true when a member has not acted for more than `inactive_after_ledgers`.
+pub fn is_member_inactive(
+    env: &Env,
+    guild_id: u64,
+    address: &Address,
+    inactive_after_ledgers: u32,
+) -> bool {
+    let member = match get_member(env, guild_id, address) {
+        Some(member) => member,
+        None => return false,
+    };
+
+    u64::from(env.ledger().sequence()).saturating_sub(member.last_active_at)
+        > u64::from(inactive_after_ledgers)
 }
 
 /// Remove a member from a guild
