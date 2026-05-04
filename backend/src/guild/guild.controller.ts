@@ -47,7 +47,6 @@ export class GuildController {
     private readonly applicationService: ApplicationService,
   ) {}
 
-
   @UseGuards(JwtAuthGuard)
   @Post()
   async create(@Body() dto: CreateGuildDto, @Request() req: any) {
@@ -204,6 +203,13 @@ export class GuildController {
   @UseGuards(JwtAuthGuard)
   @Post(':id/leave')
   async leave(@Param('id') id: string, @Request() req: any) {
+    return this.guildService.leaveGuild(id, req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id/members/me')
+  @HttpCode(HttpStatus.OK)
+  async leaveCurrentMember(@Param('id') id: string, @Request() req: any) {
     return this.guildService.leaveGuild(id, req.user.userId);
   }
 
@@ -406,10 +412,7 @@ export class GuildController {
    */
   @UseGuards(JwtAuthGuard)
   @Get(':id/moderation-queue')
-  async getModerationQueue(
-    @Param('id') guildId: string,
-    @Request() req: any,
-  ) {
+  async getModerationQueue(@Param('id') guildId: string, @Request() req: any) {
     return this.applicationService.getModerationQueue(guildId, req.user.userId);
   }
 
@@ -423,7 +426,10 @@ export class GuildController {
     @Param('applicationId') applicationId: string,
     @Request() req: any,
   ) {
-    return this.applicationService.moveToPending(applicationId, req.user.userId);
+    return this.applicationService.moveToPending(
+      applicationId,
+      req.user.userId,
+    );
   }
 
   /**

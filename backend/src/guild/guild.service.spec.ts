@@ -3,7 +3,11 @@ import { GuildService } from './guild.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailerService } from '../mailer/mailer.service';
 import { validateAndNormalizeSettings } from './guild.settings';
-import { ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { StorageService } from '../storage/storage.service';
 
 const mockPrisma = () => ({
@@ -19,8 +23,12 @@ const mockPrisma = () => ({
     findUnique: jest.fn(),
     findFirst: jest.fn(),
     findMany: jest.fn(),
+    count: jest.fn(),
+    delete: jest.fn(),
   },
-  user: { findUnique: jest.fn() },
+  guildActivityLog: { create: jest.fn() },
+  user: { findUnique: jest.fn(), update: jest.fn() },
+  $transaction: jest.fn((ops: any[]) => Promise.all(ops)),
 });
 
 const mockMailer = () => ({
@@ -299,5 +307,79 @@ describe('GuildService (settings integration)', () => {
 
     expect(result.map((m: any) => m.user.username)).toEqual(['Bob', 'Bobby']);
     expect(result.map((m: any) => m.user.username)).not.toContain('Alice');
+  });
+
+  it('deletes an approved membership and logs MEMBER_LEFT when a member leaves', async () => {
+    prisma.guildMembership.findUnique.mockResolvedValue({
+      id: 'membership-1',
+      guildId: 'guild-1',
+      userId: 'user-1',
+      role: 'MEMBER',
+      status: 'APPROVED',
+    });
+    prisma.guildMembership.delete.mockResolvedValue({ id: 'membership-1' });
+    prisma.guild.update.mockResolvedValue({ id: 'guild-1', memberCount: 1 });
+    prisma.guildActivityLog.create.mockResolvedValue({ id: 'log-1' });
+    prisma.guildMembership.count.mockResolvedValue(1);
+    prisma.user.findUnique.mockResolvedValue({
+      id: 'user-1',
+      activeGuildsCount: 1,
+    });
+
+    await expect(service.leaveGuild('guild-1', 'user-1')).resolves.toEqual({
+      success: true,
+    });
+
+    expect(prisma.guildMembership.delete).toHaveBeenCalledWith({
+      where: { id: 'membership-1' },
+    });
+    expect(prisma.guild.update).toHaveBeenCalledWith({
+      where: { id: 'guild-1' },
+      data: { memberCount: { decrement: 1 } },
+    });
+    expect(prisma.guildActivityLog.create).toHaveBeenCalledWith({
+      data: {
+        guildId: 'guild-1',
+        actorId: 'user-1',
+        action: 'MEMBER_LEFT',
+        metadata: { membershipId: 'membership-1', role: 'MEMBER' },
+      },
+    });
+    expect(prisma.$transaction).toHaveBeenCalled();
+  });
+
+  it('rejects leaving when the requester is not an approved member', async () => {
+    prisma.guildMembership.findUnique.mockResolvedValue({
+      id: 'membership-1',
+      guildId: 'guild-1',
+      userId: 'user-1',
+      role: 'MEMBER',
+      status: 'PENDING',
+    });
+
+    await expect(service.leaveGuild('guild-1', 'user-1')).rejects.toThrow(
+      NotFoundException,
+    );
+    expect(prisma.guildMembership.delete).not.toHaveBeenCalled();
+    expect(prisma.guildActivityLog.create).not.toHaveBeenCalled();
+  });
+
+  it('prevents the last approved admin from leaving', async () => {
+    prisma.guildMembership.findUnique.mockResolvedValue({
+      id: 'membership-1',
+      guildId: 'guild-1',
+      userId: 'admin-1',
+      role: 'ADMIN',
+      status: 'APPROVED',
+    });
+    prisma.guildMembership.count.mockResolvedValue(1);
+
+    await expect(service.leaveGuild('guild-1', 'admin-1')).rejects.toThrow(
+      BadRequestException,
+    );
+    expect(prisma.guildMembership.count).toHaveBeenCalledWith({
+      where: { guildId: 'guild-1', status: 'APPROVED', role: 'ADMIN' },
+    });
+    expect(prisma.guildMembership.delete).not.toHaveBeenCalled();
   });
 });
