@@ -12,7 +12,7 @@ Branch: `feat/guild-settings-layout`
 - [x] Provide central `<main>` content area.
 - [x] Wrap existing guild settings page with the new layout.
 - [x] Verify frontend build.
-- [ ] Commit, push, and open PR.
+- [x] Commit, push, and open PR: https://github.com/GalactiGuild/Stellar-Guilds/pull/560
 
 ## Verification
 - `npm run build` → PASS. Existing unrelated lint warnings remain.
