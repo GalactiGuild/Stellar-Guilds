@@ -22,15 +22,36 @@ use crate::treasury::types::{
     TreasuryInitializedEvent, WithdrawalProposedEvent,
 };
 
+pub const DEFAULT_MAX_WITHDRAWAL: i128 = 10_000_000;
+
 pub fn initialize_treasury(
     env: &Env,
     guild_id: u64,
     signers: Vec<Address>,
     approval_threshold: u32,
 ) -> u64 {
+    initialize_treasury_with_max_withdrawal(
+        env,
+        guild_id,
+        signers,
+        approval_threshold,
+        DEFAULT_MAX_WITHDRAWAL,
+    )
+}
+
+pub fn initialize_treasury_with_max_withdrawal(
+    env: &Env,
+    guild_id: u64,
+    signers: Vec<Address>,
+    approval_threshold: u32,
+    max_withdrawal: i128,
+) -> u64 {
     // First signer is the owner
     let owner = signers.get(0).expect("at least one signer required");
     owner.require_auth();
+    if max_withdrawal <= 0 {
+        panic!("max withdrawal must be positive");
+    }
 
     let mut unique_signers = Vec::new(env);
     for addr in signers.iter() {
@@ -54,6 +75,7 @@ pub fn initialize_treasury(
         signers: unique_signers,
         approval_threshold,
         high_value_threshold,
+        max_withdrawal,
         balance_xlm: 0,
         token_balances: soroban_sdk::Map::new(env),
         total_deposits: 0,
@@ -158,6 +180,11 @@ pub fn propose_withdrawal(
     if treasury.paused {
         panic!("treasury is paused");
     }
+    enforce_withdrawal_cap(&treasury, amount).unwrap_or_else(|e| match e {
+        TreasuryError::BudgetExceeded => panic!("budget exceeded"),
+        TreasuryError::AllowanceExceeded => panic!("allowance exceeded"),
+        TreasuryError::LimitExceeded => panic!("limit exceeded"),
+    });
 
     assert_signer(env, &treasury, &proposer);
 
@@ -193,6 +220,14 @@ pub fn propose_withdrawal(
     emit_event(env, MOD_TREASURY, ACT_PROPOSED, event);
 
     tx_id
+}
+
+fn enforce_withdrawal_cap(treasury: &Treasury, amount: i128) -> Result<(), TreasuryError> {
+    if amount > treasury.max_withdrawal {
+        return Err(TreasuryError::LimitExceeded);
+    }
+
+    Ok(())
 }
 
 pub fn approve_transaction(env: &Env, tx_id: u64, approver: Address) -> bool {
@@ -344,6 +379,7 @@ pub fn execute_transaction(env: &Env, tx_id: u64, executor: Address) -> bool {
             enforce_budget(env, tx.treasury_id, &category, tx.amount).unwrap_or_else(|e| match e {
                 TreasuryError::BudgetExceeded => panic!("budget exceeded"),
                 TreasuryError::AllowanceExceeded => panic!("allowance exceeded"),
+                TreasuryError::LimitExceeded => panic!("limit exceeded"),
             });
 
             let op_type = match tx.tx_type {
@@ -368,6 +404,7 @@ pub fn execute_transaction(env: &Env, tx_id: u64, executor: Address) -> bool {
             .unwrap_or_else(|e| match e {
                 TreasuryError::BudgetExceeded => panic!("budget exceeded"),
                 TreasuryError::AllowanceExceeded => panic!("allowance exceeded"),
+                TreasuryError::LimitExceeded => panic!("limit exceeded"),
             });
 
             match tx.token {
@@ -440,6 +477,7 @@ pub fn execute_milestone_payment(
     enforce_budget(env, treasury_id, &category, amount).unwrap_or_else(|e| match e {
         TreasuryError::BudgetExceeded => panic!("budget exceeded"),
         TreasuryError::AllowanceExceeded => panic!("allowance exceeded"),
+        TreasuryError::LimitExceeded => panic!("limit exceeded"),
     });
 
     // Allowance enforcement (if any) keyed by current contract address;
@@ -450,6 +488,7 @@ pub fn execute_milestone_payment(
         match e {
             TreasuryError::BudgetExceeded => panic!("budget exceeded"),
             TreasuryError::AllowanceExceeded => panic!("allowance exceeded"),
+            TreasuryError::LimitExceeded => panic!("limit exceeded"),
         }
     });
 

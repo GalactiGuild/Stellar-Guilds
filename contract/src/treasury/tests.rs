@@ -60,6 +60,29 @@ mod tests {
         (treasury_id, owner, signer1, signer2)
     }
 
+    fn create_treasury_with_cap(
+        env: &Env,
+        client: &StellarGuildsContractClient<'_>,
+        guild_id: u64,
+        max_withdrawal: i128,
+    ) -> (u64, Address, Address, Address) {
+        let owner = Address::generate(&env);
+        let signer1 = Address::generate(&env);
+        let signer2 = Address::generate(&env);
+
+        env.mock_all_auths();
+
+        let mut signers = Vec::new(env);
+        signers.push_back(owner.clone());
+        signers.push_back(signer1.clone());
+        signers.push_back(signer2.clone());
+
+        let treasury_id =
+            client.init_treasury_with_cap(&guild_id, &signers, &2u32, &max_withdrawal);
+
+        (treasury_id, owner, signer1, signer2)
+    }
+
     #[test]
     fn test_treasury_initialize_and_deposit_accounting() {
         let env = setup_env();
@@ -128,6 +151,63 @@ mod tests {
 
         let history = client.get_transaction_history(&treasury_id, &10u32);
         assert_eq!(history.len(), 2);
+    }
+
+    #[test]
+    fn test_withdrawal_below_cap_is_allowed() {
+        let env = setup_env();
+        let owner = Address::generate(&env);
+
+        set_ledger_timestamp(&env, 1000);
+        env.mock_all_auths();
+
+        let contract_id = register_and_init_contract(&env);
+        let client = StellarGuildsContractClient::new(&env, &contract_id);
+
+        let guild_id = setup_guild(&client, &env, &owner);
+        let (treasury_id, _owner, signer1, _signer2) =
+            create_treasury_with_cap(&env, &client, guild_id, 1_000);
+        let recipient = Address::generate(&env);
+
+        let tx_id = client.propose_withdrawal(
+            &treasury_id,
+            &signer1,
+            &recipient,
+            &999i128,
+            &None,
+            &String::from_str(&env, "below cap"),
+        );
+
+        let history = client.get_transaction_history(&treasury_id, &10u32);
+        assert_eq!(history.len(), 1);
+        assert_eq!(history.get(0).unwrap().id, tx_id);
+    }
+
+    #[test]
+    #[should_panic(expected = "limit exceeded")]
+    fn test_withdrawal_over_cap_fails() {
+        let env = setup_env();
+        let owner = Address::generate(&env);
+
+        set_ledger_timestamp(&env, 1000);
+        env.mock_all_auths();
+
+        let contract_id = register_and_init_contract(&env);
+        let client = StellarGuildsContractClient::new(&env, &contract_id);
+
+        let guild_id = setup_guild(&client, &env, &owner);
+        let (treasury_id, _owner, signer1, _signer2) =
+            create_treasury_with_cap(&env, &client, guild_id, 1_000);
+        let recipient = Address::generate(&env);
+
+        client.propose_withdrawal(
+            &treasury_id,
+            &signer1,
+            &recipient,
+            &1_001i128,
+            &None,
+            &String::from_str(&env, "over cap"),
+        );
     }
 
     #[test]
@@ -287,6 +367,7 @@ mod tests {
             signers,
             approval_threshold: 1,
             high_value_threshold: 1000,
+            max_withdrawal: 10_000_000,
             balance_xlm: 0,
             token_balances: soroban_sdk::Map::new(&env),
             total_deposits: 0,

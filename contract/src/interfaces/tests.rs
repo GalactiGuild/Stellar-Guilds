@@ -202,6 +202,7 @@ mod tests {
                 signers: Vec::new(&env),
                 approval_threshold: 2,
                 high_value_threshold: 1000,
+                max_withdrawal: 10_000_000,
                 balance_xlm: 500,
                 token_balances: Map::new(&env),
                 total_deposits: 700,

@@ -7,6 +7,7 @@ pub struct GuildConfig {
     pub name: String,
     pub admin: Address,
     pub member_limits: u32,
+    pub max_withdrawal: i128,
 }
 
 /// Enum for Guild related states/types
