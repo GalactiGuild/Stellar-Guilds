@@ -12,7 +12,7 @@ Branch: `feat/guild-member-leave`
 - [x] Add Prisma `GuildActivityLog` model.
 - [x] Add unit tests for success, not-member/pending-member rejection, and last-admin rejection.
 - [x] Verify with focused Jest test and backend build.
-- [ ] Commit, push, and open PR.
+- [x] Commit, push, and open PR: https://github.com/GalactiGuild/Stellar-Guilds/pull/550
 
 ## Verification
 - `npx prisma format --schema prisma/schema.prisma`
