@@ -12,7 +12,7 @@ Branch: `feat/treasury-withdrawal-cap`
 - [x] Add `LimitExceeded` error variant and focused below/over cap tests.
 - [x] Run formatting and focused/full contract tests.
 - [x] Revert generated snapshot churn before commit.
-- [ ] Commit, push, and open PR.
+- [x] Commit, push, and open PR: https://github.com/GalactiGuild/Stellar-Guilds/pull/549
 
 ## Verification
 - `cargo fmt`
