@@ -12,7 +12,7 @@ Branch: `feat/loading-components`
 - [x] Use Framer Motion for mount/unmount and spinner animation.
 - [x] Export components from UI barrel.
 - [x] Verify frontend build.
-- [ ] Commit, push, and open PR.
+- [x] Commit, push, and open PR: https://github.com/GalactiGuild/Stellar-Guilds/pull/556
 
 ## Verification
 - `npm run build` → PASS. Existing unrelated lint warnings remain.
