@@ -1,11 +1,12 @@
 #![no_std]
 
-use soroban_sdk::{contract, contractimpl, Address, Env, String, Vec};
+use soroban_sdk::{contract, contractimpl, Address, Env, Map, String, Symbol, Val, Vec};
 
 mod events;
 mod guild;
 mod integration;
 mod interfaces;
+mod test_migration;
 mod utils;
 use guild::membership::{
     add_member, create_guild, get_all_members, get_member, has_permission, is_member, join_guild,
@@ -165,6 +166,7 @@ use upgrade_mfa::{
 };
 
 mod proxy;
+mod migration;
 use integration::types::{
     ContractType, ContractVersion, CrossContractPermission, EventFilter, EventType, PlatformEvent,
 };
@@ -176,6 +178,18 @@ use proxy::implementation as proxy_impl;
 use proxy::storage as proxy_storage;
 use proxy::types::ProxyConfig;
 use utils::errors::IntegrationErrorCode;
+
+fn require_contract_admin(env: &Env, caller: &Address) {
+    caller.require_auth();
+    let admin: Address = env
+        .storage()
+        .instance()
+        .get(&DataKey::Admin)
+        .unwrap_or_else(|| panic!("Contract not initialized"));
+    if admin != *caller {
+        panic!("Admin required");
+    }
+}
 
 /// Stellar Guilds - Main Contract Entry Point
 ///
@@ -220,6 +234,18 @@ impl StellarGuildsContract {
     /// Get contract version
     pub fn version(_env: Env) -> String {
         String::from_str(&_env, "0.1.0")
+    }
+
+    /// Export guild state into deterministic arrays/maps for offline migration.
+    pub fn export_state(env: Env, caller: Address) -> Map<Symbol, Val> {
+        require_contract_admin(&env, &caller);
+        migration::export_state(&env, &caller)
+    }
+
+    /// Import a previously exported guild state into this contract instance.
+    pub fn import_state(env: Env, caller: Address, state: Map<Symbol, Val>) -> bool {
+        require_contract_admin(&env, &caller);
+        migration::import_state(&env, &caller, state)
     }
 
     // ============ Integration Layer ============

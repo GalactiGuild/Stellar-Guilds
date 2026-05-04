@@ -2,9 +2,9 @@
 use soroban_sdk::{symbol_short, Address, Env, Map, Symbol, Vec};
 
 // Storage keys as symbols for efficient lookup
-const GUILDS_KEY: Symbol = symbol_short!("guilds");
-const MEMBERS_KEY: Symbol = symbol_short!("members");
-const GUILD_COUNTER_KEY: Symbol = symbol_short!("guild_cnt");
+pub const GUILDS_KEY: Symbol = symbol_short!("guilds");
+pub const MEMBERS_KEY: Symbol = symbol_short!("members");
+pub const GUILD_COUNTER_KEY: Symbol = symbol_short!("guild_cnt");
 
 /// Initialize storage for guilds and members
 /// This should be called during contract initialization
