@@ -13,7 +13,7 @@ Branch: `feat/global-search-palette`
 - [x] Add keyboard arrow navigation and Enter-to-open behavior.
 - [x] Mount palette globally in locale layout.
 - [x] Verify frontend build.
-- [ ] Commit, push, and open PR.
+- [x] Commit, push, and open PR: https://github.com/GalactiGuild/Stellar-Guilds/pull/555
 
 ## Verification
 - `npm run build` → PASS. Existing unrelated lint warnings remain.
