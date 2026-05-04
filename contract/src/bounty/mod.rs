@@ -36,6 +36,7 @@ use crate::events::topics::{
     ACT_SUBMITTED, MOD_BOUNTY,
 };
 use crate::guild::membership::has_permission;
+use crate::guild::storage as guild_storage;
 use crate::guild::types::Role;
 use soroban_sdk::{Address, Env, String, Vec};
 
@@ -285,6 +286,7 @@ pub fn claim_bounty(env: &Env, bounty_id: u64, claimer: Address) -> bool {
     bounty.status = BountyStatus::Claimed;
     bounty.claimer = Some(claimer.clone());
     store_bounty(env, &bounty);
+    guild_storage::touch_member_activity(env, bounty.guild_id, &claimer);
 
     emit_event(
         env,
@@ -316,6 +318,7 @@ pub fn submit_work(env: &Env, bounty_id: u64, submission_url: String) -> bool {
     bounty.status = BountyStatus::UnderReview;
     bounty.submission_url = Some(submission_url.clone());
     store_bounty(env, &bounty);
+    guild_storage::touch_member_activity(env, bounty.guild_id, &claimer);
 
     emit_event(
         env,

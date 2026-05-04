@@ -8,7 +8,7 @@
 use crate::guild::types::Role;
 use crate::InitializerProof;
 use crate::{StellarGuildsContract, StellarGuildsContractClient};
-use soroban_sdk::testutils::Address as _;
+use soroban_sdk::testutils::{Address as _, Ledger, LedgerInfo};
 use soroban_sdk::{Address, Env, String};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -24,6 +24,19 @@ fn register_and_init(env: &Env) -> Address {
     let client = StellarGuildsContractClient::new(env, &contract_id);
     client.initialize(&Address::generate(env));
     contract_id
+}
+
+fn set_ledger_sequence(env: &Env, sequence_number: u32) {
+    env.ledger().set(LedgerInfo {
+        timestamp: 1_700_000_000,
+        protocol_version: 20,
+        sequence_number,
+        network_id: Default::default(),
+        base_reserve: 10,
+        min_temp_entry_ttl: 2_000_000,
+        min_persistent_entry_ttl: 2_000_000,
+        max_entry_ttl: 3_000_000,
+    });
 }
 
 fn create_test_guild(client: &StellarGuildsContractClient<'_>, env: &Env, owner: &Address) -> u64 {
@@ -126,4 +139,28 @@ fn test_join_guild_unauthorized_panics() {
     let joiner = Address::generate(&env);
     // No mock_all_auths → require_auth() inside join_guild panics.
     client.join_guild(&guild_id, &joiner);
+}
+
+#[test]
+fn test_member_last_active_tracks_join_and_touch() {
+    let env = setup_env();
+    env.mock_all_auths();
+    set_ledger_sequence(&env, 10);
+
+    let contract_id = register_and_init(&env);
+    let client = StellarGuildsContractClient::new(&env, &contract_id);
+
+    let owner = Address::generate(&env);
+    let guild_id = create_test_guild(&client, &env, &owner);
+    let member = client.get_member(&guild_id, &owner);
+    assert_eq!(member.last_active_at, 10);
+    assert!(!client.is_inactive(&guild_id, &owner));
+
+    set_ledger_sequence(&env, 1_000_011);
+    assert!(client.is_inactive(&guild_id, &owner));
+
+    assert!(client.touch_member_activity(&guild_id, &owner));
+    let refreshed = client.get_member(&guild_id, &owner);
+    assert_eq!(refreshed.last_active_at, 1_000_011);
+    assert!(!client.is_inactive(&guild_id, &owner));
 }
