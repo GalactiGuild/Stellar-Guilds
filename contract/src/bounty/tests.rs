@@ -6,7 +6,7 @@
 //! NOTE: These tests use the contract client to test through the main lib.rs
 //! contract interface, ensuring proper contract context execution.
 
-use crate::bounty::types::{BountyStatus, PayoutSplit};
+use crate::bounty::types::{BountyCategory, BountyStatus, PayoutSplit};
 use crate::guild::types::Role;
 use crate::InitializerProof;
 use crate::StellarGuildsContract;
@@ -114,10 +114,39 @@ fn test_create_bounty_success() {
     assert_eq!(bounty.guild_id, guild_id);
     assert_eq!(bounty.creator, owner);
     assert_eq!(bounty.reward_amount, reward_amount);
+    assert_eq!(bounty.category, BountyCategory::Other);
     assert_eq!(bounty.funded_amount, 0);
     assert_eq!(bounty.status, BountyStatus::AwaitingFunds);
     assert_eq!(bounty.expires_at, expiry);
     assert!(bounty.claimer.is_none());
+}
+
+#[test]
+fn test_create_bounty_with_category_stores_category() {
+    let env = setup_env();
+    let owner = Address::generate(&env);
+    let token = create_mock_token(&env, &owner);
+
+    set_ledger_timestamp(&env, 1000);
+    env.mock_all_auths();
+
+    let contract_id = register_and_init_contract(&env);
+    let client = StellarGuildsContractClient::new(&env, &contract_id);
+    let guild_id = setup_guild(&client, &env, &owner);
+
+    let bounty_id = client.create_bounty_with_category(
+        &guild_id,
+        &owner,
+        &String::from_str(&env, "Research Stellar SDK ergonomics"),
+        &String::from_str(&env, "Document contract developer experience gaps"),
+        &BountyCategory::Research,
+        &250i128,
+        &token,
+        &2000u64,
+    );
+
+    let bounty = client.get_bounty(&bounty_id);
+    assert_eq!(bounty.category, BountyCategory::Research);
 }
 
 #[test]
@@ -1997,6 +2026,7 @@ fn test_bounty_serialization() {
         creator: Address::generate(&env),
         title: String::from_str(&env, "Title"),
         description: String::from_str(&env, "Desc"),
+        category: BountyCategory::Documentation,
         reward_amount: 100,
         funded_amount: 50,
         token: Address::generate(&env),
@@ -2012,6 +2042,7 @@ fn test_bounty_serialization() {
 
     assert_eq!(bounty.id, deserialized.id);
     assert_eq!(bounty.status, deserialized.status);
+    assert_eq!(bounty.category, deserialized.category);
     assert_eq!(bounty.reward_amount, deserialized.reward_amount);
 }
 
