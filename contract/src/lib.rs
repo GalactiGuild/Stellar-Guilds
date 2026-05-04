@@ -18,8 +18,8 @@ use guild::types::{Member, Role};
 mod bounty;
 use bounty::{
     approve_bounty, approve_completion, cancel_bounty, claim_bounty, claim_payout, create_bounty,
-    expire_bounty, fund_bounty, get_bounty_data, get_guild_bounties_list, release_escrow,
-    submit_work, Bounty, PayoutSplit,
+    expire_bounty, fund_bounty, get_bounty_data, get_guild_bounties_list, process_payout_batch,
+    release_escrow, submit_work, Bounty, PayoutBatchResult, PayoutSplit,
 };
 
 mod treasury;
@@ -1860,6 +1860,11 @@ impl StellarGuildsContract {
         recipients: Vec<PayoutSplit>,
     ) -> bool {
         claim_payout(&env, bounty_id, claimer, recipients)
+    }
+
+    /// Clamp a requested payout batch size to the maximum safe per-call amount.
+    pub fn process_payout_batch(env: Env, count: u32) -> PayoutBatchResult {
+        process_payout_batch(&env, count)
     }
 
     /// Get bounty by ID

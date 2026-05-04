@@ -7,6 +7,7 @@
 //! contract interface, ensuring proper contract context execution.
 
 use crate::bounty::types::{BountyStatus, PayoutSplit};
+use crate::bounty::MAX_BATCH_SIZE;
 use crate::guild::types::Role;
 use crate::InitializerProof;
 use crate::StellarGuildsContract;
@@ -74,6 +75,35 @@ fn single_recipient_split(env: &Env, recipient: &Address) -> soroban_sdk::Vec<Pa
     let mut recipients = soroban_sdk::Vec::new(env);
     recipients.push_back(payout_split(recipient, 10_000));
     recipients
+}
+
+// ============ Payout Batch Cap Tests ============
+
+#[test]
+fn test_process_payout_batch_under_cap_processes_all() {
+    let env = setup_env();
+    let contract_id = register_and_init_contract(&env);
+    let client = StellarGuildsContractClient::new(&env, &contract_id);
+
+    let result = client.process_payout_batch(&10u32);
+
+    assert_eq!(result.requested_count, 10);
+    assert_eq!(result.processed_count, 10);
+    assert_eq!(result.remainder_count, 0);
+}
+
+#[test]
+fn test_process_payout_batch_over_cap_clamps_without_panic() {
+    let env = setup_env();
+    let contract_id = register_and_init_contract(&env);
+    let client = StellarGuildsContractClient::new(&env, &contract_id);
+
+    let requested = MAX_BATCH_SIZE + 17;
+    let result = client.process_payout_batch(&requested);
+
+    assert_eq!(result.requested_count, requested);
+    assert_eq!(result.processed_count, MAX_BATCH_SIZE);
+    assert_eq!(result.remainder_count, 17);
 }
 
 // ============ Bounty Creation Tests ============
