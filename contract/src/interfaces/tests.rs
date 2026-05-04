@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::bounty::types::{Bounty, BountyStatus};
+    use crate::bounty::types::{Bounty, BountyCategory, BountyStatus};
     use crate::dispute::types::{Dispute, DisputeReference, DisputeStatus};
     use crate::governance::types::{ExecutionPayload, Proposal, ProposalStatus, ProposalType};
     use crate::guild::types::{Member, Role};
@@ -65,6 +65,7 @@ mod tests {
                 creator: Address::generate(&env),
                 title: String::from_str(&env, "Bounty"),
                 description: String::from_str(&env, "Bounty desc"),
+                category: BountyCategory::Development,
                 reward_amount: 100,
                 funded_amount: 100,
                 token: Address::generate(&env),

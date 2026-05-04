@@ -14,6 +14,17 @@ pub enum BountyStatus {
     Funded = 7,
 }
 
+/// Machine-readable category metadata for bounties.
+#[contracttype]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BountyCategory {
+    Development = 0,
+    Design = 1,
+    Documentation = 2,
+    Research = 3,
+    Other = 4,
+}
+
 /// Bounty struct containing all bounty metadata and state
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -28,6 +39,8 @@ pub struct Bounty {
     pub title: String,
     /// Detailed description
     pub description: String,
+    /// Machine-readable bounty category
+    pub category: BountyCategory,
     /// Amount of tokens defined as reward
     pub reward_amount: i128,
     /// Amount of tokens currently funded

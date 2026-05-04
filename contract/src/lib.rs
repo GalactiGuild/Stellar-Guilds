@@ -18,8 +18,8 @@ use guild::types::{Member, Role};
 mod bounty;
 use bounty::{
     approve_bounty, approve_completion, cancel_bounty, claim_bounty, claim_payout, create_bounty,
-    expire_bounty, fund_bounty, get_bounty_data, get_guild_bounties_list, release_escrow,
-    submit_work, Bounty, PayoutSplit,
+    create_bounty_with_category, expire_bounty, fund_bounty, get_bounty_data,
+    get_guild_bounties_list, release_escrow, submit_work, Bounty, BountyCategory, PayoutSplit,
 };
 
 mod treasury;
@@ -1738,6 +1738,31 @@ impl StellarGuildsContract {
             creator,
             title,
             description,
+            reward_amount,
+            token,
+            expiry,
+        )
+    }
+
+    /// Create a new bounty with structured category metadata.
+    pub fn create_bounty_with_category(
+        env: Env,
+        guild_id: u64,
+        creator: Address,
+        title: String,
+        description: String,
+        category: BountyCategory,
+        reward_amount: i128,
+        token: Address,
+        expiry: u64,
+    ) -> u64 {
+        create_bounty_with_category(
+            &env,
+            guild_id,
+            creator,
+            title,
+            description,
+            category,
             reward_amount,
             token,
             expiry,

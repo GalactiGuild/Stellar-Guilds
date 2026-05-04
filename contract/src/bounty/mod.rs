@@ -39,7 +39,7 @@ use crate::guild::membership::has_permission;
 use crate::guild::types::Role;
 use soroban_sdk::{Address, Env, String, Vec};
 
-pub use types::{Bounty, BountyStatus, PayoutSplit};
+pub use types::{Bounty, BountyCategory, BountyStatus, PayoutSplit};
 
 const TOTAL_BPS: i128 = 10_000;
 
@@ -53,6 +53,31 @@ pub fn create_bounty(
     creator: Address,
     title: String,
     description: String,
+    reward_amount: i128,
+    token: Address,
+    expiry: u64,
+) -> u64 {
+    create_bounty_with_category(
+        env,
+        guild_id,
+        creator,
+        title,
+        description,
+        BountyCategory::Other,
+        reward_amount,
+        token,
+        expiry,
+    )
+}
+
+/// Create a new bounty with structured category metadata.
+pub fn create_bounty_with_category(
+    env: &Env,
+    guild_id: u64,
+    creator: Address,
+    title: String,
+    description: String,
+    category: BountyCategory,
     reward_amount: i128,
     token: Address,
     expiry: u64,
@@ -91,6 +116,7 @@ pub fn create_bounty(
         creator: creator.clone(),
         title,
         description,
+        category,
         reward_amount,
         funded_amount: 0,
         token: token.clone(),
