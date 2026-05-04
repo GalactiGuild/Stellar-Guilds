@@ -13,7 +13,7 @@ Branch: `feat/bounty-submission-flow`
 - [x] Add confirmation step before final submission.
 - [x] Keep `onSubmit` mocked with `console.log` only.
 - [x] Verify frontend build.
-- [ ] Commit, push, and open PR.
+- [x] Commit, push, and open PR: https://github.com/GalactiGuild/Stellar-Guilds/pull/561
 
 ## Verification
 - `npm run build` → PASS. Existing unrelated lint warnings remain.
