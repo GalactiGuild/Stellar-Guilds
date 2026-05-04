@@ -42,8 +42,9 @@ mod reputation;
 use reputation::{
     compute_governance_weight as rep_governance_weight, get_badges as rep_get_badges,
     get_contributions as rep_get_contributions, get_decayed_profile, get_global_reputation,
+    get_reputation_base_uri as rep_get_reputation_base_uri,
     get_token_metadata as rep_get_token_metadata, record_contribution as rep_record_contribution,
-    Badge, ContributionRecord, ContributionType, ReputationProfile,
+    token_uri as rep_token_uri, Badge, ContributionRecord, ContributionType, ReputationProfile,
 };
 
 mod governance;
@@ -1374,6 +1375,16 @@ impl StellarGuildsContract {
     /// Return JSON metadata for a reputation soulbound token.
     pub fn get_token_metadata(env: Env, id: u64) -> String {
         rep_get_token_metadata(&env, id)
+    }
+
+    /// Return the base URI used for reputation soulbound token metadata.
+    pub fn get_reputation_base_uri(env: Env) -> String {
+        rep_get_reputation_base_uri(&env)
+    }
+
+    /// Return the off-chain metadata URI for a reputation soulbound token.
+    pub fn token_uri(env: Env, id: i128) -> String {
+        rep_token_uri(&env, id)
     }
 
     // ============ Milestone Tracking Functions ============
@@ -3351,6 +3362,36 @@ mod tests {
                 "{\"name\":\"Stellar Hero\",\"rank\":\"Master\",\"image\":\"ipfs://stellar-hero-master\"}"
             )
         );
+    }
+
+    #[test]
+    fn test_reputation_token_uri_returns_static_metadata_path() {
+        let (env, _, _, _, _) = setup();
+        let contract_id = register_and_init_contract(&env);
+        let client = StellarGuildsContractClient::new(&env, &contract_id);
+
+        assert_eq!(
+            client.get_reputation_base_uri(),
+            String::from_str(&env, "ipfs://BASE_CID/")
+        );
+        assert_eq!(
+            client.token_uri(&1i128),
+            String::from_str(&env, "ipfs://BASE_CID/reputation_token_1.json")
+        );
+        assert_eq!(
+            client.token_uri(&2i128),
+            String::from_str(&env, "ipfs://BASE_CID/reputation_token_2.json")
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "unsupported reputation token id")]
+    fn test_reputation_token_uri_rejects_unknown_id() {
+        let (env, _, _, _, _) = setup();
+        let contract_id = register_and_init_contract(&env);
+        let client = StellarGuildsContractClient::new(&env, &contract_id);
+
+        client.token_uri(&99i128);
     }
 
     // ============ Guild Lifecycle Integration Tests ============
