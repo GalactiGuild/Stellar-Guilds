@@ -13,7 +13,7 @@ Branch: `feat/ui-error-boundary`
 - [x] Include manual dummy demo component that throws on click.
 - [x] Export components from UI barrel.
 - [x] Verify frontend build.
-- [ ] Commit, push, and open PR.
+- [x] Commit, push, and open PR: https://github.com/GalactiGuild/Stellar-Guilds/pull/558
 
 ## Verification
 - `npm run build` → PASS. Existing unrelated lint warnings remain.
