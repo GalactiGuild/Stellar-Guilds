@@ -7,6 +7,7 @@ import {
   Matches,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { GuildSocialLinksDto } from './update-guild-social-links.dto';
 
 export class UpdateGuildDto {
   @IsOptional()
@@ -33,4 +34,8 @@ export class UpdateGuildDto {
   @IsOptional()
   @IsObject()
   settings?: any;
+
+  @IsOptional()
+  @IsObject()
+  socialLinks?: GuildSocialLinksDto;
 }
