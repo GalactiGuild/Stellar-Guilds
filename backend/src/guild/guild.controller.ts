@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   Patch,
+  Put,
   Delete,
   UploadedFile,
   UseInterceptors,
@@ -23,6 +24,7 @@ import { GuildService } from './guild.service';
 import { ApplicationService } from './application.service';
 import { CreateGuildDto } from './dto/create-guild.dto';
 import { UpdateGuildDto } from './dto/update-guild.dto';
+import { UpdateGuildSocialLinksDto } from './dto/update-guild-social-links.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
 import { ApproveInviteDto } from './dto/approve-invite.dto';
 import { SearchGuildDto } from './dto/search-guild.dto';
@@ -89,6 +91,22 @@ export class GuildController {
     @Request() req: any,
   ) {
     return this.guildService.updateGuild(id, dto, req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put(':id/socials')
+  @UseGuards(GuildRoleGuard)
+  @GuildRoles('ADMIN', 'OWNER')
+  async updateSocialLinks(
+    @Param('id') id: string,
+    @Body() dto: UpdateGuildSocialLinksDto,
+    @Request() req: any,
+  ) {
+    return this.guildService.updateGuildSocialLinks(
+      id,
+      dto.socialLinks,
+      req.user.userId,
+    );
   }
 
   @UseGuards(JwtAuthGuard)

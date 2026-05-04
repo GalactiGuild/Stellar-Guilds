@@ -141,6 +141,7 @@ model Guild {
   bannerCid   String?
   ownerId     String
   settings    Json?
+  socialLinks Json?
   memberCount Int       @default(1)
   isActive    Boolean   @default(true)
 
