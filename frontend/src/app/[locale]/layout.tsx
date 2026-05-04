@@ -6,6 +6,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { locales, defaultLocale, type Locale } from '@/i18n';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ThemeProvider } from "next-themes";
+import { CommandPalette } from '@/components/Search/CommandPalette';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -44,6 +45,7 @@ export default async function RootLayout({
             <ErrorBoundary>
               <div className="min-h-screen flex flex-col bg-white dark:bg-stellar-navy text-gray-900 dark:text-stellar-white font-sans transition-colors duration-300">
                 {children}
+                <CommandPalette />
               </div>
             </ErrorBoundary>
           </NextIntlClientProvider>
