@@ -12,7 +12,7 @@ Branch: `feat/relative-time-component`
 - [x] Export the component from UI index.
 - [x] Replace bounty card deadline formatting with `RelativeTime`.
 - [x] Verify frontend build.
-- [ ] Commit, push, and open PR.
+- [x] Commit, push, and open PR: https://github.com/GalactiGuild/Stellar-Guilds/pull/552
 
 ## Verification
 - `npm run build` → PASS. Existing lint warnings remain unrelated: unused `StepWizard`, `<img>` warnings, `Tabs` unused/missing dependency, and unused `Textarea`.
