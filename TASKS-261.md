@@ -13,7 +13,7 @@ Branch: `feat/copyable-key-component`
 - [x] Emit Sonner toast: "Address Copied!".
 - [x] Export component from UI barrel.
 - [x] Verify frontend build.
-- [ ] Commit, push, and open PR.
+- [x] Commit, push, and open PR: https://github.com/GalactiGuild/Stellar-Guilds/pull/553
 
 ## Verification
 - `npm run build` → PASS. Existing unrelated lint warnings remain.
