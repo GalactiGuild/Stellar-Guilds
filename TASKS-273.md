@@ -12,7 +12,7 @@ Branch: `feat/data-table-component`
 - [x] Apply dark glassmorphism Tailwind styling.
 - [x] Export component and type from UI barrel.
 - [x] Verify frontend build.
-- [ ] Commit, push, and open PR.
+- [x] Commit, push, and open PR: https://github.com/GalactiGuild/Stellar-Guilds/pull/557
 
 ## Verification
 - `npm run build` → PASS. Existing unrelated lint warnings remain.
