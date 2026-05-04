@@ -7,6 +7,7 @@
 pub enum TreasuryError {
     BudgetExceeded = 1,
     AllowanceExceeded = 2,
+    LimitExceeded = 3,
 }
 
 #[contracttype]
@@ -55,6 +56,7 @@ pub struct Treasury {
     pub signers: Vec<Address>,
     pub approval_threshold: u32,
     pub high_value_threshold: i128,
+    pub max_withdrawal: i128,
     pub balance_xlm: i128,
     pub token_balances: Map<Address, i128>,
     pub total_deposits: i128,

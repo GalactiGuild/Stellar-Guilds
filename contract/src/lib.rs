@@ -28,6 +28,7 @@ use treasury::{
     emergency_pause as core_emergency_pause, execute_transaction as core_execute_transaction,
     get_balance as core_get_balance, get_transaction_history as core_get_transaction_history,
     grant_allowance as core_grant_allowance, initialize_treasury as core_initialize_treasury,
+    initialize_treasury_with_max_withdrawal as core_initialize_treasury_with_max_withdrawal,
     propose_withdrawal as core_propose_withdrawal, set_budget as core_set_budget, Transaction,
 };
 
@@ -914,6 +915,23 @@ impl StellarGuildsContract {
         approval_threshold: u32,
     ) -> u64 {
         core_initialize_treasury(&env, guild_id, signers, approval_threshold)
+    }
+
+    /// Initialize a new treasury with a hard per-transaction withdrawal cap.
+    pub fn init_treasury_with_cap(
+        env: Env,
+        guild_id: u64,
+        signers: Vec<Address>,
+        approval_threshold: u32,
+        max_withdrawal: i128,
+    ) -> u64 {
+        core_initialize_treasury_with_max_withdrawal(
+            &env,
+            guild_id,
+            signers,
+            approval_threshold,
+            max_withdrawal,
+        )
     }
 
     /// Deposit funds into a treasury

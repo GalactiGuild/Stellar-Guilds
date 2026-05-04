@@ -58,6 +58,8 @@ pub struct GuildConfig {
     pub admin: Address,
     /// Maximum number of members allowed
     pub member_limit: u32,
+    /// Maximum amount allowed in a single treasury withdrawal
+    pub max_withdrawal: i128,
 }
 
 /// Member struct representing a guild member

@@ -5,8 +5,8 @@ pub mod types;
 
 pub use management::{
     approve_transaction, deposit, emergency_pause, execute_milestone_payment, execute_transaction,
-    get_balance, get_transaction_history, grant_allowance, initialize_treasury, propose_withdrawal,
-    set_budget,
+    get_balance, get_transaction_history, grant_allowance, initialize_treasury,
+    initialize_treasury_with_max_withdrawal, propose_withdrawal, set_budget,
 };
 
 #[allow(unused_imports)]
