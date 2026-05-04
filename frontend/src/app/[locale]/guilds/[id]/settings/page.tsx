@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowLeft, Trash2 } from 'lucide-react'
 import { useGuildStore } from '@/store/guildStore'
 import { GuildForm } from '@/features/guilds/components/GuildForm'
+import { SettingsLayout } from '@/features/guilds/components/SettingsLayout'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import type { CreateGuildFormData } from '@/features/guilds/types'
@@ -87,24 +88,17 @@ export default function GuildSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <SettingsLayout
+      title="Guild Settings"
+      description="Manage your guild&apos;s information and preferences"
+    >
+      <div className="max-w-3xl">
         {/* Back Button */}
         <Link href={`/guilds/${guildId}`}>
           <Button variant="ghost" leftIcon={<ArrowLeft className="w-4 h-4" />} className="mb-6">
             Back to Guild
           </Button>
         </Link>
-
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Guild Settings
-          </h1>
-          <p className="text-slate-400">
-            Manage your guild&apos;s information and preferences
-          </p>
-        </div>
 
         {/* Success Message */}
         {showSuccessMessage && (
@@ -193,6 +187,6 @@ export default function GuildSettingsPage() {
           </div>
         </Modal>
       </div>
-    </div>
+    </SettingsLayout>
   )
 }
