@@ -484,14 +484,42 @@ export class GuildService {
     const membership = await this.prisma.guildMembership.findUnique({
       where: { userId_guildId: { userId, guildId } },
     });
-    if (!membership) throw new NotFoundException('Not a member');
+    if (!membership || membership.status !== 'APPROVED') {
+      throw new NotFoundException('Not a member');
+    }
     if (membership.role === 'OWNER')
       throw new BadRequestException('Owner cannot leave the guild');
-    await this.prisma.guildMembership.delete({ where: { id: membership.id } });
-    await this.prisma.guild.update({
-      where: { id: guildId },
-      data: { memberCount: { decrement: 1 } as any } as any,
-    });
+
+    if (membership.role === 'ADMIN') {
+      const adminCount = await this.prisma.guildMembership.count({
+        where: { guildId, status: 'APPROVED', role: 'ADMIN' },
+      });
+      if (adminCount <= 1) {
+        throw new BadRequestException(
+          'Last admin cannot leave without promoting another admin',
+        );
+      }
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.guildMembership.delete({ where: { id: membership.id } }),
+      this.prisma.guild.update({
+        where: { id: guildId },
+        data: { memberCount: { decrement: 1 } as any } as any,
+      }),
+      this.prisma.guildActivityLog.create({
+        data: {
+          guildId,
+          actorId: userId,
+          action: 'MEMBER_LEFT',
+          metadata: {
+            membershipId: membership.id,
+            role: membership.role,
+          },
+        },
+      }),
+    ]);
+
     await this.syncUserActiveGuildsCount(userId);
     return { success: true };
   }
