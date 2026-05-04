@@ -63,6 +63,14 @@ pub struct PayoutSplit {
     pub bps: u32,
 }
 
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PayoutBatchResult {
+    pub requested_count: u32,
+    pub processed_count: u32,
+    pub remainder_count: u32,
+}
+
 // ============ Events ============
 
 /// Event emitted when a bounty is created
@@ -139,4 +147,13 @@ pub struct BountyCancelledEvent {
 #[derive(Clone, Debug)]
 pub struct BountyExpiredEvent {
     pub bounty_id: u64,
+}
+
+/// Event emitted when a payout batch count is clamped to stay within gas bounds.
+#[contracttype]
+#[derive(Clone, Debug)]
+pub struct PayoutBatchProcessedEvent {
+    pub requested_count: u32,
+    pub processed_count: u32,
+    pub remainder_count: u32,
 }

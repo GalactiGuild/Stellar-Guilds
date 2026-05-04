@@ -26,22 +26,24 @@ use crate::bounty::escrow::{lock_funds, release_funds};
 use crate::bounty::storage::{get_bounty, get_guild_bounties, get_next_bounty_id, store_bounty};
 use crate::bounty::types::{
     BountyApprovedEvent, BountyCancelledEvent, BountyClaimedEvent, BountyCreatedEvent,
-    BountyExpiredEvent, BountyFundedEvent, EscrowReleasedEvent, WorkSubmittedEvent,
+    BountyExpiredEvent, BountyFundedEvent, EscrowReleasedEvent, PayoutBatchProcessedEvent,
+    WorkSubmittedEvent,
 };
 use crate::dispute::storage as dispute_storage;
 use crate::dispute::types::DisputeReference;
 use crate::events::emit::emit_event;
 use crate::events::topics::{
-    ACT_APPROVED, ACT_CANCELLED, ACT_CLAIMED, ACT_CREATED, ACT_EXPIRED, ACT_FUNDED, ACT_RELEASED,
-    ACT_SUBMITTED, MOD_BOUNTY,
+    ACT_APPROVED, ACT_CANCELLED, ACT_CLAIMED, ACT_CREATED, ACT_EXPIRED, ACT_FUNDED, ACT_RECORDED,
+    ACT_RELEASED, ACT_SUBMITTED, MOD_BOUNTY,
 };
 use crate::guild::membership::has_permission;
 use crate::guild::types::Role;
 use soroban_sdk::{Address, Env, String, Vec};
 
-pub use types::{Bounty, BountyStatus, PayoutSplit};
+pub use types::{Bounty, BountyStatus, PayoutBatchResult, PayoutSplit};
 
 const TOTAL_BPS: i128 = 10_000;
+pub const MAX_BATCH_SIZE: u32 = 25;
 
 /// Create a new bounty
 ///
@@ -136,6 +138,40 @@ fn validate_payout_splits(recipients: &Vec<PayoutSplit>) {
     if total_bps != TOTAL_BPS {
         panic!("Invalid payout split: total BPS must equal 10000");
     }
+}
+
+/// Clamp a requested payout batch size to the maximum safe per-call amount.
+///
+/// This does not panic on large input. Callers can process `processed_count`
+/// now and schedule `remainder_count` for a later call.
+pub fn process_payout_batch(env: &Env, count: u32) -> PayoutBatchResult {
+    let processed_count = if count > MAX_BATCH_SIZE {
+        MAX_BATCH_SIZE
+    } else {
+        count
+    };
+    let remainder_count = count.saturating_sub(processed_count);
+
+    let result = PayoutBatchResult {
+        requested_count: count,
+        processed_count,
+        remainder_count,
+    };
+
+    if remainder_count > 0 {
+        emit_event(
+            env,
+            MOD_BOUNTY,
+            ACT_RECORDED,
+            PayoutBatchProcessedEvent {
+                requested_count: count,
+                processed_count,
+                remainder_count,
+            },
+        );
+    }
+
+    result
 }
 
 fn distribute_payout(
