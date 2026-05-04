@@ -3,9 +3,9 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Clock, Coins, ChevronRight } from 'lucide-react'
-import { format } from 'date-fns'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { RelativeTime } from '@/components/ui'
 
 export type BountyStatus = 'open' | 'in-progress' | 'completed' | 'expired'
 
@@ -41,15 +41,6 @@ function formatCurrency(amount: number, currency: string): string {
     return formatter.format(amount)
   } catch {
     return `${amount.toFixed(2)} ${currency.toUpperCase()}`
-  }
-}
-
-function formatDeadline(dateString: string): string {
-  try {
-    const date = new Date(dateString)
-    return format(date, 'MMM d, yyyy')
-  } catch {
-    return dateString
   }
 }
 
@@ -134,9 +125,7 @@ export default function BountyCard({
         </div>
         <div className="flex items-center gap-1.5">
           <Clock className={clsx('w-4 h-4', isExpired ? 'text-slate-500' : 'text-slate-400')} />
-          <span className="text-slate-400">
-            {formatDeadline(deadline)}
-          </span>
+          <RelativeTime date={deadline} className="text-slate-400" />
         </div>
       </div>
 
