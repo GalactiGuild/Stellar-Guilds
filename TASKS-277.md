@@ -11,7 +11,7 @@ Branch: `feat/request-logger`
 - [x] Add global `LoggerMiddleware` for method/url/ip/status/elapsed request logs.
 - [x] Redact sensitive request headers/body fields before debug logging.
 - [x] Verify backend build/tests.
-- [ ] Commit, push, and open PR.
+- [x] Commit, push, and open PR: https://github.com/GalactiGuild/Stellar-Guilds/pull/562
 
 ## Verification
 - `cd backend && npm run build` → PASS.
