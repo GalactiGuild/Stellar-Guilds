@@ -16,3 +16,5 @@ export {
 export { Pagination } from "./Pagination";
 export { StatCard } from "./StatCard";
 export type { StatCardProps } from "./StatCard";
+export { RoleBadge } from "./RoleBadge";
+export type { RoleBadgeProps, RoleBadgeRole } from "./RoleBadge";
