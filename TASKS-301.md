@@ -10,7 +10,7 @@ Branch: `feat/reputation-token-uri`
 - [x] Add tests for base URI, multiple token IDs, and unknown ID rejection.
 - [x] Run formatting and contract tests.
 - [x] Revert generated snapshot churn before commit.
-- [ ] Commit, push, and open PR.
+- [x] Commit, push, and open PR: https://github.com/GalactiGuild/Stellar-Guilds/pull/551
 
 ## Verification
 - `cargo fmt`
