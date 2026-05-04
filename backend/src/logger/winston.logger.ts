@@ -1,5 +1,6 @@
 import * as winston from 'winston';
 import { ConsoleLogger } from '@nestjs/common';
+import { createWinstonLoggerOptions } from './logger.config';
 
 export class WinstonLogger extends ConsoleLogger {
   private winstonLogger!: winston.Logger;
@@ -43,28 +44,8 @@ export class WinstonLogger extends ConsoleLogger {
     );
 
     return winston.createLogger({
-      level: process.env.LOG_LEVEL || 'info',
+      ...createWinstonLoggerOptions(),
       format: logFormat,
-      defaultMeta: { service: 'stellar-guilds' },
-      transports: [
-        new winston.transports.Console({
-          format: logFormat,
-        }),
-        // Optional: Add file transport for production
-        ...(process.env.NODE_ENV === 'production'
-          ? [
-              new winston.transports.File({
-                filename: 'logs/error.log',
-                level: 'error',
-                format: logFormat,
-              }),
-              new winston.transports.File({
-                filename: 'logs/combined.log',
-                format: logFormat,
-              }),
-            ]
-          : []),
-      ],
     });
   }
 

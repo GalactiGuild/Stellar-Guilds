@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
@@ -12,7 +12,7 @@ import { SocialModule } from './social/social.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { HealthModule } from './health/health.module';
-import { LoggerModule } from './logger/logger.module';
+import { LoggerMiddleware, LoggerModule } from './logger';
 import { QueueModule } from './queue/queue.module';
 import { ProxylModule } from './proxyl/proxyl.module';
 import { ReputationModule } from './reputation/reputation.module';
@@ -73,4 +73,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}
