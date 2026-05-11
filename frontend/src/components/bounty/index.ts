@@ -1,2 +1,5 @@
 export { default as BountyCard } from './BountyCard'
+export { default as AssetSelector } from './AssetSelector'
+export { STELLAR_ASSETS, stellarAssetValueSchema, stellarIssuerSchema } from './AssetSelector'
 export type { BountyStatus } from './BountyCard'
+export type { StellarAssetCode } from './AssetSelector'
