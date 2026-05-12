@@ -9,6 +9,7 @@ import { useGuildStore } from '@/store/guildStore'
 import { GuildStats } from '@/features/guilds/components/GuildStats'
 import { MemberList } from '@/features/guilds/components/MemberList'
 import { SpotlightCard } from '@/features/guilds/components/SpotlightCard'
+import { Leaderboard } from '@/features/guilds/components/Leaderboard'
 import { Button } from '@/components/ui/Button'
 import type { GuildRole } from '@/features/guilds/types'
 
@@ -153,6 +154,11 @@ export default function GuildDetailPage() {
             createdAt={currentGuild.createdAt}
             tier={currentGuild.tier}
           />
+        </div>
+
+        {/* Reputation Leaderboard */}
+        <div className="mb-6">
+          <Leaderboard />
         </div>
 
         {/* Tabs */}
