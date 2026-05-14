@@ -35,6 +35,19 @@ fn set_ledger_timestamp(env: &Env, timestamp: u64) {
     });
 }
 
+fn set_ledger(env: &Env, timestamp: u64, sequence_number: u32) {
+    env.ledger().set(LedgerInfo {
+        timestamp,
+        protocol_version: 20,
+        sequence_number,
+        network_id: Default::default(),
+        base_reserve: 10,
+        min_temp_entry_ttl: 100,
+        min_persistent_entry_ttl: 100,
+        max_entry_ttl: 1000000,
+    });
+}
+
 fn register_and_init_contract(env: &Env) -> Address {
     let contract_id = env.register_contract(None, StellarGuildsContract);
     let client = StellarGuildsContractClient::new(env, &contract_id);
@@ -684,6 +697,49 @@ fn test_submit_work_success() {
     let bounty = client.get_bounty(&bounty_id);
     assert_eq!(bounty.status, BountyStatus::UnderReview);
     assert_eq!(bounty.submission_url, Some(submission));
+    assert_eq!(bounty.review_started_ledger_sequence, Some(0));
+}
+
+#[test]
+fn test_submit_work_records_review_ledger_sequence() {
+    let env = setup_env();
+    let owner = Address::generate(&env);
+    let funder = Address::generate(&env);
+    let claimer = Address::generate(&env);
+    let token = create_mock_token(&env, &owner);
+
+    set_ledger(&env, 1000, 25);
+    env.mock_all_auths();
+
+    let contract_id = register_and_init_contract(&env);
+    let client = StellarGuildsContractClient::new(&env, &contract_id);
+
+    let guild_id = setup_guild(&client, &env, &owner);
+    mint_tokens(&env, &token, &funder, 1000);
+
+    let title = String::from_str(&env, "Task");
+    let description = String::from_str(&env, "Description");
+    let bounty_id = client.create_bounty(
+        &guild_id,
+        &owner,
+        &title,
+        &description,
+        &100i128,
+        &token,
+        &2000u64,
+    );
+
+    client.fund_bounty(&bounty_id, &funder, &100i128);
+    client.approve_bounty(&bounty_id, &owner, &claimer);
+    client.claim_bounty(&bounty_id, &claimer);
+
+    set_ledger(&env, 1100, 42);
+
+    let submission = String::from_str(&env, "https://github.com/pr/123");
+    client.submit_work(&bounty_id, &submission);
+
+    let bounty = client.get_bounty(&bounty_id);
+    assert_eq!(bounty.review_started_ledger_sequence, Some(42));
 }
 
 #[test]
@@ -838,6 +894,94 @@ fn test_approve_completion_success() {
 
     let bounty = client.get_bounty(&bounty_id);
     assert_eq!(bounty.status, BountyStatus::Completed);
+}
+
+#[test]
+fn test_is_review_window_over_uses_ledger_sequence() {
+    use crate::bounty::REVIEW_WINDOW_SEQUENCE_LIMIT;
+
+    let env = setup_env();
+    let owner = Address::generate(&env);
+    let funder = Address::generate(&env);
+    let claimer = Address::generate(&env);
+    let token = create_mock_token(&env, &owner);
+
+    set_ledger(&env, 1000, 1);
+    env.mock_all_auths();
+
+    let contract_id = register_and_init_contract(&env);
+    let client = StellarGuildsContractClient::new(&env, &contract_id);
+
+    let guild_id = setup_guild(&client, &env, &owner);
+    mint_tokens(&env, &token, &funder, 1000);
+
+    let title = String::from_str(&env, "Task");
+    let description = String::from_str(&env, "Description");
+    let bounty_id = client.create_bounty(
+        &guild_id,
+        &owner,
+        &title,
+        &description,
+        &100i128,
+        &token,
+        &2000u64,
+    );
+
+    client.fund_bounty(&bounty_id, &funder, &100i128);
+    client.approve_bounty(&bounty_id, &owner, &claimer);
+    client.claim_bounty(&bounty_id, &claimer);
+
+    let submission = String::from_str(&env, "https://github.com/pr/123");
+    client.submit_work(&bounty_id, &submission);
+
+    set_ledger(&env, 1100, 1 + REVIEW_WINDOW_SEQUENCE_LIMIT);
+    assert_eq!(client.is_review_window_over(&bounty_id), false);
+
+    set_ledger(&env, 1200, 2 + REVIEW_WINDOW_SEQUENCE_LIMIT);
+    assert_eq!(client.is_review_window_over(&bounty_id), true);
+}
+
+#[test]
+#[should_panic(expected = "Review window has closed")]
+fn test_approve_completion_after_review_window_fails() {
+    use crate::bounty::REVIEW_WINDOW_SEQUENCE_LIMIT;
+
+    let env = setup_env();
+    let owner = Address::generate(&env);
+    let funder = Address::generate(&env);
+    let claimer = Address::generate(&env);
+    let token = create_mock_token(&env, &owner);
+
+    set_ledger(&env, 1000, 1);
+    env.mock_all_auths();
+
+    let contract_id = register_and_init_contract(&env);
+    let client = StellarGuildsContractClient::new(&env, &contract_id);
+
+    let guild_id = setup_guild(&client, &env, &owner);
+    mint_tokens(&env, &token, &funder, 1000);
+
+    let title = String::from_str(&env, "Task");
+    let description = String::from_str(&env, "Description");
+    let bounty_id = client.create_bounty(
+        &guild_id,
+        &owner,
+        &title,
+        &description,
+        &100i128,
+        &token,
+        &2000u64,
+    );
+
+    client.fund_bounty(&bounty_id, &funder, &100i128);
+    client.approve_bounty(&bounty_id, &owner, &claimer);
+    client.claim_bounty(&bounty_id, &claimer);
+
+    let submission = String::from_str(&env, "https://github.com/pr/123");
+    client.submit_work(&bounty_id, &submission);
+
+    set_ledger(&env, 1200, 2 + REVIEW_WINDOW_SEQUENCE_LIMIT);
+    client.approve_completion(&bounty_id, &owner);
 }
 
 #[test]
@@ -2003,6 +2147,7 @@ fn test_bounty_serialization() {
         status: BountyStatus::Open,
         claimer: None,
         submission_url: None,
+        review_started_ledger_sequence: None,
         created_at: 1000,
         expires_at: 2000,
     };

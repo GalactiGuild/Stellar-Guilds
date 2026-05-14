@@ -40,6 +40,8 @@ pub struct Bounty {
     pub claimer: Option<Address>,
     /// Submission URL when work is submitted
     pub submission_url: Option<String>,
+    /// Ledger sequence when the current submission entered review
+    pub review_started_ledger_sequence: Option<u32>,
     /// Creation timestamp (seconds)
     pub created_at: u64,
     /// Expiration timestamp (seconds)

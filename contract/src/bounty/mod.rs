@@ -42,6 +42,7 @@ use soroban_sdk::{Address, Env, String, Vec};
 pub use types::{Bounty, BountyStatus, PayoutSplit};
 
 const TOTAL_BPS: i128 = 10_000;
+pub const REVIEW_WINDOW_SEQUENCE_LIMIT: u32 = 50;
 
 /// Create a new bounty
 ///
@@ -97,6 +98,7 @@ pub fn create_bounty(
         status,
         claimer: None,
         submission_url: None,
+        review_started_ledger_sequence: None,
         created_at,
         expires_at: expiry,
     };
@@ -315,6 +317,7 @@ pub fn submit_work(env: &Env, bounty_id: u64, submission_url: String) -> bool {
 
     bounty.status = BountyStatus::UnderReview;
     bounty.submission_url = Some(submission_url.clone());
+    bounty.review_started_ledger_sequence = Some(env.ledger().sequence());
     store_bounty(env, &bounty);
 
     emit_event(
@@ -376,6 +379,9 @@ pub fn approve_completion(env: &Env, bounty_id: u64, approver: Address) -> bool 
     }
     if bounty.status != BountyStatus::UnderReview {
         panic!("Bounty is not under review");
+    }
+    if is_review_window_over(env, bounty_id) {
+        panic!("Review window has closed");
     }
 
     bounty.status = BountyStatus::Completed;
@@ -581,6 +587,15 @@ pub fn get_bounty_data(env: &Env, bounty_id: u64) -> Bounty {
 
 pub fn get_guild_bounties_list(env: &Env, guild_id: u64) -> Vec<Bounty> {
     get_guild_bounties(env, guild_id)
+}
+
+pub fn is_review_window_over(env: &Env, bounty_id: u64) -> bool {
+    let bounty = get_bounty(env, bounty_id).expect("Bounty not found");
+    let started_at = bounty
+        .review_started_ledger_sequence
+        .expect("Bounty has no submission under review");
+
+    env.ledger().sequence().saturating_sub(started_at) > REVIEW_WINDOW_SEQUENCE_LIMIT
 }
 
 #[allow(dead_code)]
