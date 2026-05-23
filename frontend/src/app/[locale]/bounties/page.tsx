@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { MOCK_BOUNTIES } from "@/lib/mocks/bounties";
 import { BountyCard } from "@/features/bounties/components/BountyCard";
+import { useBountyStore } from "@/store/bountyStore";
 import {
   Search,
   Zap,
@@ -24,13 +24,14 @@ type SortOption = "Newest" | "Highest Reward" | "Expiring Soon";
 
 export default function MarketplacePage() {
   const router = useRouter();
+  const bounties = useBountyStore((state) => state.bounties);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
   const [sortBy, setSortBy] = useState<SortOption>("Newest");
   const [activeCategory, setActiveCategory] = useState("All");
 
   const filteredAndSortedBounties = useMemo(() => {
-    const result = MOCK_BOUNTIES.filter((bounty) => {
+    const result = bounties.filter((bounty) => {
       const matchesSearch = bounty.title
         .toLowerCase()
         .includes(search.toLowerCase());
@@ -47,7 +48,7 @@ export default function MarketplacePage() {
       if (sortBy === "Newest") return Number(b.id) - Number(a.id);
       return 0;
     });
-  }, [search, filterStatus, sortBy]);
+  }, [bounties, search, filterStatus, sortBy]);
 
   return (
     <div className="min-h-screen w-full bg-slate-950 text-white selection:bg-violet-500/30">

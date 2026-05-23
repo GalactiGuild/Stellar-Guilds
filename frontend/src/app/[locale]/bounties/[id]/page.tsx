@@ -3,11 +3,11 @@ import React, { useState, use } from "react";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import { CodeBlock } from "@/components/markdown/CodeBlock";
-import { MOCK_BOUNTIES } from "@/lib/mocks/bounties";
 import { StatusBadge } from "@/features/bounties/components/BountyCard";
 import { SubmissionForm } from "@/features/bounties/components/SubmissionForm";
 import { BountyApplicationForm } from "@/features/bounties/components/BountyApplicationForm";
 import { toast, Toaster } from "sonner";
+import { useBountyStore } from "@/store/bountyStore";
 import {
   Clock,
   Wallet,
@@ -30,34 +30,29 @@ interface PageProps {
 export default function BountyDetailPage({ params }: PageProps) {
   const resolvedParams = use(params);
   const id = resolvedParams.id;
-  const bounty = MOCK_BOUNTIES.find((b) => b.id === id) || MOCK_BOUNTIES[0];
+  const bounty = useBountyStore((state) =>
+    state.bounties.find((b) => b.id === id) ?? state.bounties[0],
+  );
+  const acceptSubmission = useBountyStore((state) => state.acceptSubmission);
+  const submitBounty = useBountyStore((state) => state.submitBounty);
+  const displayedStatus = bounty.optimisticStatus ?? bounty.status;
 
   const [showApplicationForm, setShowApplicationForm] = useState(false);
 
-  const [viewState, setViewState] = useState<
-    "idle" | "claimed" | "submitting" | "completed"
-  >("idle");
+  const [viewState, setViewState] = useState<"idle" | "submitting">("idle");
 
   const handleClaim = () => {
-    const promise = () => new Promise((resolve) => setTimeout(resolve, 1500));
-
-    toast.promise(promise, {
-      loading: "Initializing neural link to mission...",
-      success: () => {
-        setViewState("claimed");
-        return "Mission Initialized. Good luck, contributor.";
-      },
-      error: "Connection failed.",
-    });
+    void acceptSubmission(bounty.id);
   };
 
   const handleFinalSubmit = () => {
-    toast.success("SUBMISSION RECEIVED", {
+    toast("SUBMISSION RECEIVED", {
       description:
         "Your work has been encrypted and sent to the guild for review.",
       icon: <CheckCircle2 className="text-violet-500" size={18} />,
     });
-    setViewState("completed");
+    setViewState("idle");
+    void submitBounty(bounty.id);
   };
 
   return (
@@ -86,9 +81,14 @@ export default function BountyDetailPage({ params }: PageProps) {
               <div className="flex flex-wrap items-center gap-3">
                 <StatusBadge
                   status={
-                    viewState === "completed" ? "Under Review" : bounty.status
+                    viewState === "submitting" ? "Claimed" : displayedStatus
                   }
                 />
+                {bounty.isPending && (
+                  <span className="text-[10px] font-mono text-amber-400 uppercase tracking-widest">
+                    Awaiting Stellar confirmation
+                  </span>
+                )}
                 <div className="h-1 w-1 bg-slate-700 rounded-full" />
                 <span className="text-[10px] font-mono text-violet-500 uppercase tracking-widest bg-violet-500/10 px-2 py-1 rounded">
                   {bounty.difficulty}
@@ -188,16 +188,18 @@ export default function BountyDetailPage({ params }: PageProps) {
                 </div>
 
                 <div className="space-y-3">
-                  {viewState === "idle" && (
+                  {displayedStatus === "Open" && viewState === "idle" && (
                     <>
                       <button
                         onClick={handleClaim}
+                        disabled={bounty.isPending}
                         className="w-full bg-white text-black py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-violet-500 transition-all active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.1)]"
                       >
-                        Initialize Mission
+                        {bounty.isPending ? "Confirming..." : "Initialize Mission"}
                       </button>
                       <button
                         onClick={() => setShowApplicationForm(true)}
+                        disabled={bounty.isPending}
                         className="w-full py-4 bg-violet-500/10 border border-violet-500/30 text-violet-400 rounded-2xl font-black uppercase tracking-widest hover:bg-violet-500/20 transition-all flex items-center justify-center gap-2"
                       >
                         <Send size={14} />
@@ -206,23 +208,24 @@ export default function BountyDetailPage({ params }: PageProps) {
                     </>
                   )}
 
-                  {viewState === "claimed" && (
+                  {displayedStatus === "Claimed" && viewState === "idle" && (
                     <button
                       onClick={() => setViewState("submitting")}
+                      disabled={bounty.isPending}
                       className="w-full bg-violet-500 text-black py-5 rounded-2xl font-black uppercase tracking-widest transition-all hover:bg-violet-400"
                     >
-                      Upload Submission
+                      {bounty.isPending ? "Confirming..." : "Upload Submission"}
                     </button>
                   )}
 
                   {viewState === "submitting" && (
                     <SubmissionForm
-                      onCancel={() => setViewState("claimed")}
-                      onSubmit={handleFinalSubmit} 
+                      onCancel={() => setViewState("idle")}
+                      onSubmit={handleFinalSubmit}
                     />
                   )}
 
-                  {viewState === "completed" && (
+                  {displayedStatus === "Under Review" && viewState === "idle" && (
                     <div className="w-full bg-white/5 border border-slate-800/10 text-violet-500 py-5 rounded-2xl font-black uppercase tracking-widest text-center flex items-center justify-center gap-2">
                       <CheckCircle2 size={18} />
                       Submitted

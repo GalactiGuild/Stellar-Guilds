@@ -15,4 +15,7 @@ export interface Bounty {
   deadline: string;
   applicants: number;
   tags: string[];
+  isPending?: boolean;
+  optimisticStatus?: BountyStatus;
+  error?: string;
 }
