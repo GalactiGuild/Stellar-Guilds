@@ -16,6 +16,7 @@ const mockPrisma = () => ({
   },
   guildMembership: {
     create: jest.fn(),
+    count: jest.fn(),
     findUnique: jest.fn(),
     findFirst: jest.fn(),
     findMany: jest.fn(),
@@ -90,6 +91,31 @@ describe('GuildService (settings integration)', () => {
       'owner1',
     );
     expect(updated.settings.requireApproval).toBe(true);
+  });
+
+  it('updates structured guild socials when caller can manage guild', async () => {
+    const guildId = 'g-1';
+    const socials = {
+      website: 'https://example.org',
+      twitter: 'https://twitter.com/stellarorg',
+      discord: 'https://discord.gg/stellar',
+    };
+    prisma.guild.findUnique.mockResolvedValue({ id: guildId, ownerId: 'owner1' });
+    prisma.guild.update.mockImplementation(({ where, data }: any) =>
+      Promise.resolve({ id: where.id, ...data }),
+    );
+
+    const updated = await service.updateGuildSocials(
+      guildId,
+      socials,
+      'owner1',
+    );
+
+    expect(prisma.guild.update).toHaveBeenCalledWith({
+      where: { id: guildId },
+      data: { socials },
+    });
+    expect(updated.socials).toEqual(socials);
   });
 
   it('searches only discoverable guilds', async () => {

@@ -12,6 +12,7 @@ import { MailerService } from '../mailer/mailer.service';
 import { StorageService } from '../storage/storage.service';
 import { CreateGuildDto } from './dto/create-guild.dto';
 import { UpdateGuildDto } from './dto/update-guild.dto';
+import { UpdateGuildSocialsDto } from './dto/update-guild-socials.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
 import { UpdateGuildMembershipDto } from './dto/update-guild-membership.dto';
 import { randomUUID } from 'crypto';
@@ -187,6 +188,19 @@ export class GuildService {
     }
 
     return this.prisma.guild.update({ where: { id: guildId }, data });
+  }
+
+  async updateGuildSocials(
+    guildId: string,
+    dto: UpdateGuildSocialsDto,
+    userId: string,
+  ) {
+    await this.ensureManagePermission(guildId, userId);
+
+    return this.prisma.guild.update({
+      where: { id: guildId },
+      data: { socials: dto },
+    });
   }
 
   async deleteGuild(guildId: string, userId: string) {
