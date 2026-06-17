@@ -1,10 +1,9 @@
 "use client";
 import React, { useState, use } from "react";
 import Image from "next/image";
-import ReactMarkdown from "react-markdown";
-import { CodeBlock } from "@/components/markdown/CodeBlock";
 import { MOCK_BOUNTIES } from "@/lib/mocks/bounties";
 import { StatusBadge } from "@/features/bounties/components/BountyCard";
+import { BountyDescription } from "@/features/bounties/components/BountyDescription";
 import { SubmissionForm } from "@/features/bounties/components/SubmissionForm";
 import { BountyApplicationForm } from "@/features/bounties/components/BountyApplicationForm";
 import { toast, Toaster } from "sonner";
@@ -141,17 +140,7 @@ export default function BountyDetailPage({ params }: PageProps) {
                 Technical Requirements{" "}
                 <div className="h-[1px] flex-grow bg-white/5" />
               </h2>
-              <div className="prose prose-invert max-w-none prose-violet">
-                <ReactMarkdown
-                  components={{
-                    pre: ({ children, className }) => (
-                      <CodeBlock className={className}>{children}</CodeBlock>
-                    ),
-                  }}
-                >
-                  {bounty.description}
-                </ReactMarkdown>
-              </div>
+              <BountyDescription markdown={bounty.description} />
             </section>
           </div>
 
@@ -238,6 +227,7 @@ export default function BountyDetailPage({ params }: PageProps) {
                   src={bounty.guildLogo}
                   width={48}
                   height={48}
+                  unoptimized={bounty.guildLogo.includes("/svg")}
                   className="w-12 h-12 rounded-2xl bg-black p-1 border border-slate-800/10"
                   alt={bounty.guildName}
                 />

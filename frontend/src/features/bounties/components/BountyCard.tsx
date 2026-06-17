@@ -23,6 +23,7 @@ export const BountyCard = ({ bounty }: { bounty: Bounty }) => {
               src={bounty.guildLogo}
               width={20}
               height={20}
+              unoptimized={bounty.guildLogo.includes("/svg")}
               alt={bounty.guildName}
               className="w-5 h-5 rounded-full"
             />
