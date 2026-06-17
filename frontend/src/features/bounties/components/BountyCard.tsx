@@ -11,6 +11,8 @@ interface StatusBadgeProps {
 }
 
 export const BountyCard = ({ bounty }: { bounty: Bounty }) => {
+  const status = bounty.optimisticStatus ?? bounty.status;
+
   return (
     <motion.div
       whileHover={{ y: -4 }}
@@ -31,7 +33,14 @@ export const BountyCard = ({ bounty }: { bounty: Bounty }) => {
             {bounty.guildName}
           </span>
         </div>
-        <StatusBadge status={bounty.status} />
+        <div className="flex items-center gap-2">
+          {bounty.isPending && (
+            <span className="text-[8px] font-black uppercase tracking-widest text-amber-400">
+              Pending
+            </span>
+          )}
+          <StatusBadge status={status} />
+        </div>
       </div>
 
       <Link href={`/bounties/${bounty.id}`}>
