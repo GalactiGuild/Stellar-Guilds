@@ -1,4 +1,4 @@
-﻿use soroban_sdk::{contracttype, Address, String};
+use soroban_sdk::{contracttype, Address, String};
 
 /// Distribution rule types
 #[contracttype]
@@ -94,4 +94,31 @@ pub struct DistributionFailedEvent {
 pub struct PoolCancelledEvent {
     pub pool_id: u64,
     pub cancelled_by: Address,
+}
+
+/// A pending payout entry
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Payout {
+    /// Recipient of the payout
+    pub recipient: Address,
+    /// Amount to be paid
+    pub amount: i128,
+    /// Token contract address (None for native XLM)
+    pub token: Option<Address>,
+}
+
+/// Event emitted when a payout is added to the queue
+#[contracttype]
+pub struct PayoutQueuedEvent {
+    pub recipient: Address,
+    pub amount: i128,
+    pub token: Option<Address>,
+}
+
+/// Event emitted when a batch of payouts is processed
+#[contracttype]
+pub struct PayoutBatchProcessedEvent {
+    pub count: u32,
+    pub total_amount: i128,
 }

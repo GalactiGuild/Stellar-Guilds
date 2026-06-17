@@ -56,6 +56,8 @@ pub const ACT_EMITTED: &str = "emitted";
 pub const ACT_RECORDED: &str = "recorded";
 pub const ACT_ACCEPTED: &str = "accepted";
 pub const ACT_TRANSFERRED: &str = "transferred";
+pub const ACT_QUEUED: &str = "queued";
+pub const ACT_PROCESSED: &str = "processed";
 
 // =========== Guild-specific actions ===========
 

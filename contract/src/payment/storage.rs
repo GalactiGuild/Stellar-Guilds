@@ -1,4 +1,4 @@
-﻿use crate::payment::types::{DistributionStatus, PaymentPool, Recipient};
+use crate::payment::types::{DistributionStatus, PaymentPool, Recipient};
 use soroban_sdk::{contracttype, Address, Env, Vec};
 
 /// Storage key for the next pool ID counter
@@ -7,6 +7,7 @@ pub enum PaymentStorageKey {
     NextPoolId,
     Pool(u64),
     Recipients(u64),
+    PayoutQueue,
 }
 
 /// Initialize payment distribution storage

@@ -73,6 +73,7 @@ use payment::{
     execute_distribution as pay_execute_distribution, get_pool_status as pay_get_pool_status,
     get_recipient_amount as pay_get_recipient_amount,
     validate_distribution as pay_validate_distribution, DistributionRule, DistributionStatus,
+    PayoutQueue,
 };
 
 mod subscription;
@@ -815,6 +816,24 @@ impl StellarGuildsContract {
     /// Vector of results (true for success, false for failure) for each pool
     pub fn batch_distribute(env: Env, pool_ids: Vec<u64>, caller: Address) -> Vec<bool> {
         pay_batch_distribute(&env, pool_ids, caller)
+    }
+
+    // ============ Payout Queue Functions ============
+
+    /// Add a payout to the queue to be processed later in batches.
+    /// This helps avoid exceeding gas limits for large numbers of payouts.
+    pub fn add_payout(env: Env, recipient: Address, amount: i128, token: Option<Address>) {
+        PayoutQueue::add_payout(&env, recipient, amount, token);
+    }
+
+    /// Process a batch of payouts from the queue in FIFO order.
+    pub fn process_payout_batch(env: Env, count: u32) -> u32 {
+        PayoutQueue::process_payout_batch(&env, count)
+    }
+
+    /// Get the current number of pending payouts in the queue.
+    pub fn get_payout_queue_size(env: Env) -> u32 {
+        PayoutQueue::queue_size(&env)
     }
 
     // ============ Dispute Functions ============

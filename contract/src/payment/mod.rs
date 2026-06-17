@@ -1,5 +1,6 @@
-﻿pub mod distribution;
+pub mod distribution;
 pub mod storage;
+pub mod queue;
 /// Payment distribution module
 ///
 /// This module provides automated payment splitting functionality for the Stellar Guilds platform.
@@ -29,7 +30,10 @@ pub use distribution::{
     execute_distribution, get_pool_status, get_recipient_amount, validate_distribution,
 };
 // pub use storage::initialize_payment_storage;
-pub use types::{DistributionRule, DistributionStatus};
+pub use types::{DistributionRule, DistributionStatus, Payout};
+pub use queue::PayoutQueue;
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod queue_test;
