@@ -3,7 +3,8 @@ use crate::events::topics::{
     ACT_APPROVED, ACT_CREATED, ACT_EXECUTED, ACT_FUNDED, ACT_GRANTED, ACT_PAUSED, ACT_PROPOSED,
     ACT_RESUMED, ACT_UPDATED, MOD_TREASURY,
 };
-use soroban_sdk::{token::Client as TokenClient, Address, Env, String, Vec};
+use crate::errors::ErrorCode;
+use soroban_sdk::{panic_with_error, token::Client as TokenClient, Address, Env, String, Vec};
 
 use crate::analytics::storage::store_snapshot;
 use crate::analytics::types::TreasurySnapshot;
@@ -85,7 +86,7 @@ pub fn deposit(
         panic!("amount must be positive");
     }
 
-    let mut treasury = get_treasury(env, treasury_id).expect("treasury not found");
+    let mut treasury = get_treasury(env, treasury_id).unwrap_or_else(|| panic_with_error!(env, ErrorCode::TreasuryNotFound));
     if treasury.paused {
         panic!("treasury is paused");
     }
@@ -198,7 +199,7 @@ pub fn propose_withdrawal(
 pub fn approve_transaction(env: &Env, tx_id: u64, approver: Address) -> bool {
     approver.require_auth();
 
-    let mut tx = crate::treasury::storage::get_transaction(env, tx_id).expect("tx not found");
+    let mut tx = crate::treasury::storage::get_transaction(env, tx_id).unwrap_or_else(|| panic_with_error!(env, ErrorCode::TransactionNotFound));
     let treasury = get_treasury(env, tx.treasury_id).expect("treasury not found");
 
     let now = env.ledger().timestamp();
@@ -301,7 +302,7 @@ fn enforce_allowance(
 pub fn execute_transaction(env: &Env, tx_id: u64, executor: Address) -> bool {
     executor.require_auth();
 
-    let mut tx = crate::treasury::storage::get_transaction(env, tx_id).expect("tx not found");
+    let mut tx = crate::treasury::storage::get_transaction(env, tx_id).unwrap_or_else(|| panic_with_error!(env, ErrorCode::TransactionNotFound));
     let mut treasury = get_treasury(env, tx.treasury_id).expect("treasury not found");
 
     let now = env.ledger().timestamp();
@@ -342,8 +343,8 @@ pub fn execute_transaction(env: &Env, tx_id: u64, executor: Address) -> bool {
             // This creates a proper contract error (all panics in Soroban become contract errors)
             // while maintaining the expected error message for test compatibility
             enforce_budget(env, tx.treasury_id, &category, tx.amount).unwrap_or_else(|e| match e {
-                TreasuryError::BudgetExceeded => panic!("budget exceeded"),
-                TreasuryError::AllowanceExceeded => panic!("allowance exceeded"),
+                TreasuryError::BudgetExceeded => panic_with_error!(env, ErrorCode::BudgetExceeded),
+                TreasuryError::AllowanceExceeded => panic_with_error!(env, ErrorCode::AllowanceExceeded),
             });
 
             let op_type = match tx.tx_type {
@@ -377,7 +378,7 @@ pub fn execute_transaction(env: &Env, tx_id: u64, executor: Address) -> bool {
                     let mut balances = treasury.token_balances.clone();
                     let current = balances.get(token_addr.clone()).unwrap_or(0i128);
                     if current < tx.amount {
-                        panic!("insufficient treasury balance");
+                        panic_with_error!(env, ErrorCode::InsufficientFunds);
                     }
                     balances.set(token_addr.clone(), current - tx.amount);
                     treasury.token_balances = balances;
@@ -386,7 +387,7 @@ pub fn execute_transaction(env: &Env, tx_id: u64, executor: Address) -> bool {
                 }
                 None => {
                     if treasury.balance_xlm < tx.amount {
-                        panic!("insufficient XLM balance");
+                        panic_with_error!(env, ErrorCode::InsufficientFunds);
                     }
                     treasury.balance_xlm -= tx.amount;
                 }

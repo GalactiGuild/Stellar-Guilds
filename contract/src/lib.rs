@@ -1,12 +1,16 @@
 #![no_std]
 
-use soroban_sdk::{contract, contractimpl, Address, Env, String, Vec};
+use crate::errors::ErrorCode;
+use soroban_sdk::{contract, contractimpl, panic_with_error, Address, Env, String, Vec};
 
 mod events;
 mod guild;
 mod integration;
 mod interfaces;
 mod utils;
+mod errors;
+mod dummy;
+
 use guild::membership::{
     add_member, create_guild, get_all_members, get_member, has_permission, is_member, join_guild,
     remove_member, reque_permissions as guild_reque_permissions,
@@ -204,7 +208,7 @@ pub struct StellarGuildsContract;
 impl StellarGuildsContract {
     pub fn initialize(env: Env, admin: Address) -> bool {
         if env.storage().instance().has(&DataKey::Initialized) {
-            panic!("Already initialized");
+            panic_with_error!(&env, ErrorCode::AlreadyInitialized);
         }
 
         env.storage().instance().set(&DataKey::Admin, &admin);
