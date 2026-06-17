@@ -33,6 +33,7 @@ export default function BountyDetailPage({ params }: PageProps) {
   const bounty = MOCK_BOUNTIES.find((b) => b.id === id) || MOCK_BOUNTIES[0];
 
   const [showApplicationForm, setShowApplicationForm] = useState(false);
+  const [showSubmissionForm, setShowSubmissionForm] = useState(false);
 
   const [viewState, setViewState] = useState<
     "idle" | "claimed" | "submitting" | "completed"
@@ -208,18 +209,11 @@ export default function BountyDetailPage({ params }: PageProps) {
 
                   {viewState === "claimed" && (
                     <button
-                      onClick={() => setViewState("submitting")}
+                      onClick={() => setShowSubmissionForm(true)}
                       className="w-full bg-violet-500 text-black py-5 rounded-2xl font-black uppercase tracking-widest transition-all hover:bg-violet-400"
                     >
                       Upload Submission
                     </button>
-                  )}
-
-                  {viewState === "submitting" && (
-                    <SubmissionForm
-                      onCancel={() => setViewState("claimed")}
-                      onSubmit={handleFinalSubmit} 
-                    />
                   )}
 
                   {viewState === "completed" && (
@@ -262,6 +256,12 @@ export default function BountyDetailPage({ params }: PageProps) {
         bountyId={bounty.id}
         bountyTitle={bounty.title}
       />
+      <SubmissionForm
+        isOpen={showSubmissionForm}
+        onOpenChange={setShowSubmissionForm}
+        bountyTitle={bounty.title}
+        onSubmitted={handleFinalSubmit}
+      />
     </div>
   );
 }
@@ -296,5 +296,4 @@ const SidebarInfo = ({
     {text}
   </div>
 );
-
 
