@@ -7,6 +7,8 @@
 pub enum TreasuryError {
     BudgetExceeded = 1,
     AllowanceExceeded = 2,
+    TimelockNotExpired = 3,
+    TimelockExpired = 4,
 }
 
 #[contracttype]
@@ -44,6 +46,11 @@ pub struct Transaction {
     pub created_at: u64,
     pub expires_at: u64,
     pub reason: String,
+    /// @notice Earliest timestamp at which this withdrawal can be executed.
+    /// @dev Set to created_at + 86400 for high-value withdrawals. Zero means no timelock.
+    pub earliest_execution_time: u64,
+    /// @notice Whether this transaction has been cancelled during the timelock window.
+    pub cancelled: bool,
 }
 
 #[contracttype]
@@ -93,6 +100,14 @@ pub struct TreasuryInitializedEvent {
     pub treasury_id: u64,
     pub guild_id: u64,
     pub owner: Address,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct WithdrawalCancelledEvent {
+    pub treasury_id: u64,
+    pub tx_id: u64,
+    pub cancelled_by: Address,
 }
 
 #[contracttype]
