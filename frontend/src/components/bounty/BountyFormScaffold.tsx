@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import AssetSelector from './AssetSelector';
 import {
   bountySchema,
   bountyDefaultValues,
@@ -22,6 +23,7 @@ export default function BountyFormScaffold({
 }) {
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting, isValid },
     reset,
@@ -94,15 +96,19 @@ export default function BountyFormScaffold({
       {/* Token Type */}
       <div className="field-group">
         <label htmlFor="bounty-token">Token Type</label>
-        <select
-          id="bounty-token"
-          {...register('tokenType')}
-          aria-invalid={!!errors.tokenType}
-        >
-          <option value="XLM">XLM (Stellar)</option>
-          <option value="USDC">USDC</option>
-          <option value="ETH">Ethereum</option>
-        </select>
+        <Controller
+          name="tokenType"
+          control={control}
+          render={({ field }) => (
+            <AssetSelector
+              id="bounty-token"
+              name={field.name}
+              value={field.value}
+              onChange={field.onChange}
+              error={errors.tokenType?.message}
+            />
+          )}
+        />
         {errors.tokenType && (
           <span className="error-text" role="alert">
             {errors.tokenType.message}

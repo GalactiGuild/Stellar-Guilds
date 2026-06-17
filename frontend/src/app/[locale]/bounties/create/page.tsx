@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import ReactMarkdown from "react-markdown";
+import AssetSelector from "@/components/bounty/AssetSelector";
+import { stellarAssetValueSchema } from "@/lib/schemas/stellarAssetSchema";
 import { CodeBlock } from "@/components/markdown/CodeBlock";
 import {
   Edit3,
@@ -29,7 +31,7 @@ const bountySchema = z.object({
       (val) => !isNaN(Number(val)) && Number(val) > 0,
       " ERROR: Payout must be a positive number",
     ),
-  token: z.string().min(1, "ECON ERROR: Token type required"),
+  token: stellarAssetValueSchema,
   deadline: z
     .string()
     .min(1, "ERROR: Deadline required")
@@ -49,6 +51,7 @@ export default function CreateBountyPage() {
 
   const {
     register,
+    control,
     handleSubmit,
     watch,
     setValue,
@@ -211,6 +214,26 @@ export default function CreateBountyPage() {
                       className="flex-grow bg-white/5 border border-slate-800/10 rounded-xl py-3 px-4 outline-none focus:border-violet-500/50 font-bold"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <FieldLabel
+                    label="Payout Asset"
+                    error={errors.token?.message}
+                  />
+                  <Controller
+                    control={control}
+                    name="token"
+                    render={({ field }) => (
+                      <AssetSelector
+                        id="bounty-token"
+                        name={field.name}
+                        value={field.value}
+                        onChange={field.onChange}
+                        error={errors.token?.message}
+                      />
+                    )}
+                  />
                 </div>
 
                 <div>
